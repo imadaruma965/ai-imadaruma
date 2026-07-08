@@ -86,6 +86,7 @@ AI尊徳は戦略を勝手に変更しない。変更が必要なときは、週
 | `night_review.md` | 夜の統治レビュー |
 | `weekly_review.md` | 週末レビュー（AI栄一接続） |
 | `parking_lot.md` | 保留・後回し置き場（補助） |
+| `evening_review.md` | 旧夕方振り返り（レガシー。標準は `night_review.md`） |
 
 ---
 
