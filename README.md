@@ -29,12 +29,27 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 ### DOCX正本一覧
 
-| 正本ファイル | Markdown実装版 |
-|------------|---------------|
-| `sources/originals/imada_life_philosophy_v02.docx` | `philosophy/imada_life_philosophy.md` |
-| `sources/originals/imada_constitution_v2.docx` | `constitution/jibun_constitution.md` |
-| `sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `constitution/four_pillars.md` |
-| `sources/originals/imadaruma_明君七徳_v02.docx` | `constitution/meikun_shichitoku.md` |
+| 正本ファイル | Markdown実装版 | 備考 |
+|------------|---------------|------|
+| `sources/originals/imadaruma_じぶん憲法_v3.docx` | `constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `sources/originals/imada_life_philosophy_v02.docx` | `philosophy/imada_life_philosophy.md` | |
+| `sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `constitution/four_pillars.md` | |
+| `sources/originals/imadaruma_明君七徳_v02.docx` | `constitution/meikun_shichitoku.md` | |
+
+**旧版（参照用・履歴用）:**
+
+| 旧版ファイル | 備考 |
+|------------|------|
+| `sources/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
+
+### じぶん憲法（最高法規）
+
+- **正本DOCX**: `sources/originals/imadaruma_じぶん憲法_v3.docx`
+- **Markdown実装版**: `constitution/jibun_constitution.md`
+- **標語**: 葦なる刃は、静かに尖れる。
+- **中核文**: 人生は選択である。選択が国家を定める。
+
+じぶん憲法は、君主いまだ唯仁が立ち返る**最高法規**である。AI栄一・AI尊徳・四柱統治フレームワーク・日次運用・戦略は、すべてこの憲法の下位に位置する。
 
 ---
 
@@ -108,14 +123,15 @@ ai-imadaruma/
 ├── README.md                              # このファイル
 ├── sources/
 │   └── originals/                         # DOCX正本（改訂の起点）
+│       ├── imadaruma_じぶん憲法_v3.docx         # 現行正本
+│       ├── imada_constitution_v2.docx           # 旧版（参照用）
 │       ├── imada_life_philosophy_v02.docx
-│       ├── imada_constitution_v2.docx
 │       ├── imadaruma_四柱統治フレームワーク_v1.docx
 │       └── imadaruma_明君七徳_v02.docx
 ├── philosophy/                            # 最上位規範（実装版）
 │   └── imada_life_philosophy.md           # いまだライフ理念体系
 ├── constitution/                          # 統治法・実行構造（実装版）
-│   ├── jibun_constitution.md              # じぶん憲法 ★新
+│   ├── jibun_constitution.md              # じぶん憲法 v3 実装版
 │   ├── four_pillars.md                    # 四柱統治フレームワーク ★新
 │   ├── meikun_shichitoku.md               # 明君七徳 ★新
 │   ├── doctrine.md                        # 旧：統治思想（移行予定）
