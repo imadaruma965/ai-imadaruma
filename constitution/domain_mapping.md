@@ -159,7 +159,7 @@
 | `cabinet/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
 | `cabinet/eiichi.md` | 戦略メンター AI栄一 |
 | `cabinet/sontoku.md` | 実行マネージャー AI尊徳 |
-| `cabinet/chief_statecraft_minister.md` | 統治総理AI（移行予定） |
+| `cabinet/chief_statecraft_minister.md` | 旧：統治総理AI（移行予定）→ AI尊徳（実行マネージャー） |
 
 ---
 
