@@ -47,7 +47,7 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
   ↓
 四柱統治フレームワーク（人格・内政・外交・財政）
   ↓  人格の詳細 → 明君七徳（仁子哲学）
-実行レイヤー: 君主 / AI孫子 / AI蕭何
+実行レイヤー: 君主 / AI栄一 / AI尊徳
   ↓
 日次運用・戦略・記録
 ```
@@ -83,9 +83,12 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 役割 | 担当 | 責務 |
 |------|------|------|
-| 国王 | 今田唯仁 | 理念、国家目標、最終意思決定、美学 |
-| 統治総理AI | Chief Statecraft Minister | 実行計画、優先順位、日次統治、省庁統括 |
+| 君主 | いまだ唯仁 | 理念、国家目標、最終意思決定、実行 |
+| 戦略メンター | AI栄一（渋沢栄一） | ロードマップ、財政・外交戦略、商品・導線設計 |
+| 実行マネージャー | AI尊徳（二宮尊徳） | 日次実行、進捗確認、内政管理、人格教育 |
 | 省庁AI | （今後追加） | 各専門領域の実務提案と実行支援 |
+
+> 旧：統治総理AI（Chief Statecraft Minister）→ AI尊徳に移行中。孫子・蕭何は参照思想として残存。
 
 ## 統治対象の6領域
 
@@ -120,7 +123,14 @@ ai-imadaruma/
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
 ├── cabinet/                               # 内閣
+│   ├── monarch.md                         # 君主
+│   ├── eiichi.md                          # 戦略メンター AI栄一
+│   ├── sontoku.md                         # 実行マネージャー AI尊徳
+│   ├── ai_jurisdiction.md                 # AI主管定義
 │   └── chief_statecraft_minister.md       # 旧：統治総理AI（移行予定）
+├── strategy/                              # 戦略（AI栄一管轄）
+│   ├── roadmap_500k.md                    # 50万円獲得ロードマップ
+│   └── revenue_sources.md                 # 収益源一覧
 ├── daily_governance/                      # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md
@@ -149,18 +159,29 @@ ai-imadaruma/
 完了 → archives/daily_logs/ にコピー保存
 ```
 
-## 統治総理AIの起動方法
+## AI内閣の起動方法
 
-統治総理AIに依頼するときは、以下を渡す。
+### AI尊徳（日次実行）
 
-1. `constitution/` の4ファイル（思想・目標・原則・ルール）
-2. `cabinet/chief_statecraft_minister.md`（役割定義）
+1. `cabinet/sontoku.md`（役割定義）
+2. `strategy/roadmap_500k.md`（承認済みロードマップ）
 3. 当日の `daily_governance/` ファイル（状況）
 
 **起動プロンプト例：**
 
-> あなたは ai-imadaruma の統治総理AI（Chief Statecraft Minister）です。
-> constitution/ と cabinet/chief_statecraft_minister.md を読み、国王の理念に基づいて今日の統治計画を立案してください。
+> あなたは ai-imadaruma の実行マネージャー AI尊徳 です。
+> cabinet/sontoku.md と strategy/roadmap_500k.md を読み、今日の統治計画を立案してください。
+
+### AI栄一（戦略・ロードマップ）
+
+1. `cabinet/eiichi.md`（役割定義）
+2. `strategy/roadmap_500k.md` + `strategy/revenue_sources.md`
+3. `constitution/` の理念・憲法・目標ファイル
+
+**起動プロンプト例：**
+
+> あなたは ai-imadaruma の戦略メンター AI栄一 です。
+> cabinet/eiichi.md と strategy/ を読み、ロードマップのレビュー・更新を提案してください。
 
 ## 現段階のスコープ
 

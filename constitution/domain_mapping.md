@@ -139,13 +139,26 @@
 
 ---
 
+## AI主管との接続
+
+> 四柱・6領域の定義はAI名称に依存しない。AI主管は `cabinet/ai_jurisdiction.md` に分離して定義する。
+
+| 担当 | AI | 管轄範囲 |
+|------|-----|---------|
+| **戦略メンター** | AI栄一 | 戦略・収益・導線・商品設計・やらない戦の判断 |
+| **実行マネージャー** | AI尊徳 | 日次実行・進捗確認・内政管理・習慣化・人格教育 |
+
+---
+
 ## 関連ファイル
 
 | ファイル | 役割 |
 |---------|------|
 | `constitution/four_pillars.md` | 四柱の原典（AI主管定義は含まない） |
 | `constitution/mission.md` | 第一国家目標の詳細 |
-| `cabinet/ai_jurisdiction.md` | AI孫子・AI蕭何の主管定義 |
+| `cabinet/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
+| `cabinet/eiichi.md` | 戦略メンター AI栄一 |
+| `cabinet/sontoku.md` | 実行マネージャー AI尊徳 |
 | `cabinet/chief_statecraft_minister.md` | 統治総理AI（移行予定） |
 
 ---
