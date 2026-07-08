@@ -129,8 +129,14 @@ ai-imadaruma/
 │   ├── ai_jurisdiction.md                 # AI主管定義
 │   └── chief_statecraft_minister.md       # 旧：統治総理AI（移行予定）
 ├── strategy/                              # 戦略（AI栄一管轄）
+│   ├── README.md                          # 戦略領域の全体像
 │   ├── roadmap_500k.md                    # 50万円獲得ロードマップ
-│   └── revenue_sources.md                 # 収益源一覧
+│   ├── revenue_sources.md                 # 収益源一覧
+│   ├── eiichi_weekly_review.md            # 週次戦略レビュー
+│   ├── eiichi_monthly_review.md           # 月次戦略レビュー
+│   ├── no_battle_rules.md                 # やらない戦
+│   ├── offer_review.md                    # 商品・オファー見直し
+│   └── sales_pipeline.md                  # 売上導線管理
 ├── daily_governance/                      # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md

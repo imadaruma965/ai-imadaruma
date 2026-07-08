@@ -13,7 +13,7 @@
 | **実施タイミング** | 週末（推奨: 日曜） |
 | **担当** | AI尊徳が整理 → AI栄一が戦略レビュー |
 | **前提** | 今週の `night_review.md` / `today.md` / `impulse_protocol.md` を参照 |
-| **接続先** | `strategy/roadmap_500k.md` の週次レビュー欄 |
+| **接続先** | `strategy/eiichi_weekly_review.md` → `strategy/roadmap_500k.md` |
 
 ```
 AI尊徳（実行振り返り）
@@ -165,9 +165,11 @@ AI栄一（戦略レビュー）
 **起動プロンプト（AI栄一）**:
 
 ```
-週次戦略レビューです。AI尊徳からの実行材料は以下のとおりです。
+週次戦略レビューです。strategy/eiichi_weekly_review.md に沿って進めてください。
+AI尊徳からの実行材料は以下のとおりです。
 （weekly_review.md のセクション9を貼る）
-ロードマップとの乖離を分析し、来週の主戦場候補とやらないことを提案してください。
+ロードマップとの乖離を分析し、no_battle_rules.md を確認し、
+来週の一点突破とAI尊徳への実行方針を提案してください。
 ```
 
 ---
@@ -195,7 +197,7 @@ AI栄一（戦略レビュー）
 ## アーカイブ手順
 
 1. このファイルの内容を `archives/weekly_reviews/YYYY-Www.md` にコピー
-2. `strategy/roadmap_500k.md` の週次レビュー欄を更新（AI栄一）
+2. `strategy/eiichi_weekly_review.md` で戦略レビュー（AI栄一）→ `strategy/roadmap_500k.md` を必要に応じて更新
 3. `parking_lot.md` の判定を反映
 4. 翌週月曜の `morning_cabinet.md` で新しい閣議を開始
 

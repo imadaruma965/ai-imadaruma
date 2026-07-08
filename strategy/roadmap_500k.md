@@ -349,9 +349,29 @@ Phase 3（11月）: 二点展開 → 月50万円
 
 ---
 
+## レビュー運用との接続（Phase 5）
+
+| レビュー | ファイル | 役割 |
+|---------|---------|------|
+| **週次** | `strategy/eiichi_weekly_review.md` | 乖離検知、次週の一点突破、やらない戦の確認 |
+| **月次** | `strategy/eiichi_monthly_review.md` | ポートフォリオ見直し、捨てる戦・強化する戦 |
+| **やらない戦** | `strategy/no_battle_rules.md` | 勝てない戦の管理 |
+| **商品** | `strategy/offer_review.md` | 商品仮説の検証・更新 |
+| **導線** | `strategy/sales_pipeline.md` | 見込み客・商談の管理 |
+
+**原則:**
+
+- 週次・月次レビューから本ロードマップを見直す
+- 11月の50万円ポートフォリオ仮説は**固定ではなく毎週検証**する
+- 基本戦略（一点突破→二点展開、7〜8月 sound 集中、9月〜 DS 投入）は壊さない
+- 入力材料は `daily_governance/weekly_review.md`（AI尊徳）から受け取る
+
+---
+
 ## 週次レビュー
 
 > AI栄一が毎週日曜に更新。君主が承認。
+> 詳細テンプレートは `strategy/eiichi_weekly_review.md` を使用する。
 
 ### レビュー記録
 
@@ -433,6 +453,7 @@ Phase 3（11月）: 二点展開 → 月50万円
 | 2026-07-08 | AI栄一 | 初版作成（テンプレート） | ⬜ |
 | 2026-07-08 | AI栄一 | **v1 立案**（現状仮説・基本戦略・マイルストーン・商品仮説） | ⬜ |
 | 2026-07-08 | AI栄一 | AI孫子→AI栄一、AI蕭何→AI尊徳への改称 | ⬜ |
+| 2026-07-08 | AI栄一 | Phase 5：週次・月次レビュー運用との接続追記 | ⬜ |
 
 ---
 
@@ -441,6 +462,12 @@ Phase 3（11月）: 二点展開 → 月50万円
 | ファイル | 役割 |
 |---------|------|
 | `strategy/revenue_sources.md` | 収益源の詳細定義 |
+| `strategy/README.md` | strategy/ 領域の全体像 |
+| `strategy/eiichi_weekly_review.md` | 週次戦略レビュー |
+| `strategy/eiichi_monthly_review.md` | 月次戦略レビュー |
+| `strategy/no_battle_rules.md` | やらない戦の管理 |
+| `strategy/offer_review.md` | 商品・オファー見直し |
+| `strategy/sales_pipeline.md` | 売上導線管理 |
 | `constitution/domain_mapping.md` | 売上計算ルール・6領域マッピング |
 | `constitution/mission.md` | 第一国家目標 |
 | `cabinet/eiichi.md` | 戦略メンターの役割・レビュー手順 |

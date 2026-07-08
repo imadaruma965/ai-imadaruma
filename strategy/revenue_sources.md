@@ -237,6 +237,23 @@ AI栄一が優先度を提案するときの参考基準。最終決定は君主
 
 ---
 
+## レビュー運用との接続（Phase 5）
+
+| ファイル | 役割 |
+|---------|------|
+| `strategy/offer_review.md` | 商品仮説の見直し（imadaruma.sound / Daily Statecraft / SNS・受託ブリッジ） |
+| `strategy/sales_pipeline.md` | 売上導線・見込み客の管理 |
+| `strategy/eiichi_weekly_review.md` | 週次で収益源別の手応えを確認 |
+| `strategy/eiichi_monthly_review.md` | 月次で収益源ポートフォリオを見直す |
+
+**原則:**
+
+- 収益源の追加・変更は君主承認が必要（本ファイルの定義を壊さない）
+- 商品の詳細仮説は `offer_review.md` で検証する
+- 導線・商談の実態は `sales_pipeline.md` で管理する
+
+---
+
 ## 変更履歴
 
 | 日付 | 変更者 | 内容 | 君主承認 |
@@ -244,6 +261,7 @@ AI栄一が優先度を提案するときの参考基準。最終決定は君主
 | 2026-07-08 | AI栄一 | 初版作成（テンプレート） | ⬜ |
 | 2026-07-08 | AI栄一 | **v1 更新**（優先順位・状態・次の一手・11月寄与仮説） | ⬜ |
 | 2026-07-08 | AI栄一 | AI孫子→AI栄一への改称 | ⬜ |
+| 2026-07-08 | AI栄一 | Phase 5：offer_review / sales_pipeline との接続追記 | ⬜ |
 
 ---
 
@@ -252,6 +270,8 @@ AI栄一が優先度を提案するときの参考基準。最終決定は君主
 | ファイル | 役割 |
 |---------|------|
 | `strategy/roadmap_500k.md` | ロードマップ・ポートフォリオ設計 |
+| `strategy/offer_review.md` | 商品・オファー見直し |
+| `strategy/sales_pipeline.md` | 売上導線管理 |
 | `constitution/domain_mapping.md` | 四柱・6領域マッピング・売上計算ルール |
 | `philosophy/imada_life_philosophy.md` | 理念と事業の接続 |
 | `cabinet/eiichi.md` | 戦略メンターの役割・戦略レビュー手順 |
