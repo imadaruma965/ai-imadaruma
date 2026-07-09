@@ -203,7 +203,7 @@ AI栄一: ロードマップ更新を提案
 
 | 旧 | 新 | 状態 |
 |----|-----|------|
-| 統治総理AI（Chief Statecraft Minister） | AI尊徳 | 移行予定（`cabinet/chief_statecraft_minister.md` は未アーカイブ） |
+| 統治総理AI（Chief Statecraft Minister） | AI尊徳 | 移行完了（`archives/legacy/chief_statecraft_minister.md` にアーカイブ済み） |
 | AI孫子（軍師） | AI栄一（戦略メンター） | 改称（孫子は補助原理として残存） |
 | AI蕭何（相国） | AI尊徳（実行マネージャー） | 改称（蕭何は補助原理として残存） |
 | 国王 | 君主いまだ唯仁 | 継続 |
