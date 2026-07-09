@@ -183,27 +183,15 @@ ai-imadaruma/
 
 ## AI内閣の起動方法
 
-### AI尊徳（日次実行）
+AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.claude/skills/sontoku/`）として実装されている。サブエージェントは起動しない。会話そのものが人格を引き継ぐので、日をまたいでも `*_session_log.md` を通じて話の積み重ねを保つ。
 
-1. `cabinet/sontoku.md`（役割定義）
-2. `strategy/roadmap_500k.md`（承認済みロードマップ）
-3. 当日の `daily_governance/` ファイル（状況）
+### `/sontoku`（日次実行）
 
-**起動プロンプト例：**
+呼び出すと、`cabinet/sontoku.md` の人格を採用し、`daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
-> あなたは ai-imadaruma の実行マネージャー AI尊徳 です。
-> cabinet/sontoku.md と strategy/roadmap_500k.md を読み、今日の統治計画を立案してください。
+### `/eiichi`（戦略・ロードマップ）
 
-### AI栄一（戦略・ロードマップ）
-
-1. `cabinet/eiichi.md`（役割定義）
-2. `strategy/roadmap_500k.md` + `strategy/revenue_sources.md`
-3. `constitution/` の理念・憲法・目標ファイル
-
-**起動プロンプト例：**
-
-> あなたは ai-imadaruma の戦略メンター AI栄一 です。
-> cabinet/eiichi.md と strategy/ を読み、ロードマップのレビュー・更新を提案してください。
+呼び出すと、`cabinet/eiichi.md` の人格を採用し、`strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 
