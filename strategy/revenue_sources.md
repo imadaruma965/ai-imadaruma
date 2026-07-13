@@ -21,6 +21,7 @@
 - v1（2026-07-08）は仮説ベース。君主承認後に確定する
 - 新しい収益源を追加する場合は、君主の承認が必要
 - 50万円目標への含む/含まないは `constitution/domain_mapping.md` に準拠する
+- **2026年7〜11月の売り順・切る戦は `strategy/monetization_2026h2.md` を正とする**
 
 ---
 
@@ -34,8 +35,9 @@
 | 4 | デザイン・制作受託 | COM | **含む** | 中（限定） | 未着手 | 50,000円（ブリッジ） |
 | 5 | コンサルティング / 個別支援 | COM | **含む** | 低〜中 | 未着手 | 0〜50,000円 |
 | 6 | Kindle / Publishing | PUB | **含む** | 低 | 未着手 | 0〜20,000円 |
-| 7 | 講座・動画商品 | COM / COMC | **含む** | 低（保留） | 未着手 | 0円（v1対象外） |
-| 8 | imadaruma.capital | TRE | **含まない** | 対象外 | 稼働中 | — |
+| 7 | 講座・動画商品 | COM / COMC | **含む（限定）** | 中（19,800円のみ） | 準備中 | 再起の内政システムのみ。大Academyは今期外 |
+| 8 | Communityサロン | COMC | **今期売上に含まない** | 低（設計のみ） | 保留 | Reed Blade本格は今期やらない戦 |
+| 9 | imadaruma.capital | TRE | **含まない** | 対象外 | 稼働中 | — |
 
 **凡例**: COM = Commerce、COMC = Communications & Culture、PUB = Publishing、TRE = Treasury & Markets
 
