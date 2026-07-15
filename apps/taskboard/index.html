@@ -3,22 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>業務統治</title>
+  <title>統治手帳</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="top">
-    <div>
+    <div class="top-main">
       <p class="brand">IMADARUMA</p>
-      <h1>業務統治</h1>
-      <p class="sub">七習慣の振り分け · 日／週／月 · カテゴリ俯瞰</p>
+      <h1>統治手帳</h1>
+      <p class="sub">今日・予定・タスク・振り返り</p>
+      <div class="today-row">
+        <p class="today-date" id="today-date" aria-live="polite"></p>
+        <button type="button" class="btn ghost compact" id="btn-open-calendar">カレンダーを見る</button>
+      </div>
+    </div>
+    <div id="pomodoro-bar" class="pomodoro-bar" aria-live="polite">
+      <div class="pomo-info">
+        <span id="pomo-phase" class="pomo-phase"></span>
+        <span id="pomo-task" class="pomo-task"></span>
+      </div>
+      <span id="pomo-time" class="pomo-time">25:00</span>
+      <button type="button" class="btn primary compact" id="pomo-start">開始</button>
+      <button type="button" class="btn ghost compact hidden" id="pomo-stop">停止</button>
     </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button type="button" class="tab active" data-view="home">俯瞰</button>
-    <button type="button" class="tab" data-view="board">象限</button>
-    <button type="button" class="tab" data-view="day">日</button>
+    <button type="button" class="tab active" data-view="home">全体</button>
+    <button type="button" class="tab" data-view="board">優先順位</button>
+    <button type="button" class="tab" data-view="day">今日</button>
     <button type="button" class="tab" data-view="week">週</button>
     <button type="button" class="tab" data-view="month">月</button>
     <button type="button" class="tab" data-view="all">一覧</button>
@@ -26,42 +39,63 @@
   </nav>
 
   <main>
-    <!-- カテゴリ俯瞰 -->
+    <!-- 全体 -->
     <section id="view-home" class="view active">
-      <p class="lead">未完了の件数だけ先に見る。カテゴリを開くと中身。</p>
-      <div id="cat-overview" class="cat-grid"></div>
+      <p class="lead">未完了の件数だけ先に見る。タップで中身を開く。</p>
+
+      <div class="home-block">
+        <h3 class="home-head">優先順位</h3>
+        <div id="quad-overview" class="overview-grid quad-grid"></div>
+      </div>
+
+      <div class="home-block">
+        <div class="home-head-row">
+          <h3 class="home-head">カテゴリ</h3>
+          <button type="button" class="btn ghost compact" id="btn-edit-categories">名前を編集</button>
+        </div>
+        <div id="cat-overview" class="overview-grid cat-grid"></div>
+      </div>
+
       <button type="button" class="btn ghost" id="btn-goto-all">全体一覧へ</button>
+    </section>
+
+    <!-- 優先順位詳細 -->
+    <section id="view-quad" class="view">
+      <button type="button" class="linkback" id="btn-back-home-quad">← 全体に戻る</button>
+      <h2 id="quad-detail-title" class="section-title"></h2>
+      <p id="quad-detail-hint" class="lead tight"></p>
+      <ul class="rows" id="list-quad"></ul>
     </section>
 
     <!-- カテゴリ詳細 -->
     <section id="view-cat" class="view">
-      <button type="button" class="linkback" id="btn-back-home">← 俯瞰に戻る</button>
+      <button type="button" class="linkback" id="btn-back-home">← 全体に戻る</button>
       <h2 id="cat-detail-title" class="section-title"></h2>
       <ul class="rows" id="list-cat"></ul>
     </section>
 
-    <!-- 四象限 -->
+    <!-- 優先順位（コヴィの4分類） -->
     <section id="view-board" class="view">
-      <p class="lead">第II象限（大事・急がない）を毎日空にしない。</p>
+      <p class="lead">コヴィの4分類。<strong>「大事だが急がない」を毎日ひとつは空けない。</strong></p>
       <div class="matrix">
         <div class="quad">
-          <h2>I · 今すぐ <span class="count" id="c-uu">0</span></h2>
-          <p class="hint">緊急かつ重要</p>
+          <h2>今すぐ対応 <span class="count" id="c-uu">0</span></h2>
+          <p class="hint">急ぎで大事（締切・クレーム）</p>
           <ul class="rows" id="list-uu"></ul>
         </div>
         <div class="quad">
-          <h2>III · 急ぎ雑務 <span class="count" id="c-un">0</span></h2>
-          <p class="hint">緊急・重要ではない</p>
+          <h2>見せかけの急ぎ <span class="count" id="c-un">0</span></h2>
+          <p class="hint">急ぎだが大事でない → 任せる・まとめる</p>
           <ul class="rows" id="list-un"></ul>
         </div>
         <div class="quad accent">
-          <h2>II · 大事 <span class="count" id="c-nu">0</span></h2>
-          <p class="hint">重要・急がない（防衛）</p>
+          <h2>大事・種まき <span class="count" id="c-nu">0</span></h2>
+          <p class="hint">大事だが急がない（営業・学び・健康）→ 毎日ひとつ</p>
           <ul class="rows" id="list-nu"></ul>
         </div>
         <div class="quad">
-          <h2>IV · 後回し <span class="count" id="c-nn">0</span></h2>
-          <p class="hint">どちらでもない</p>
+          <h2>減らす <span class="count" id="c-nn">0</span></h2>
+          <p class="hint">急ぎでも大事でもない → 削る</p>
           <ul class="rows" id="list-nn"></ul>
         </div>
       </div>
@@ -69,7 +103,27 @@
 
     <!-- 日 -->
     <section id="view-day" class="view">
-      <h2 class="section-title">日の統治</h2>
+      <h2 class="section-title">今日の計画</h2>
+
+      <div class="sontoku-chat" id="sontoku-chat">
+        <div class="sontoku-chat-head">
+          <span class="sontoku-avatar" aria-hidden="true">尊</span>
+          <div>
+            <strong>AI尊徳</strong>
+            <p class="sontoku-sub">実行マネージャー · 進捗・壁打ち</p>
+          </div>
+        </div>
+        <div class="sontoku-messages" id="sontoku-messages" aria-live="polite"></div>
+        <div class="sontoku-chips">
+          <button type="button" class="sontoku-chip" data-chip="進捗を報告します">進捗報告</button>
+          <button type="button" class="sontoku-chip" data-chip="迷っています">壁打ち</button>
+          <button type="button" class="sontoku-chip" data-chip="今日の任務を教えて">今日の任務</button>
+        </div>
+        <form id="sontoku-form" class="sontoku-form">
+          <input type="text" id="sontoku-input" placeholder="進捗報告・相談・壁打ち…" autocomplete="off" />
+          <button type="submit" class="btn primary compact">送る</button>
+        </form>
+      </div>
 
       <div class="journal-panel am">
         <h3>朝 · 意図</h3>
@@ -131,9 +185,30 @@
       </div>
     </section>
 
+    <!-- カレンダー -->
+    <section id="view-calendar" class="view">
+      <button type="button" class="linkback" id="btn-calendar-back">← 全体に戻る</button>
+      <div class="calendar-toolbar">
+        <button type="button" class="btn ghost compact" id="calendar-prev" aria-label="前の月">←</button>
+        <h2 class="section-title" id="calendar-title"></h2>
+        <button type="button" class="btn ghost compact" id="calendar-next" aria-label="次の月">→</button>
+        <button type="button" class="btn ghost compact" id="calendar-today">今月</button>
+      </div>
+      <p class="lead">期限付きタスク、毎週・毎月の定期タスク、メディア予定を表示。</p>
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-legend">
+        <span><i class="legend-task"></i>タスク</span>
+        <span><i class="legend-repeat"></i>定期</span>
+        <span><i class="legend-media"></i>メディア</span>
+      </div>
+    </section>
+
     <!-- 週 -->
     <section id="view-week" class="view">
-      <h2 class="section-title">週の統治</h2>
+      <h2 class="section-title">今週の計画</h2>
       <div class="goal-triple">
         <label class="field">目的（なぜこの週か）
           <textarea id="week-purpose" rows="2" placeholder="例：信用を戻し、請求と営業の流れを再開する"></textarea>
@@ -165,7 +240,7 @@
 
     <!-- 月 -->
     <section id="view-month" class="view">
-      <h2 class="section-title">月の統治</h2>
+      <h2 class="section-title">今月の計画</h2>
       <p class="lead">目標日 <strong>2026-12-09</strong>。現在値を直打ち → 保存。</p>
       <div class="goal-triple">
         <label class="field">目的（今月の意図）
@@ -211,14 +286,14 @@
       <div class="filters">
         <label><input type="checkbox" id="hide-done" checked /> 完了を隠す</label>
         <select id="filter-quad">
-          <option value="all">象限すべて</option>
-          <option value="uu">I</option>
-          <option value="un">III</option>
-          <option value="nu">II</option>
-          <option value="nn">IV</option>
+          <option value="all">優先すべて</option>
+          <option value="uu">今すぐ対応</option>
+          <option value="un">見せかけの急ぎ</option>
+          <option value="nu">大事・種まき</option>
+          <option value="nn">減らす</option>
         </select>
         <select id="filter-horizon">
-          <option value="all">視野すべて</option>
+          <option value="all">期間すべて</option>
           <option value="day">日</option>
           <option value="week">週</option>
           <option value="month">月</option>
@@ -249,6 +324,13 @@
           </select>
         </label>
         <label class="field">期限<input type="date" id="new-due" /></label>
+        <label class="field">繰り返し
+          <select id="new-recurrence">
+            <option value="none" selected>なし</option>
+            <option value="weekly">毎週（期限と同じ曜日）</option>
+            <option value="monthly">毎月（期限と同じ日）</option>
+          </select>
+        </label>
         <fieldset class="row">
           <legend>緊急</legend>
           <label><input type="radio" name="urgency" value="high" /> 高</label>
@@ -266,6 +348,18 @@
       <p id="new-msg" class="msg"></p>
     </section>
   </main>
+
+  <dialog id="category-dialog">
+    <form method="dialog" id="form-categories">
+      <h3>カテゴリ名を編集</h3>
+      <p class="lead tight">表示名を変えても、タスクの分類IDはそのままです。</p>
+      <div id="category-fields"></div>
+      <div class="btn-row">
+        <button type="submit" class="btn primary">保存</button>
+        <button type="button" class="btn ghost" id="category-cancel">閉じる</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="edit-dialog">
     <form method="dialog" id="form-edit">
@@ -286,6 +380,13 @@
         </select>
       </label>
       <label class="field">期限<input type="date" id="edit-due" /></label>
+      <label class="field">繰り返し
+        <select id="edit-recurrence">
+          <option value="none">なし</option>
+          <option value="weekly">毎週（期限と同じ曜日）</option>
+          <option value="monthly">毎月（期限と同じ日）</option>
+        </select>
+      </label>
       <fieldset class="row">
         <legend>緊急</legend>
         <label><input type="radio" name="edit-urgency" value="high" /> 高</label>
@@ -312,7 +413,7 @@
       <button type="button" class="btn ghost compact" id="btn-export">JSON保存</button>
       <input type="file" id="import-file" accept=".json,application/json" hidden />
     </div>
-    <span class="muted">業務統治</span>
+    <span class="muted">統治手帳</span>
   </footer>
 
   <script src="seed-data.js"></script>

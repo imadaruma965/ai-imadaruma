@@ -2,18 +2,28 @@
   const STORAGE_KEY = "imadaruma-gyomu-tochi-v1";
   const TARGET_DATE = "2026-12-09";
 
-  const CATEGORIES = [
-    { id: "fres", label: "フレスト", tag: "【フレスト】" },
-    { id: "lex", label: "レックス", tag: "【レックス】" },
-    { id: "sound", label: "sound", tag: "【sound】" },
-    { id: "media", label: "発信", tag: "【発信】" },
-    { id: "write", label: "執筆", tag: "【執筆】" },
-    { id: "ds", label: "DS", tag: "【DS】" },
-    { id: "design", label: "デザイン", tag: "【デザイン】" },
-    { id: "invest", label: "投資", tag: "【投資】" },
-    { id: "personal", label: "個人", tag: "【個人】" },
-    { id: "other", label: "その他", tag: "【その他】" },
+  const DEFAULT_CATEGORIES = [
+    { id: "fres", label: "フレスト" },
+    { id: "lex", label: "レックス" },
+    { id: "sound", label: "sound" },
+    { id: "media", label: "発信" },
+    { id: "write", label: "執筆" },
+    { id: "ds", label: "DS" },
+    { id: "design", label: "デザイン" },
+    { id: "invest", label: "投資" },
+    { id: "personal", label: "個人" },
+    { id: "other", label: "その他" },
   ];
+
+  const PRIORITIES = [
+    { id: "uu", label: "今すぐ対応", hint: "急ぎで大事（締切・クレーム）", accent: false },
+    { id: "un", label: "見せかけの急ぎ", hint: "急ぎだが大事でない → 任せる・まとめる", accent: false },
+    { id: "nu", label: "大事・種まき", hint: "大事だが急がない → 毎日ひとつ", accent: true },
+    { id: "nn", label: "減らす", hint: "急ぎでも大事でもない → 削る", accent: false },
+  ];
+
+  const POMO_WORK_MS = 25 * 60 * 1000;
+  const POMO_BREAK_MS = 5 * 60 * 1000;
 
   // 現在値は君主入力。baseline / target は 12/9 統治目標（ご提示値）
   const BOARD_DEFS = {
@@ -43,20 +53,49 @@
 
   // メディア戦略（火〜金カルーセル／日NL）。準備は2日前に強制。
   const MEDIA_FORCE = {
-    2: { pub: "【発信・強制】火・人格カルーセル 配信日", prep: "【発信・強制】火・人格カルーセル 制作（配信2日前）" },
-    3: { pub: "【発信・強制】水・内政カルーセル 配信日", prep: "【発信・強制】水・内政カルーセル 制作（配信2日前）" },
-    4: { pub: "【発信・強制】木・外交カルーセル 配信日", prep: "【発信・強制】木・外交カルーセル 制作（配信2日前）" },
-    5: { pub: "【発信・強制】金・財政カルーセル 配信日", prep: "【発信・強制】金・財政カルーセル 制作（配信2日前）" },
-    0: { pub: "【発信・強制】日・ニュースレター 配信日", prep: "【発信・強制】日・NL制作（配信2日前＝金）" },
+    2: { pub: "火・人格カルーセル 配信日", prep: "火・人格カルーセル 制作（配信2日前）" },
+    3: { pub: "水・内政カルーセル 配信日", prep: "水・内政カルーセル 制作（配信2日前）" },
+    4: { pub: "木・外交カルーセル 配信日", prep: "木・外交カルーセル 制作（配信2日前）" },
+    5: { pub: "金・財政カルーセル 配信日", prep: "金・財政カルーセル 制作（配信2日前）" },
+    0: { pub: "日・ニュースレター 配信日", prep: "日・NL制作（配信2日前＝金）" },
   };
+
+  const MEDIA_CALENDAR = {
+    0: ["NL公開・音声収録"],
+    1: ["音源配布・解説・予約確認"],
+    2: ["人格カルーセル（LI・FB・IG・X）"],
+    3: ["内政カルーセル（LI・FB・IG・X）"],
+    4: ["外交カルーセル（LI・FB・IG・X）"],
+    5: ["財政カルーセル（LI・FB・IG・X）", "翌週カ4・NL下書き／統治ボード"],
+    6: ["NL確認・火〜金投稿予約"],
+  };
+
+  const REQUIRED_MONTHLY = [
+    { key: "fres-billing", category: "fres", day: 1, title: "請求案内" },
+    { key: "fres-guardian", category: "fres", day: 3, title: "保護者案内" },
+    { key: "fres-withdrawal", category: "fres", day: 10, title: "引き落とし日" },
+    { key: "lex-billing", category: "lex", day: 1, title: "請求案内" },
+    { key: "lex-guardian", category: "lex", day: 3, title: "保護者案内" },
+    { key: "lex-withdrawal", category: "lex", day: 10, title: "引き落とし日" },
+  ];
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
-  function todayISO() {
-    const d = new Date();
+  function isoFromDate(d) {
     const z = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+  }
+
+  function dateFromISO(iso) {
+    if (!iso) return null;
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  function todayISO() {
+    return isoFromDate(new Date());
   }
 
   function addDaysISO(n) {
@@ -83,6 +122,27 @@
     return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
+  function monthlyDateISO(day, base = new Date()) {
+    const last = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+    return isoFromDate(new Date(base.getFullYear(), base.getMonth(), Math.min(day, last)));
+  }
+
+  function nextRecurringDue(task) {
+    const anchor = dateFromISO(task.dueDate) || new Date();
+    if (task.recurrence === "weekly") {
+      anchor.setDate(anchor.getDate() + 7);
+      return isoFromDate(anchor);
+    }
+    if (task.recurrence === "monthly") {
+      const day = Number(task.recurrenceDay) || anchor.getDate();
+      const next = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1);
+      const last = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      next.setDate(Math.min(day, last));
+      return isoFromDate(next);
+    }
+    return task.dueDate;
+  }
+
   function inferCategory(title) {
     const s = title || "";
     if (s.includes("レックス")) return "lex";
@@ -97,16 +157,59 @@
     return "other";
   }
 
-  function normalizeTask(t) {
+  function escapeRegExp(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function stripCategoryPrefix(title, categoryId, categories = DEFAULT_CATEGORIES) {
+    let s = String(title || "").trim();
+    const labels = [];
+    const own = categories.find((c) => c.id === categoryId)?.label;
+    if (own) labels.push(own);
+    categories.forEach((c) => {
+      if (c.label && !labels.includes(c.label)) labels.push(c.label);
+    });
+    // 長いラベルから先に（部分一致の誤爆を防ぐ）
+    labels.sort((a, b) => b.length - a.length);
+    for (const label of labels) {
+      const re = new RegExp(`^【\\s*${escapeRegExp(label)}\\s*】\\s*`);
+      if (re.test(s)) {
+        s = s.replace(re, "");
+        break;
+      }
+    }
+    return s.trim();
+  }
+
+  function normalizeTask(t, categories = DEFAULT_CATEGORIES) {
+    const recurrence = ["weekly", "monthly"].includes(t.recurrence) ? t.recurrence : "none";
+    const due = dateFromISO(t.dueDate);
+    const category = t.category || inferCategory(t.title);
     return {
       ...t,
-      category: t.category || inferCategory(t.title),
+      title: stripCategoryPrefix(t.title || "", category, categories),
+      category,
       horizon: t.horizon || "week",
       urgency: t.urgency === "high" ? "high" : "low",
       importance: t.importance === "high" ? "high" : "low",
       tags: Array.isArray(t.tags) ? t.tags : [],
       forced: !!t.forced,
+      recurrence,
+      recurrenceDay: recurrence === "monthly" ? Number(t.recurrenceDay) || due?.getDate() || null : null,
     };
+  }
+
+  function initCategories(saved) {
+    if (!Array.isArray(saved) || !saved.length) {
+      return DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+    }
+    const map = Object.fromEntries(saved.map((c) => [c.id, c]));
+    return DEFAULT_CATEGORIES.map((def) => {
+      const s = map[def.id];
+      let label = (s?.label || def.label || "").trim() || def.label;
+      label = label.replace(/^【/, "").replace(/】$/, "");
+      return { id: def.id, label };
+    });
   }
 
   function load() {
@@ -115,12 +218,15 @@
       if (!raw) raw = localStorage.getItem("imadaruma-taskboard-v2") || localStorage.getItem("imadaruma-taskboard-v1");
       if (!raw) return blankState();
       const data = JSON.parse(raw);
+      const categories = initCategories(data.categories);
       return {
-        tasks: (Array.isArray(data.tasks) ? data.tasks : []).map(normalizeTask),
+        tasks: (Array.isArray(data.tasks) ? data.tasks : []).map((t) => normalizeTask(t, categories)),
         reviews: data.reviews || {},
         plans: data.plans || {},
         kpis: data.kpis || {},
         board: mergeBoard(data.board),
+        categories,
+        sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
       };
     } catch {
       return blankState();
@@ -152,7 +258,15 @@
   }
 
   function blankState() {
-    return { tasks: [], reviews: {}, plans: {}, kpis: {}, board: defaultBoard() };
+    return {
+      tasks: [],
+      reviews: {},
+      plans: {},
+      kpis: {},
+      board: defaultBoard(),
+      categories: initCategories(),
+      sontokuChat: {},
+    };
   }
 
   function save() {
@@ -164,6 +278,8 @@
         plans: state.plans,
         kpis: state.kpis,
         board: state.board,
+        categories: state.categories,
+        sontokuChat: state.sontokuChat,
       })
     );
   }
@@ -194,13 +310,73 @@
 
   const state = load();
   let openCategory = null;
+  let openQuadrant = null;
+  let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let pomodoro = { phase: null, taskId: null, taskTitle: "", endsAt: null, timer: null };
+
+  function ensureRequiredMonthlyTasks() {
+    let changed = false;
+    const findLegacy = (def) =>
+      state.tasks.find((t) => {
+        if (t.scheduleKey === def.key) return true;
+        if ((t.category || inferCategory(t.title)) !== def.category) return false;
+        if (def.key.endsWith("-billing")) return t.title.includes("請求案内");
+        if (def.key.endsWith("-guardian")) return t.title.includes("保護者案内");
+        return t.title.includes("引き落とし日") || t.title.includes("引き落とし設定（毎月10日送信）");
+      });
+
+    REQUIRED_MONTHLY.forEach((def) => {
+      let task = findLegacy(def);
+      if (!task) {
+        task = normalizeTask({
+          id: uid(),
+          title: def.title,
+          dueDate: monthlyDateISO(def.day),
+          category: def.category,
+          horizon: "month",
+          urgency: "high",
+          importance: "high",
+          status: "todo",
+          onToday: false,
+          notes: `毎月${def.day}日`,
+          tags: ["recurring"],
+          recurrence: "monthly",
+          recurrenceDay: def.day,
+          scheduleKey: def.key,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        state.tasks.push(task);
+        changed = true;
+        return;
+      }
+
+      const wasMonthly = task.recurrence === "monthly";
+      task.title = def.title;
+      task.category = def.category;
+      task.scheduleKey = def.key;
+      task.recurrence = "monthly";
+      task.recurrenceDay = def.day;
+      task.tags = [...new Set([...(task.tags || []), "recurring"])];
+      task.notes = `毎月${def.day}日`;
+      if (!wasMonthly || !task.dueDate) task.dueDate = monthlyDateISO(def.day);
+      task.updatedAt = new Date().toISOString();
+      changed = true;
+    });
+
+    if (changed) save();
+  }
 
   function catLabel(id) {
-    return (CATEGORIES.find((c) => c.id === id) || { label: id }).label;
+    return (state.categories.find((c) => c.id === id) || { label: id }).label;
   }
 
   function catTag(id) {
-    return (CATEGORIES.find((c) => c.id === id) || { tag: `【${id}】` }).tag;
+    return catLabel(id);
+  }
+
+  function priorityMeta(id) {
+    return PRIORITIES.find((p) => p.id === id) || { id, label: id, hint: "" };
   }
 
   function setCatValue(hiddenSel, tagsSel, value) {
@@ -218,10 +394,10 @@
     const hidden = $(hiddenSel);
     if (!wrap || !hidden) return;
     const items = includeAll
-      ? [{ id: "all", tag: "すべて", extra: "tag-all" }, ...CATEGORIES]
-      : CATEGORIES;
+      ? [{ id: "all", label: "すべて", tag: "すべて", extra: "tag-all" }, ...state.categories]
+      : state.categories;
     wrap.innerHTML = items
-      .map((c) => `<button type="button" class="cat-tag tag-${c.id}" data-cat="${c.id}">${c.tag}</button>`)
+      .map((c) => `<button type="button" class="cat-tag tag-${c.id}" data-cat="${c.id}">${escapeHtml(c.tag || c.label)}</button>`)
       .join("");
     wrap.querySelectorAll(".cat-tag").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -246,7 +422,13 @@
     const dowIn2 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).getDay();
 
     const ensure = (title, due) => {
-      let t = state.tasks.find((x) => x.title === title && x.status !== "done");
+      let t = state.tasks.find(
+        (x) =>
+          x.status !== "done" &&
+          (x.title === title ||
+            x.title === `【発信・強制】${title}` ||
+            (x.forced && x.category === "media" && x.title.endsWith(title)))
+      );
       if (!t) {
         t = {
           id: uid(),
@@ -266,6 +448,7 @@
         };
         state.tasks.push(t);
       } else {
+        t.title = title;
         t.forced = true;
         t.category = "media";
         if (due === today) t.onToday = true;
@@ -309,6 +492,9 @@
           onToday: raw.horizon === "day" && raw.urgency === "high",
           notes: raw.notes || "",
           tags: raw.tags || [],
+          recurrence: raw.recurrence || "none",
+          recurrenceDay: raw.recurrenceDay || null,
+          scheduleKey: raw.scheduleKey || null,
           createdAt: now,
           updatedAt: now,
         })
@@ -324,6 +510,7 @@
         n -= 1;
       }
     });
+    ensureRequiredMonthlyTasks();
     save();
     ensureForcedMedia();
     return added;
@@ -365,11 +552,16 @@
   function rowHtml(t) {
     const cat = t.category || "other";
     const force = t.forced ? '<span class="force-tag">強制</span>' : "";
+    const repeat = t.recurrence === "weekly"
+      ? '<span class="repeat-tag">毎週</span>'
+      : t.recurrence === "monthly"
+        ? `<span class="repeat-tag">毎月${t.recurrenceDay || ""}日</span>`
+        : "";
     const pill = `<span class="row-cat tag-${cat}">${catTag(cat)}</span>`;
-    const q = { uu: "I", un: "III", nu: "II", nn: "IV" }[quadrant(t)];
+    const q = { uu: "今すぐ", un: "見せかけ", nu: "種まき", nn: "減らす" }[quadrant(t)];
     return `<li class="row-item border-${cat} ${t.status === "done" ? "done" : ""} ${t.forced ? "forced" : ""}" data-id="${t.id}">
       <span class="dot dot-${cat}"></span>
-      <span class="row-title">${pill}${force}${escapeHtml(t.title)}</span>
+      <span class="row-title">${pill}${force}${repeat}${escapeHtml(t.title)}</span>
       <span class="row-meta">${q}${t.dueDate ? " · " + t.dueDate.slice(5) : ""}</span>
       <span class="row-actions">
         ${t.status !== "done" ? `<button type="button" data-act="done">完</button>` : `<button type="button" data-act="undone">戻</button>`}
@@ -389,7 +581,13 @@
         const t = state.tasks.find((x) => x.id === id);
         if (!t) return;
         if (act === "done") {
-          t.status = "done";
+          if (t.recurrence === "weekly" || t.recurrence === "monthly") {
+            t.lastCompletedAt = new Date().toISOString();
+            t.dueDate = nextRecurringDue(t);
+            t.status = "todo";
+          } else {
+            t.status = "done";
+          }
           t.onToday = false;
         } else if (act === "undone") {
           t.status = "todo";
@@ -420,27 +618,48 @@
   }
 
   function renderHome() {
-    const grid = $("#cat-overview");
-    const counts = {};
-    CATEGORIES.forEach((c) => {
-      counts[c.id] = 0;
+    const quadGrid = $("#quad-overview");
+    const catGrid = $("#cat-overview");
+    const quadCounts = { uu: 0, un: 0, nu: 0, nn: 0 };
+    const catCounts = {};
+    state.categories.forEach((c) => {
+      catCounts[c.id] = 0;
     });
     activeTasks().forEach((t) => {
+      quadCounts[quadrant(t)] += 1;
       const id = t.category || "other";
-      counts[id] = (counts[id] || 0) + 1;
+      catCounts[id] = (catCounts[id] || 0) + 1;
     });
-    grid.innerHTML = CATEGORIES.map((c) => {
-      const n = counts[c.id] || 0;
-      if (n === 0 && !["fres", "lex", "sound", "media", "personal"].includes(c.id)) {
-        // still show zero for main ones only? show all with 0 muted
-      }
-      return `<button type="button" class="cat-card" data-cat="${c.id}">
-        <div class="name"><span class="dot dot-${c.id}"></span>${c.label}</div>
-        <div class="num">${n}</div>
-        <div class="meta">未完了</div>
-      </button>`;
-    }).join("");
-    grid.querySelectorAll(".cat-card").forEach((card) => {
+
+    if (quadGrid) {
+      quadGrid.innerHTML = PRIORITIES.map((p) => {
+        const n = quadCounts[p.id] || 0;
+        return `<button type="button" class="overview-card quad-card ${p.accent ? "accent" : ""}" data-quad="${p.id}">
+          <div class="name">${escapeHtml(p.label)}</div>
+          <div class="num">${n}</div>
+          <div class="meta">未完了</div>
+        </button>`;
+      }).join("");
+      quadGrid.querySelectorAll(".quad-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          openQuadrant = card.dataset.quad;
+          setView("quad");
+        });
+      });
+    }
+
+    if (!catGrid) return;
+    catGrid.innerHTML = state.categories
+      .map((c) => {
+        const n = catCounts[c.id] || 0;
+        return `<button type="button" class="overview-card cat-card" data-cat="${c.id}">
+          <div class="name"><span class="dot dot-${c.id}"></span>${escapeHtml(c.label)}</div>
+          <div class="num">${n}</div>
+          <div class="meta">未完了</div>
+        </button>`;
+      })
+      .join("");
+    catGrid.querySelectorAll(".cat-card").forEach((card) => {
       card.addEventListener("click", () => {
         openCategory = card.dataset.cat;
         setView("cat");
@@ -453,6 +672,16 @@
     $("#cat-detail-title").textContent = `${catLabel(id)} · 未完了`;
     const list = activeTasks().filter((t) => (t.category || "other") === id);
     fillList("#list-cat", list);
+  }
+
+  function renderQuad() {
+    const q = openQuadrant || "uu";
+    const meta = priorityMeta(q);
+    $("#quad-detail-title").textContent = `${meta.label} · 未完了`;
+    const hint = $("#quad-detail-hint");
+    if (hint) hint.textContent = meta.hint || "";
+    const list = activeTasks().filter((t) => quadrant(t) === q);
+    fillList("#list-quad", list);
   }
 
   function renderBoard() {
@@ -494,6 +723,99 @@
       return (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title);
     });
     fillList("#list-all", list);
+  }
+
+  function renderCurrentDate() {
+    const now = new Date();
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+    $("#today-date").textContent = `今日 ${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${weekdays[now.getDay()]}）`;
+  }
+
+  function calendarEvents(year, month) {
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    const events = [];
+    const pushTask = (task, date, type) => {
+      events.push({
+        date: isoFromDate(date),
+        title: task.title,
+        category: task.category || "other",
+        type,
+        taskId: task.id,
+      });
+    };
+
+    state.tasks.filter((t) => t.status !== "done" && t.dueDate).forEach((task) => {
+      const anchor = dateFromISO(task.dueDate);
+      if (!anchor) return;
+      if (task.recurrence === "monthly") {
+        if (monthEnd < anchor) return;
+        const day = Number(task.recurrenceDay) || anchor.getDate();
+        const last = monthEnd.getDate();
+        pushTask(task, new Date(year, month, Math.min(day, last)), "repeat");
+        return;
+      }
+      if (task.recurrence === "weekly") {
+        if (monthEnd < anchor) return;
+        const first = new Date(Math.max(monthStart.getTime(), anchor.getTime()));
+        const offset = (anchor.getDay() - first.getDay() + 7) % 7;
+        first.setDate(first.getDate() + offset);
+        for (const d = new Date(first); d <= monthEnd; d.setDate(d.getDate() + 7)) {
+          pushTask(task, new Date(d), "repeat");
+        }
+        return;
+      }
+      if (anchor.getFullYear() === year && anchor.getMonth() === month) pushTask(task, anchor, "task");
+    });
+
+    for (let day = 1; day <= monthEnd.getDate(); day += 1) {
+      const date = new Date(year, month, day);
+      (MEDIA_CALENDAR[date.getDay()] || []).forEach((title) => {
+        events.push({
+          date: isoFromDate(date),
+          title,
+          category: "media",
+          type: "media",
+          taskId: null,
+        });
+      });
+    }
+    return events;
+  }
+
+  function renderCalendar() {
+    const host = $("#calendar-grid");
+    if (!host) return;
+    const year = calendarCursor.getFullYear();
+    const month = calendarCursor.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const byDate = {};
+    calendarEvents(year, month).forEach((event) => {
+      (byDate[event.date] ||= []).push(event);
+    });
+    $("#calendar-title").textContent = `${year}年${month + 1}月`;
+
+    const cells = [];
+    for (let i = 0; i < firstDay; i += 1) cells.push('<div class="calendar-cell blank"></div>');
+    for (let day = 1; day <= lastDay; day += 1) {
+      const iso = isoFromDate(new Date(year, month, day));
+      const events = byDate[iso] || [];
+      const eventHtml = events.map((event) => {
+        const content = `<span class="dot dot-${event.category}"></span>${escapeHtml(event.title)}`;
+        return event.taskId
+          ? `<button type="button" class="calendar-event ${event.type}" data-task-id="${event.taskId}">${content}</button>`
+          : `<div class="calendar-event ${event.type}">${content}</div>`;
+      }).join("");
+      cells.push(`<div class="calendar-cell ${iso === todayISO() ? "today" : ""}">
+        <div class="calendar-day">${day}</div>
+        <div class="calendar-events">${eventHtml}</div>
+      </div>`);
+    }
+    host.innerHTML = cells.join("");
+    host.querySelectorAll("[data-task-id]").forEach((button) => {
+      button.addEventListener("click", () => openEdit(button.dataset.taskId));
+    });
   }
 
   function renderBoardMetrics() {
@@ -570,22 +892,338 @@
     renderBoardMetrics();
   }
 
+  /* —— AI尊徳チャット（今日タブ） —— */
+  function sontokuChatKey() {
+    return `day:${todayISO()}`;
+  }
+
+  function getSontokuMessages() {
+    const key = sontokuChatKey();
+    if (!state.sontokuChat[key]) state.sontokuChat[key] = [];
+    return state.sontokuChat[key];
+  }
+
+  function pushSontokuMessage(role, text) {
+    const msg = { role, text: String(text).trim(), at: new Date().toISOString() };
+    if (!msg.text) return;
+    getSontokuMessages().push(msg);
+    save();
+    renderSontokuChat();
+  }
+
+  function sontokuCtx() {
+    const dayTasks = activeTasks().filter(inDay);
+    const pinned = dayTasks.filter((t) => t.onToday);
+    const doneToday = state.tasks.filter(
+      (t) => t.status === "done" && String(t.updatedAt || "").slice(0, 10) === todayISO()
+    );
+    const dayPlan = state.plans[sontokuChatKey()] || {};
+    const urgent = dayTasks.filter((t) => quadrant(t) === "uu");
+    const hour = new Date().getHours();
+    return {
+      hour,
+      dayTasks,
+      pinned,
+      doneToday,
+      dayPlan,
+      urgent,
+      goal: (dayPlan.goal || "").trim(),
+      ifthen: (dayPlan.ifthen || "").trim(),
+      eveningDone: !!(dayPlan.good1 || dayPlan.lesson),
+    };
+  }
+
+  function taskSnippet(t) {
+    return stripCategoryPrefix(t.title, t.category || "other", state.categories);
+  }
+
+  function buildSontokuOpening(ctx) {
+    const total = ctx.dayTasks.length;
+    const done = ctx.doneToday.length;
+    const remain = total;
+    const pinnedN = ctx.pinned.length;
+
+    if (ctx.hour < 12) {
+      let text = `尊徳: おはようございます。今日の任務は${total}件なり`;
+      if (pinnedN) text += `（うち今日に固定${pinnedN}件）`;
+      text += "。";
+      if (!ctx.goal) {
+        text += " 朝の一事がまだ空であるなら、今すぐ対応の一件を選び、if-thenまで書くのが筋なり。";
+      } else {
+        text += ` 今日の一事は「${ctx.goal}」なり。`;
+        if (ctx.ifthen) text += ` if-then「${ctx.ifthen}」も定まっておる。`;
+      }
+      if (ctx.urgent.length) {
+        text += ` 今すぐ対応は${ctx.urgent.length}件——まず「${taskSnippet(ctx.urgent[0])}」から手を付けるのがよいなり。`;
+      }
+      text += " 進捗や迷いがあれば、下の欄に書いてくだされ。";
+      return text;
+    }
+
+    if (ctx.hour < 18) {
+      let text = `尊徳: 午後の進捗を確認させていただきたいなり。今日の任務${total}件のうち、完了は${done}件`;
+      if (remain > done) text += `、残り${remain - done}件`;
+      text += "。";
+      if (!ctx.goal) text += " 一事が未定のままなら、今からでも一件に絞るのが分度なり。";
+      else if (done === 0 && total > 0) {
+        text += ` 一事「${ctx.goal}」に向かう一歩は、まだ踏めておらぬようだなり。`;
+      }
+      text += " どこまで進んだか、壁打ちでも構わぬ。送ってくだされ。";
+      return text;
+    }
+
+    let text = `尊徳: 夕刻なり。今日の任務は完了${done}件`;
+    if (total) text += `／残${Math.max(0, total - done)}件`;
+    text += "。";
+    if (!ctx.eveningDone) {
+      text += " よかったこと三つと、教訓一行がまだ空であるなら、振り返りを書く時間なり。";
+    } else {
+      text += " 振り返りは書けておるようだなり。明日の一手があれば、ここで整理してもよい。";
+    }
+    text += " 今日の手応えや迷いを、下の欄に残してくだされ。";
+    return text;
+  }
+
+  function replySontoku(input, ctx) {
+    const s = input.trim();
+
+    if (/^(おは|こん|こんばん|はじめ|よろしく)/.test(s) || /挨拶/.test(s)) {
+      if (ctx.hour < 12) return "尊徳: おはようございます。今日も分度を守り、一事に集中するのが筋なり。何から手を付けるか、迷えば一緒に整理いたそう。";
+      if (ctx.hour < 18) return "尊徳: こんにちは。午後の手応えはいかがなり。進捗を一言でもよいので、送ってくだされ。";
+      return "尊徳: こんばんは。一日の締めくくりの時間なり。よかったこと・教訓を一行でも残すと、明日の分度が立ちやすい。";
+    }
+
+    if (/進捗|報告|できた|終わ|完了|やった|進め/.test(s)) {
+      const total = ctx.dayTasks.length;
+      const done = ctx.doneToday.length;
+      let text = `尊徳: 報告、承りました。今日の任務${total}件に対し、完了${done}件なり。`;
+      if (ctx.goal) text += ` 一事「${ctx.goal}」は、今どの段階であろうか。`;
+      const next = ctx.dayTasks.find((t) => quadrant(t) === "uu") || ctx.dayTasks[0];
+      if (next) text += ` 次の一手として「${taskSnippet(next)}」に向かうのが筋なり。`;
+      else if (done > 0) text += " 任務を片付けておるなら、振り返りか明日の準備に時間を回すのもよい。";
+      return text;
+    }
+
+    if (/脱線|迷|わから|SNS|ダラ|サボ|集中でき|散漫/.test(s)) {
+      let text = "尊徳: 脱線は起きるものなり。責めるより、原因と次の一手を分けるのが我が役目。";
+      if (ctx.ifthen) text += ` if-then「${ctx.ifthen}」に戻るのが定めなり。`;
+      else if (ctx.goal) text += ` 一事「${ctx.goal}」に戻るのが定めなり。`;
+      else text += " まず今日の一事を一行で定め、if-thenまで書くのが定めなり。";
+      text += " 今、何に引っ張られておるか、もう少し具体的に書いてくだされ。";
+      return text;
+    }
+
+    if (/壁|相談|困|悩|どうし|詰ま|迷って/.test(s)) {
+      const top = ctx.urgent[0] || ctx.dayTasks[0];
+      let text = "尊徳: 壁打ち、承ります。戦略の変更は栄一の領分——我は実行の整理に徹するなり。";
+      if (top) text += ` 今いちばん重いのは「${taskSnippet(top)}」であろうか。`;
+      text += " 完璧を目指さず、十五分でできる最小の一歩は何か。それだけ教えてくだされ。";
+      return text;
+    }
+
+    if (/今日|任務|タスク|何を|リスト/.test(s)) {
+      const list = ctx.dayTasks.slice(0, 5);
+      if (!list.length) return "尊徳: 今日の任務は、いま帳簿上は空なり。週や月から一件だけ「今日」に載せるのがよい。";
+      const names = list.map((t) => `・${taskSnippet(t)}`).join("\n");
+      return `尊徳: 今日の任務は次のとおりなり。\n${names}${ctx.dayTasks.length > 5 ? `\n…ほか${ctx.dayTasks.length - 5}件` : ""}`;
+    }
+
+    if (/一事|目標|ゴール/.test(s)) {
+      if (ctx.goal) return `尊徳: 今日の一事は「${ctx.goal}」と記されておるなり。${ctx.ifthen ? `if-thenは「${ctx.ifthen}」。` : "if-thenが空なら、今すぐ一行足すのがよい。"} 他に奪われそうなものがあれば、書いてくだされ。`;
+      return "尊徳: 一事がまだ空なり。今すぐ対応の任務から一件選び、「今日これだけは」と一行で定めるのが筋。決まれば、if-thenも続けて書くとよい。";
+    }
+
+    if (/分度|多すぎ|7|七/.test(s)) {
+      const pinnedN = ctx.pinned.filter((t) => !t.forced).length;
+      if (pinnedN > 7) return `尊徳: 今日に固定した任務が${pinnedN}件——分度の七を超えておるなり。完了か「今日」解除で減らすのが先なり。`;
+      return "尊徳: 分度は一日七件が目安なり。今の件数は許容内と見える。それでも重ければ、見せかけの急ぎを手放すのがよい。";
+    }
+
+    if (/ありがと|感謝|助か/.test(s)) {
+      return "尊徳: どういたしまして。記録と実行は君主の手で、整理は我が役目なり。また迷えば、いつでも送ってくだされ。";
+    }
+
+    if (s.length < 4) {
+      return "尊徳: もう少し具体的に書いてくだされ。進捗・迷い・今日の一手のどれでもよいなり。";
+    }
+
+    return `尊徳: 「${s}」——承りました。${ctx.goal ? `一事「${ctx.goal}」との関係で、` : ""}いま一番引っかかっている一点を、一文で教えてくだされ。そこから次の一手を一緒に整理いたそう。`;
+  }
+
+  function ensureSontokuOpening() {
+    if (getSontokuMessages().length > 0) return;
+    pushSontokuMessage("sontoku", buildSontokuOpening(sontokuCtx()));
+  }
+
+  function renderSontokuChat() {
+    const host = $("#sontoku-messages");
+    if (!host) return;
+    const msgs = getSontokuMessages();
+    host.innerHTML = msgs
+      .map(
+        (m) =>
+          `<div class="sontoku-msg ${m.role === "user" ? "user" : "sontoku"}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p></div>`
+      )
+      .join("");
+    host.scrollTop = host.scrollHeight;
+  }
+
+  function sendSontokuUserMessage(text) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return;
+    pushSontokuMessage("user", trimmed);
+    const reply = replySontoku(trimmed, sontokuCtx());
+    window.setTimeout(() => pushSontokuMessage("sontoku", reply), 380);
+  }
+
   function render() {
+    renderCurrentDate();
     renderHome();
+    renderQuad();
     renderCat();
     renderBoard();
     renderHorizons();
     renderAll();
+    renderCalendar();
+    updatePomodoroDisplay();
+    renderSontokuChat();
   }
 
   function setView(name) {
     $$(".tab").forEach((t) => {
-      if (name === "cat") t.classList.remove("active");
+      if (name === "cat" || name === "quad") t.classList.remove("active");
       else t.classList.toggle("active", t.dataset.view === name);
     });
     $$(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
     if (["day", "week", "month"].includes(name)) loadPlanFields();
+    if (name === "day") ensureSontokuOpening();
     render();
+  }
+
+  function openCategoryDialog() {
+    const host = $("#category-fields");
+    if (!host) return;
+    host.innerHTML = state.categories
+      .map(
+        (c) => `<label class="field">${escapeHtml(c.id)}
+          <input type="text" data-cat-id="${c.id}" />
+        </label>`
+      )
+      .join("");
+    state.categories.forEach((c) => {
+      const input = host.querySelector(`input[data-cat-id="${c.id}"]`);
+      if (input) input.value = c.label;
+    });
+    $("#category-dialog").showModal();
+  }
+
+  function saveCategoryDialog() {
+    $$("#category-fields input[data-cat-id]").forEach((input) => {
+      const id = input.dataset.catId;
+      const cat = state.categories.find((c) => c.id === id);
+      if (!cat) return;
+      const label = input.value.trim();
+      if (!label) return;
+      cat.label = label.replace(/^【/, "").replace(/】$/, "");
+      cat.tag = cat.label;
+    });
+    save();
+    fillCategoryPickers();
+    render();
+    $("#category-dialog").close();
+  }
+
+  function playAlarm(message) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.45, 0.9].forEach((start) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = start === 0.9 ? 660 : 880;
+        gain.gain.value = 0.25;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + 0.35);
+      });
+    } catch {
+      /* no audio */
+    }
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      new Notification("統治手帳", { body: message });
+    }
+  }
+
+  function formatPomoTime(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  function updatePomodoroDisplay() {
+    const bar = $("#pomodoro-bar");
+    if (!bar) return;
+    const startBtn = $("#pomo-start");
+    const stopBtn = $("#pomo-stop");
+    if (!pomodoro.phase) {
+      $("#pomo-phase").textContent = "ポモドーロ";
+      $("#pomo-task").textContent = "";
+      $("#pomo-time").textContent = "25:00";
+      bar.classList.remove("running");
+      if (startBtn) startBtn.classList.remove("hidden");
+      if (stopBtn) stopBtn.classList.add("hidden");
+      return;
+    }
+    bar.classList.add("running");
+    if (startBtn) startBtn.classList.add("hidden");
+    if (stopBtn) stopBtn.classList.remove("hidden");
+    const remaining = pomodoro.endsAt - Date.now();
+    $("#pomo-phase").textContent = pomodoro.phase === "work" ? "集中 25分" : "休憩 5分";
+    $("#pomo-task").textContent = "";
+    $("#pomo-time").textContent = formatPomoTime(remaining);
+  }
+
+  function tickPomodoro() {
+    if (!pomodoro.phase) return;
+    const remaining = pomodoro.endsAt - Date.now();
+    if (remaining > 0) {
+      updatePomodoroDisplay();
+      return;
+    }
+    if (pomodoro.phase === "work") {
+      playAlarm("25分が終わりました。5分休憩です。");
+      alert("25分が終わりました。5分休憩に入ります。");
+      pomodoro.phase = "break";
+      pomodoro.endsAt = Date.now() + POMO_BREAK_MS;
+      updatePomodoroDisplay();
+      return;
+    }
+    playAlarm("休憩が終わりました。次のタスクへ。");
+    alert("休憩が終わりました。次のタスクへ。");
+    stopPomodoro();
+  }
+
+  function stopPomodoro() {
+    if (pomodoro.timer) clearInterval(pomodoro.timer);
+    pomodoro = { phase: null, taskId: null, taskTitle: "", endsAt: null, timer: null };
+    updatePomodoroDisplay();
+  }
+
+  function startPomodoro() {
+    if (pomodoro.timer) clearInterval(pomodoro.timer);
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    pomodoro = {
+      phase: "work",
+      taskId: null,
+      taskTitle: "",
+      endsAt: Date.now() + POMO_WORK_MS,
+      timer: setInterval(tickPomodoro, 1000),
+    };
+    updatePomodoroDisplay();
   }
 
   function openEdit(id) {
@@ -597,6 +1235,7 @@
     setCatValue("#edit-category", "#edit-cat-tags", t.category || "other");
     $("#edit-horizon").value = t.horizon || "week";
     $("#edit-due").value = t.dueDate || "";
+    $("#edit-recurrence").value = t.recurrence || "none";
     $$("input[name=edit-urgency]").forEach((r) => {
       r.checked = r.value === t.urgency;
     });
@@ -607,16 +1246,67 @@
     $("#edit-dialog").showModal();
   }
 
+  function scrubStoredTitles() {
+    let changed = false;
+    state.tasks.forEach((t) => {
+      let next = stripCategoryPrefix(t.title || "", t.category || "other", state.categories);
+      next = next.replace(/^【発信・強制】\s*/, "");
+      if (next !== t.title) {
+        t.title = next;
+        t.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    });
+    if (changed) save();
+  }
+
   fillCategoryPickers();
+  scrubStoredTitles();
   ensureForcedMedia();
+  ensureRequiredMonthlyTasks();
 
   $$(".tab").forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
   $("#btn-back-home").addEventListener("click", () => setView("home"));
+  $("#btn-back-home-quad").addEventListener("click", () => setView("home"));
   $("#btn-goto-all").addEventListener("click", () => setView("all"));
+  $("#btn-open-calendar").addEventListener("click", () => setView("calendar"));
+  $("#btn-calendar-back").addEventListener("click", () => setView("home"));
+  $("#btn-edit-categories").addEventListener("click", openCategoryDialog);
+  $("#form-categories").addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveCategoryDialog();
+  });
+  $("#category-cancel").addEventListener("click", () => $("#category-dialog").close());
+  $("#pomo-start").addEventListener("click", startPomodoro);
+  $("#pomo-stop").addEventListener("click", stopPomodoro);
+
+  $("#sontoku-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#sontoku-input");
+    const text = input?.value || "";
+    if (input) input.value = "";
+    sendSontokuUserMessage(text);
+  });
+  $$(".sontoku-chip").forEach((btn) => {
+    btn.addEventListener("click", () => sendSontokuUserMessage(btn.dataset.chip || btn.textContent));
+  });
 
   $("#hide-done").addEventListener("change", renderAll);
   $("#filter-quad").addEventListener("change", renderAll);
   $("#filter-horizon").addEventListener("change", renderAll);
+  $("#calendar-prev").addEventListener("click", () => {
+    calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  $("#calendar-next").addEventListener("click", () => {
+    calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  $("#calendar-today").addEventListener("click", () => {
+    const now = new Date();
+    calendarCursor = new Date(now.getFullYear(), now.getMonth(), 1);
+    renderCalendar();
+  });
 
   $("#day-save-morning").addEventListener("click", () => {
     const d = todayISO();
@@ -707,6 +1397,12 @@
     e.preventDefault();
     const title = $("#new-title").value.trim();
     const horizon = $("#new-horizon").value;
+    const recurrence = $("#new-recurrence").value;
+    const dueDate = $("#new-due").value || null;
+    if (recurrence !== "none" && !dueDate) {
+      alert("繰り返しタスクには、最初の期限を入れてください。");
+      return;
+    }
     let onToday = $("#new-today").checked || horizon === "day";
     if (onToday && state.tasks.filter((x) => x.onToday && x.status !== "done").length >= 7) {
       onToday = false;
@@ -716,9 +1412,11 @@
       normalizeTask({
         id: uid(),
         title,
-        dueDate: $("#new-due").value || null,
+        dueDate,
         category: $("#new-category").value,
         horizon,
+        recurrence,
+        recurrenceDay: recurrence === "monthly" ? dateFromISO(dueDate)?.getDate() : null,
         urgency: $("input[name=urgency]:checked").value,
         importance: $("input[name=importance]:checked").value,
         status: "todo",
@@ -731,6 +1429,7 @@
     );
     save();
     $("#form-new").reset();
+    $("#new-recurrence").value = "none";
     $("input[name=urgency][value=low]").checked = true;
     $("input[name=importance][value=high]").checked = true;
     $("#new-msg").textContent = "保存した";
@@ -741,10 +1440,18 @@
     e.preventDefault();
     const t = state.tasks.find((x) => x.id === $("#edit-id").value);
     if (!t) return;
-    t.title = $("#edit-title").value.trim();
+    t.title = stripCategoryPrefix($("#edit-title").value.trim(), $("#edit-category").value, state.categories);
     t.category = $("#edit-category").value;
     t.horizon = $("#edit-horizon").value;
-    t.dueDate = $("#edit-due").value || null;
+    const dueDate = $("#edit-due").value || null;
+    const recurrence = $("#edit-recurrence").value;
+    if (recurrence !== "none" && !dueDate) {
+      alert("繰り返しタスクには、最初の期限を入れてください。");
+      return;
+    }
+    t.dueDate = dueDate;
+    t.recurrence = recurrence;
+    t.recurrenceDay = recurrence === "monthly" ? dateFromISO(dueDate)?.getDate() : null;
     t.urgency = $("input[name=edit-urgency]:checked").value;
     t.importance = $("input[name=edit-importance]:checked").value;
     t.notes = $("#edit-notes").value.trim();
@@ -766,7 +1473,7 @@
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `gyomu-tochi-${todayISO()}.json`;
+    a.download = `tosei-techo-${todayISO()}.json`;
     a.click();
   });
 
@@ -776,6 +1483,9 @@
     state.plans = data.plans && typeof data.plans === "object" ? data.plans : {};
     state.kpis = data.kpis && typeof data.kpis === "object" ? data.kpis : {};
     state.board = mergeBoard(data.board);
+    state.categories = initCategories(data.categories);
+    state.sontokuChat = data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {};
+    ensureRequiredMonthlyTasks();
     ensureForcedMedia();
     save();
     loadPlanFields();

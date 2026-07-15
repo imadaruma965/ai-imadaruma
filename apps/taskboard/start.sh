@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 業務統治 — デスクトップ起動
+# 統治手帳 — デスクトップ起動
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,7 +33,7 @@ if is_listening; then
   exit 0
 fi
 
-echo "業務統治を起動します（ポート ${PORT}）"
+echo "統治手帳を起動します（ポート ${PORT}）"
 echo "止める: このターミナルで Ctrl+C"
 echo "URL: $URL"
 echo ""
