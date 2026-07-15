@@ -426,6 +426,11 @@
   </footer>
 
   <script src="seed-data.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+    }
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

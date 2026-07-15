@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
+const { execFileSync } = require("node:child_process");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
 
 const APP_DIR = __dirname;
@@ -145,6 +146,24 @@ function getLanUrls() {
     });
   });
   return [...new Set(urls)];
+}
+
+function getTailscaleUrl() {
+  try {
+    const ip = execFileSync("tailscale", ["ip", "-4"], { encoding: "utf8", timeout: 2000 }).trim();
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) return `http://${ip}:${PORT}/`;
+  } catch {
+    /* tailscale not installed or not connected */
+  }
+  return null;
+}
+
+function getAccessUrls() {
+  const lan = getLanUrls();
+  const tailscale = getTailscaleUrl();
+  const urls = tailscale ? [...lan, tailscale] : lan;
+  const mobileUrl = lan.find((url) => /192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\./.test(url)) || lan[1] || lan[0];
+  return { urls, lanUrls: lan, tailscaleUrl: tailscale, mobileUrl };
 }
 
 function enqueueByDate(date, operation) {
@@ -368,10 +387,11 @@ function createServer() {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
 
     if (req.method === "GET" && url.pathname === "/api/info") {
+      const access = getAccessUrls();
       json(res, 200, {
         sync: true,
         port: PORT,
-        urls: getLanUrls(),
+        ...access,
         sontokuConnected: Boolean(process.env.CURSOR_API_KEY),
       });
       return;
@@ -464,11 +484,14 @@ function createServer() {
 if (require.main === module) {
   const server = createServer();
   server.listen(PORT, HOST, () => {
-    const urls = getLanUrls();
+    const { urls, tailscaleUrl, mobileUrl } = getAccessUrls();
     console.log("統治手帳:");
     urls.forEach((entry) => console.log(`  ${entry}`));
-    if (urls.length > 1) {
-      console.log("携帯: 同じWi-Fiで上のLANアドレスを開く");
+    console.log(`携帯（同じWi-Fi）: ${mobileUrl}`);
+    if (tailscaleUrl) {
+      console.log(`携帯（外出先）: ${tailscaleUrl}`);
+    } else {
+      console.log("携帯（外出先）: Tailscale未設定 → apps/taskboard/setup-tailscale.sh を参照");
     }
     console.log(
       process.env.CURSOR_API_KEY
@@ -487,4 +510,6 @@ module.exports = {
   readStateRecord,
   writeStateRecord,
   getLanUrls,
+  getTailscaleUrl,
+  getAccessUrls,
 };
