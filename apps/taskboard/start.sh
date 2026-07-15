@@ -53,6 +53,7 @@ echo "統治手帳を起動します（ポート ${PORT}）"
 if [[ -z "${CURSOR_API_KEY:-}" ]]; then
   echo "AI尊徳: APIキー未設定（閲覧は可能、チャットは未接続）"
 fi
+echo "携帯: 起動後に表示されるLANアドレスを同じWi-Fiで開く"
 echo "止める: このターミナルで Ctrl+C"
 echo "URL: $URL"
 echo ""

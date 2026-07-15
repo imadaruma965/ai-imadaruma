@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   const STORAGE_KEY = "imadaruma-gyomu-tochi-v1";
   const TARGET_DATE = "2026-12-09";
 
@@ -212,22 +212,25 @@
     });
   }
 
-  function load() {
+  function hydrateFromData(data) {
+    const categories = initCategories(data.categories);
+    return {
+      tasks: (Array.isArray(data.tasks) ? data.tasks : []).map((t) => normalizeTask(t, categories)),
+      reviews: data.reviews || {},
+      plans: data.plans || {},
+      kpis: data.kpis || {},
+      board: mergeBoard(data.board),
+      categories,
+      sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+    };
+  }
+
+  function loadLocalStorage() {
     try {
       let raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) raw = localStorage.getItem("imadaruma-taskboard-v2") || localStorage.getItem("imadaruma-taskboard-v1");
       if (!raw) return blankState();
-      const data = JSON.parse(raw);
-      const categories = initCategories(data.categories);
-      return {
-        tasks: (Array.isArray(data.tasks) ? data.tasks : []).map((t) => normalizeTask(t, categories)),
-        reviews: data.reviews || {},
-        plans: data.plans || {},
-        kpis: data.kpis || {},
-        board: mergeBoard(data.board),
-        categories,
-        sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
-      };
+      return hydrateFromData(JSON.parse(raw));
     } catch {
       return blankState();
     }
@@ -269,20 +272,144 @@
     };
   }
 
-  function save() {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        tasks: state.tasks,
-        reviews: state.reviews,
-        plans: state.plans,
-        kpis: state.kpis,
-        board: state.board,
-        categories: state.categories,
-        sontokuChat: state.sontokuChat,
-      })
-    );
+  function snapshotState() {
+    return {
+      tasks: state.tasks,
+      reviews: state.reviews,
+      plans: state.plans,
+      kpis: state.kpis,
+      board: state.board,
+      categories: state.categories,
+      sontokuChat: state.sontokuChat,
+    };
   }
+
+  function applyHydrated(next) {
+    state.tasks = next.tasks;
+    state.reviews = next.reviews;
+    state.plans = next.plans;
+    state.kpis = next.kpis;
+    state.board = next.board;
+    state.categories = next.categories;
+    state.sontokuChat = next.sontokuChat;
+  }
+
+  function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotState()));
+  }
+
+  function setSyncStatus(text, mode = "") {
+    const el = $("#sync-status");
+    if (!el) return;
+    el.textContent = text;
+    el.dataset.state = mode;
+  }
+
+  async function fetchServerState() {
+    const response = await fetch("/api/state", { cache: "no-store" });
+    if (!response.ok) throw new Error("state_fetch_failed");
+    return response.json();
+  }
+
+  async function pushServerState(data, expectedUpdatedAt) {
+    const response = await fetch("/api/state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updatedAt: expectedUpdatedAt, data }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (response.status === 409) return { conflict: true, ...body };
+    if (!response.ok) throw new Error(body.message || "state_save_failed");
+    return { conflict: false, ...body };
+  }
+
+  async function reloadFromServer(record) {
+    const remote = record?.data ? record : await fetchServerState();
+    serverUpdatedAt = remote.updatedAt || null;
+    applyHydrated(hydrateFromData(remote.data || blankState()));
+    saveLocal();
+    loadPlanFields();
+    render();
+    setSyncStatus("最新を反映", "connected");
+  }
+
+  async function refreshFromServerIfNewer() {
+    try {
+      const remote = await fetchServerState();
+      if (!remote.updatedAt || remote.updatedAt === serverUpdatedAt) return;
+      await reloadFromServer(remote);
+    } catch {
+      /* offline */
+    }
+  }
+
+  async function bootstrapState() {
+    setSyncStatus("同期中…", "busy");
+    try {
+      const remote = await fetchServerState();
+      if (remote.updatedAt && remote.data) {
+        serverUpdatedAt = remote.updatedAt;
+        setSyncStatus("サーバー同期", "connected");
+        return hydrateFromData(remote.data);
+      }
+      const local = loadLocalStorage();
+      const hasLocal =
+        local.tasks.length > 0 ||
+        Object.keys(local.plans).length > 0 ||
+        Object.keys(local.kpis).length > 0 ||
+        Object.keys(local.sontokuChat).length > 0;
+      if (hasLocal) {
+        const payload = {
+          tasks: local.tasks,
+          reviews: local.reviews,
+          plans: local.plans,
+          kpis: local.kpis,
+          board: local.board,
+          categories: local.categories,
+          sontokuChat: local.sontokuChat,
+        };
+        const uploaded = await pushServerState(payload, null);
+        if (!uploaded.conflict) {
+          serverUpdatedAt = uploaded.updatedAt;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          setSyncStatus("ローカルデータをサーバーへ移行", "connected");
+          return local;
+        }
+      }
+      setSyncStatus("新規開始", "connected");
+      return hasLocal ? local : blankState();
+    } catch {
+      setSyncStatus("オフライン（この端末のみ）", "error");
+      return loadLocalStorage();
+    }
+  }
+
+  function scheduleServerSave() {
+    clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(async () => {
+      try {
+        setSyncStatus("保存中…", "busy");
+        const result = await pushServerState(snapshotState(), serverUpdatedAt);
+        if (result.conflict) {
+          await reloadFromServer(result);
+          return;
+        }
+        serverUpdatedAt = result.updatedAt;
+        setSyncStatus("同期済み", "connected");
+      } catch {
+        setSyncStatus("オフライン保存", "error");
+      }
+    }, 450);
+  }
+
+  function save() {
+    saveLocal();
+    scheduleServerSave();
+  }
+
+  let state = blankState();
+  let serverUpdatedAt = null;
+  let saveTimer = null;
 
   function fmtVal(n, unit) {
     if (n === null || n === undefined || n === "") return "未計測";
@@ -308,7 +435,6 @@
     return Math.max(0, Math.min(100, p));
   }
 
-  const state = load();
   let openCategory = null;
   let openQuadrant = null;
   let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -1240,6 +1366,7 @@
     if (changed) save();
   }
 
+  applyHydrated(await bootstrapState());
   fillCategoryPickers();
   scrubStoredTitles();
   ensureForcedMedia();
@@ -1504,6 +1631,11 @@
   if (state.tasks.filter((t) => !t.forced).length === 0 && window.TASKBOARD_SEED) {
     if (confirm("任務が空です。シードを読み込みますか？")) importSeed({ replace: false });
   }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshFromServerIfNewer();
+  });
+  window.addEventListener("focus", refreshFromServerIfNewer);
 
   loadPlanFields();
   render();

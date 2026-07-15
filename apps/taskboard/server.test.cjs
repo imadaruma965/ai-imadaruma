@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { createServer, normalizeContext, turnPrompt, validDate } = require("./server.cjs");
+const { createServer, normalizeContext, turnPrompt, validDate, sanitizeStateData } = require("./server.cjs");
 
 test("validDate accepts only ISO calendar-shaped dates", () => {
   assert.equal(validDate("2026-07-15"), true);
@@ -37,6 +37,16 @@ test("turnPrompt distinguishes opening from user messages", () => {
   });
   assert.match(opening, /今日の計画を開いた/);
   assert.match(message, /進捗を報告します/);
+});
+
+test("sanitizeStateData normalizes persisted payload", () => {
+  const data = sanitizeStateData({
+    tasks: [{ id: "1", title: "任務" }],
+    plans: { "day:2026-07-15": { goal: "一事" } },
+  });
+  assert.equal(data.tasks.length, 1);
+  assert.equal(data.plans["day:2026-07-15"].goal, "一事");
+  assert.equal(Array.isArray(data.categories), true);
 });
 
 test("status endpoint reports Cursor connection without exposing secrets", async (t) => {

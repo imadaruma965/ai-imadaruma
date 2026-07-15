@@ -54,6 +54,24 @@ chmod 600 apps/taskboard/.env.local
 
 ---
 
+## 携帯で同期して使う
+
+Macを「統治の本体」として、同じWi-Fi内の携帯から同じデータを見る・更新する。
+
+1. Macで `./start.sh` を起動する
+2. ターミナルに表示される **LANアドレス**（例: `http://192.168.1.10:8765/`）を携帯のブラウザで開く
+3. iPhoneなら共有 → **ホーム画面に追加** でアプリのように使える
+
+データは Mac の `apps/taskboard/data/state.json` に保存される。
+Mac・携帯どちらで変更しても、自動で同期される（画面に戻ったときも最新を取得）。
+
+**注意**
+- Macが起動していて `./start.sh` が動いている必要がある
+- 家のWi-Fi内が前提（外出先からは次段で Tailscale 等）
+- AI尊徳チャットも携帯から使える（処理はMac側）
+
+---
+
 ## 別のPC／別ブラウザへ続きを移す
 
 データは **そのブラウザの localStorage** にだけ入る。機種を変えるときは JSON で運ぶ。
@@ -115,4 +133,6 @@ chmod 600 apps/taskboard/.env.local
 | データが空 | JSON読込、またはシード読込 |
 | AI尊徳が「APIキー未設定」 | `apps/taskboard/.env.local` を作成し、統治手帳を再起動 |
 | AI尊徳が「接続エラー」 | 起動中のターミナルを確認。APIキーとCursor利用権限も確認 |
+| 携帯で開けない | Macと携帯が同じWi-Fiか確認。ターミナンのLANアドレスを使う |
+| 同期されない | フッターの同期状態を確認。Macで `./start.sh` が動いているか確認 |
 | `start.command` が開けない | 右クリック → 開く。またはターミナルで `chmod +x start.command start.sh` |

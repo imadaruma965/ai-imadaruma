@@ -730,6 +730,24 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
 }
 .foot-actions { display: flex; gap: 0.25rem; }
 .muted { color: var(--muted); }
+.sync-status {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--bg);
+}
+.sync-status[data-state="connected"] {
+  background: var(--mint);
+  color: var(--ok);
+}
+.sync-status[data-state="busy"] {
+  background: var(--butter);
+  color: var(--warn);
+}
+.sync-status[data-state="error"] {
+  background: var(--rose);
+  color: #9f3653;
+}
 .force-tag {
   font-size: 0.58rem;
   letter-spacing: 0.06em;

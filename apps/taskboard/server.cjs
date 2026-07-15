@@ -1,6 +1,7 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const fsp = require("node:fs/promises");
+const os = require("node:os");
 const path = require("node:path");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
 
@@ -8,8 +9,10 @@ const APP_DIR = __dirname;
 const REPO_ROOT = path.resolve(APP_DIR, "../..");
 const DATA_DIR = path.join(APP_DIR, "data");
 const SESSION_FILE = path.join(DATA_DIR, ".sontoku-sessions.json");
+const STATE_FILE = path.join(DATA_DIR, "state.json");
 const CHAT_LOG_DIR = path.join(REPO_ROOT, "daily_governance", "chat_logs");
 const PORT = Number(process.env.GYOMU_TOCHI_PORT || 8765);
+const HOST = process.env.GYOMU_TOCHI_HOST || "0.0.0.0";
 const MODEL = process.env.SONTOKU_MODEL || "auto";
 const MAX_BODY_BYTES = 1024 * 1024;
 
@@ -21,6 +24,7 @@ const MIME_TYPES = {
   ".md": "text/markdown; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
 };
 
 const dateQueues = new Map();
@@ -77,6 +81,70 @@ async function writeSessions(sessions) {
   const temporary = `${SESSION_FILE}.tmp`;
   await fsp.writeFile(temporary, `${JSON.stringify(sessions, null, 2)}\n`, "utf8");
   await fsp.rename(temporary, SESSION_FILE);
+}
+
+function sanitizeStateData(raw) {
+  const data = raw && typeof raw === "object" ? raw : {};
+  return {
+    tasks: Array.isArray(data.tasks) ? data.tasks : [],
+    reviews: data.reviews && typeof data.reviews === "object" ? data.reviews : {},
+    plans: data.plans && typeof data.plans === "object" ? data.plans : {},
+    kpis: data.kpis && typeof data.kpis === "object" ? data.kpis : {},
+    board: data.board && typeof data.board === "object" ? data.board : {},
+    categories: Array.isArray(data.categories) ? data.categories : [],
+    sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+  };
+}
+
+async function readStateRecord() {
+  try {
+    const parsed = JSON.parse(await fsp.readFile(STATE_FILE, "utf8"));
+    if (parsed && parsed.data) {
+      return {
+        updatedAt: parsed.updatedAt || null,
+        data: sanitizeStateData(parsed.data),
+      };
+    }
+    return {
+      updatedAt: null,
+      data: sanitizeStateData(parsed),
+    };
+  } catch (error) {
+    if (error.code === "ENOENT" || error instanceof SyntaxError) {
+      return { updatedAt: null, data: null };
+    }
+    throw error;
+  }
+}
+
+async function writeStateRecord(body) {
+  const current = await readStateRecord();
+  if (body.updatedAt && current.updatedAt && body.updatedAt !== current.updatedAt) {
+    return { conflict: true, updatedAt: current.updatedAt, data: current.data };
+  }
+  const updatedAt = new Date().toISOString();
+  const record = {
+    updatedAt,
+    data: sanitizeStateData(body.data),
+  };
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  const temporary = `${STATE_FILE}.tmp`;
+  await fsp.writeFile(temporary, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  await fsp.rename(temporary, STATE_FILE);
+  return { conflict: false, updatedAt, data: record.data };
+}
+
+function getLanUrls() {
+  const urls = [`http://127.0.0.1:${PORT}/`];
+  const nets = os.networkInterfaces();
+  Object.keys(nets).forEach((name) => {
+    (nets[name] || []).forEach((net) => {
+      if (net.family === "IPv4" && !net.internal) {
+        urls.push(`http://${net.address}:${PORT}/`);
+      }
+    });
+  });
+  return [...new Set(urls)];
 }
 
 function enqueueByDate(date, operation) {
@@ -299,6 +367,47 @@ function createServer() {
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
 
+    if (req.method === "GET" && url.pathname === "/api/info") {
+      json(res, 200, {
+        sync: true,
+        port: PORT,
+        urls: getLanUrls(),
+        sontokuConnected: Boolean(process.env.CURSOR_API_KEY),
+      });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/state") {
+      const record = await readStateRecord();
+      json(res, 200, record);
+      return;
+    }
+
+    if (req.method === "PUT" && url.pathname === "/api/state") {
+      try {
+        const body = await readJsonBody(req);
+        if (!body || typeof body !== "object" || !body.data) {
+          json(res, 400, { error: "invalid_state", message: "保存データが正しくありません。" });
+          return;
+        }
+        const result = await writeStateRecord(body);
+        if (result.conflict) {
+          json(res, 409, {
+            error: "state_conflict",
+            message: "別の端末で更新がありました。最新データを読み込みます。",
+            updatedAt: result.updatedAt,
+            data: result.data,
+          });
+          return;
+        }
+        json(res, 200, { updatedAt: result.updatedAt, data: result.data });
+      } catch (error) {
+        console.error("[state]", error);
+        json(res, 500, { error: "state_save_failed", message: "データ保存に失敗しました。" });
+      }
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/sontoku/status") {
       json(res, 200, {
         connected: Boolean(process.env.CURSOR_API_KEY),
@@ -344,7 +453,7 @@ function createServer() {
     }
 
     if (req.method !== "GET" && req.method !== "HEAD") {
-      res.writeHead(405, { Allow: "GET, HEAD, POST" });
+      res.writeHead(405, { Allow: "GET, HEAD, PUT, POST" });
       res.end();
       return;
     }
@@ -354,8 +463,13 @@ function createServer() {
 
 if (require.main === module) {
   const server = createServer();
-  server.listen(PORT, "127.0.0.1", () => {
-    console.log(`統治手帳: http://127.0.0.1:${PORT}/`);
+  server.listen(PORT, HOST, () => {
+    const urls = getLanUrls();
+    console.log("統治手帳:");
+    urls.forEach((entry) => console.log(`  ${entry}`));
+    if (urls.length > 1) {
+      console.log("携帯: 同じWi-Fiで上のLANアドレスを開く");
+    }
     console.log(
       process.env.CURSOR_API_KEY
         ? `AI尊徳: Cursor SDK接続準備済み（model: ${MODEL}）`
@@ -369,4 +483,8 @@ module.exports = {
   normalizeContext,
   turnPrompt,
   validDate,
+  sanitizeStateData,
+  readStateRecord,
+  writeStateRecord,
+  getLanUrls,
 };
