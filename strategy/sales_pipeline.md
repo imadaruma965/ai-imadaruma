@@ -12,7 +12,7 @@
 | **更新頻度** | 商談・提案のたびに更新。最低でも週次レビュー前に棚卸し |
 | **入力** | AI尊徳（日次実行の記録） |
 | **判断** | AI栄一（週次・月次レビュー） |
-| **接続先** | `eiichi_weekly_review.md` / `revenue_sources.md` / `offer_review.md` |
+| **接続先** | `ops_rhythm_2026h2.md` / `eiichi_weekly_review.md` / `revenue_sources.md` / `offer_review.md` / `monetization_2026h2.md` |
 
 ---
 

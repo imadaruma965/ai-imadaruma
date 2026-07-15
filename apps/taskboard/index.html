@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>業務統治</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="brand">IMADARUMA</p>
+      <h1>業務統治</h1>
+      <p class="sub">七習慣の振り分け · 日／週／月 · カテゴリ俯瞰</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" class="tab active" data-view="home">俯瞰</button>
+    <button type="button" class="tab" data-view="board">象限</button>
+    <button type="button" class="tab" data-view="day">日</button>
+    <button type="button" class="tab" data-view="week">週</button>
+    <button type="button" class="tab" data-view="month">月</button>
+    <button type="button" class="tab" data-view="all">一覧</button>
+    <button type="button" class="tab" data-view="new">新規</button>
+  </nav>
+
+  <main>
+    <!-- カテゴリ俯瞰 -->
+    <section id="view-home" class="view active">
+      <p class="lead">未完了の件数だけ先に見る。カテゴリを開くと中身。</p>
+      <div id="cat-overview" class="cat-grid"></div>
+      <button type="button" class="btn ghost" id="btn-goto-all">全体一覧へ</button>
+    </section>
+
+    <!-- カテゴリ詳細 -->
+    <section id="view-cat" class="view">
+      <button type="button" class="linkback" id="btn-back-home">← 俯瞰に戻る</button>
+      <h2 id="cat-detail-title" class="section-title"></h2>
+      <ul class="rows" id="list-cat"></ul>
+    </section>
+
+    <!-- 四象限 -->
+    <section id="view-board" class="view">
+      <p class="lead">第II象限（大事・急がない）を毎日空にしない。</p>
+      <div class="matrix">
+        <div class="quad">
+          <h2>I · 今すぐ <span class="count" id="c-uu">0</span></h2>
+          <p class="hint">緊急かつ重要</p>
+          <ul class="rows" id="list-uu"></ul>
+        </div>
+        <div class="quad">
+          <h2>III · 急ぎ雑務 <span class="count" id="c-un">0</span></h2>
+          <p class="hint">緊急・重要ではない</p>
+          <ul class="rows" id="list-un"></ul>
+        </div>
+        <div class="quad accent">
+          <h2>II · 大事 <span class="count" id="c-nu">0</span></h2>
+          <p class="hint">重要・急がない（防衛）</p>
+          <ul class="rows" id="list-nu"></ul>
+        </div>
+        <div class="quad">
+          <h2>IV · 後回し <span class="count" id="c-nn">0</span></h2>
+          <p class="hint">どちらでもない</p>
+          <ul class="rows" id="list-nn"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 日 -->
+    <section id="view-day" class="view">
+      <h2 class="section-title">日の統治</h2>
+
+      <div class="journal-panel am">
+        <h3>朝 · 意図</h3>
+        <p class="journal-why">実装意図（Gollwitzer）：「一事」と「もし〜ならこうする」を先に書くと実行率が上がる。長文の反省は朝に置かない。</p>
+        <label class="field">今日いちばん守る一事
+          <textarea id="day-goal" rows="2" placeholder="例：レックス請求2件を送る"></textarea>
+        </label>
+        <label class="field">もし脱線したら（if-then）
+          <input type="text" id="day-ifthen" placeholder="もしSNSを開いたら、5分で閉じて一事に戻る" />
+        </label>
+        <label class="field">今朝のエネルギー（1–5）
+          <input type="number" id="day-energy" min="1" max="5" step="1" placeholder="3" />
+        </label>
+        <button type="button" class="btn primary compact" id="day-save-morning">朝を保存</button>
+        <span id="day-morning-msg" class="msg"></span>
+      </div>
+
+      <div class="kpi-box">
+        <p class="kpi-head">今日の行動KPI（現在値）</p>
+        <div class="kpi-grid">
+          <label>売上行動（件）<input type="number" id="kpi-sales" min="0" step="1" /></label>
+          <label>発信／連絡（件）<input type="number" id="kpi-media" min="0" step="1" /></label>
+          <label>内政（○/×）<input type="text" id="kpi-health" placeholder="○ or ×" /></label>
+          <label>メモ<input type="text" id="kpi-note" placeholder="短く1行" /></label>
+        </div>
+        <div class="toolbar" style="margin:0.55rem 0 0">
+          <button type="button" class="btn ghost compact" id="day-save-meta">行動KPIを保存</button>
+          <span id="day-meta-msg" class="msg"></span>
+        </div>
+      </div>
+
+      <p class="lead tight">今日の任務（目安≤7）</p>
+      <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
+      <ul class="rows compact" id="list-day"></ul>
+
+      <div class="journal-panel pm">
+        <h3>夕 · ジャーナル</h3>
+        <p class="journal-why">Three Good Things（Seligman）＋感謝（Emmons）：良い点に「なぜ」を付けると効果が強い。終わりは学び1つと翌日の種だけ（反芻しない）。</p>
+        <p class="lead tight">よかったこと3つ（各1行・理由も短く）</p>
+        <div class="triple">
+          <input type="text" id="good1" placeholder="1. … なぜなら…" />
+          <input type="text" id="good2" placeholder="2. … なぜなら…" />
+          <input type="text" id="good3" placeholder="3. … なぜなら…" />
+        </div>
+        <p class="lead tight">感謝3つ</p>
+        <div class="triple">
+          <input type="text" id="grate1" placeholder="1." />
+          <input type="text" id="grate2" placeholder="2." />
+          <input type="text" id="grate3" placeholder="3." />
+        </div>
+        <label class="field">学び1つ（責めず、次に使える形で）
+          <input type="text" id="day-lesson" placeholder="次は○分で切る、など" />
+        </label>
+        <label class="field">翌日へ渡す一事
+          <input type="text" id="day-tomorrow" placeholder="明日の朝の「一事」候補" />
+        </label>
+        <button type="button" class="btn primary compact" id="day-save-review">夕を保存</button>
+        <span id="day-review-msg" class="msg"></span>
+      </div>
+    </section>
+
+    <!-- 週 -->
+    <section id="view-week" class="view">
+      <h2 class="section-title">週の統治</h2>
+      <div class="goal-triple">
+        <label class="field">目的（なぜこの週か）
+          <textarea id="week-purpose" rows="2" placeholder="例：信用を戻し、請求と営業の流れを再開する"></textarea>
+        </label>
+        <label class="field">数値目標
+          <textarea id="week-numeric" rows="2" placeholder="例：請求送付4／売上行動10／筋トレ2／習慣5/7"></textarea>
+        </label>
+        <label class="field">行動目標
+          <textarea id="week-actions" rows="2" placeholder="例：火金に請求／毎日連絡1／金にボード更新"></textarea>
+        </label>
+      </div>
+      <div class="kpi-box">
+        <p class="kpi-head">今週の内政スナップ</p>
+        <div class="kpi-grid">
+          <label>習慣達成（日）<input type="number" id="week-habit-done" min="0" max="7" step="1" placeholder="3" /></label>
+          <label>／7日<input type="number" id="week-habit-total" min="1" max="7" step="1" value="7" /></label>
+          <label>筋トレ（回）<input type="number" id="week-workout" min="0" max="7" step="1" placeholder="1" /></label>
+          <label>タイム表完全達成<input type="number" id="week-schedule-perfect" min="0" max="7" step="1" placeholder="0" /></label>
+        </div>
+      </div>
+      <button type="button" class="btn primary compact" id="week-save-goal">週の目標・内政を保存</button>
+      <span id="week-save-msg" class="msg"></span>
+      <ul class="rows compact" id="list-week"></ul>
+      <label class="field">週の振り返り
+        <textarea id="week-review" rows="2"></textarea>
+      </label>
+      <button type="button" class="btn ghost" id="week-save-review">振り返り保存</button>
+    </section>
+
+    <!-- 月 -->
+    <section id="view-month" class="view">
+      <h2 class="section-title">月の統治</h2>
+      <p class="lead">目標日 <strong>2026-12-09</strong>。現在値を直打ち → 保存。</p>
+      <div class="goal-triple">
+        <label class="field">目的（今月の意図）
+          <textarea id="month-purpose" rows="2" placeholder="例：50万への道筋を、信用ある受託と発信で固める"></textarea>
+        </label>
+        <label class="field">数値目標
+          <textarea id="month-numeric" rows="2" placeholder="例：教育・制作・投資の月収／LI＋200／体重−1kg"></textarea>
+        </label>
+        <label class="field">行動目標
+          <textarea id="month-actions" rows="2" placeholder="例：週の営業枠固定／カルーセル火〜金／NL毎週"></textarea>
+        </label>
+      </div>
+      <button type="button" class="btn primary compact" id="month-save-goal">月の目標を保存</button>
+
+      <div class="board-block finance">
+        <p class="board-head">月の累計売上</p>
+        <div class="metric-table" id="board-finance"></div>
+      </div>
+      <div class="board-block diplomacy">
+        <p class="board-head">外交・発信</p>
+        <div class="metric-table" id="board-diplomacy"></div>
+      </div>
+      <div class="board-block naisei">
+        <p class="board-head">内政</p>
+        <div class="metric-table" id="board-naisei"></div>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn primary compact" id="month-save-board">KPIボードを保存</button>
+        <span id="month-board-msg" class="msg"></span>
+      </div>
+
+      <ul class="rows compact" id="list-month"></ul>
+      <h3 class="subhead">いつか</h3>
+      <ul class="rows compact" id="list-someday"></ul>
+      <label class="field">月の振り返り
+        <textarea id="month-review" rows="2"></textarea>
+      </label>
+      <button type="button" class="btn ghost" id="month-save-review">振り返り保存</button>
+    </section>
+
+    <!-- 全体一覧 -->
+    <section id="view-all" class="view">
+      <div class="filters">
+        <label><input type="checkbox" id="hide-done" checked /> 完了を隠す</label>
+        <select id="filter-quad">
+          <option value="all">象限すべて</option>
+          <option value="uu">I</option>
+          <option value="un">III</option>
+          <option value="nu">II</option>
+          <option value="nn">IV</option>
+        </select>
+        <select id="filter-horizon">
+          <option value="all">視野すべて</option>
+          <option value="day">日</option>
+          <option value="week">週</option>
+          <option value="month">月</option>
+          <option value="someday">いつか</option>
+        </select>
+      </div>
+      <p class="lead tight">カテゴリ</p>
+      <div class="tag-picker" id="filter-cat-tags" role="group" aria-label="カテゴリ絞り込み"></div>
+      <input type="hidden" id="filter-cat" value="all" />
+      <ul class="rows compact" id="list-all"></ul>
+    </section>
+
+    <!-- 新規 -->
+    <section id="view-new" class="view">
+      <form id="form-new">
+        <label class="field">タイトル<input type="text" id="new-title" required /></label>
+        <div class="field">
+          <span>カテゴリ</span>
+          <div class="tag-picker" id="new-cat-tags" role="group" aria-label="カテゴリ"></div>
+          <input type="hidden" id="new-category" value="other" required />
+        </div>
+        <label class="field">視野
+          <select id="new-horizon">
+            <option value="day">日</option>
+            <option value="week" selected>週</option>
+            <option value="month">月</option>
+            <option value="someday">いつか</option>
+          </select>
+        </label>
+        <label class="field">期限<input type="date" id="new-due" /></label>
+        <fieldset class="row">
+          <legend>緊急</legend>
+          <label><input type="radio" name="urgency" value="high" /> 高</label>
+          <label><input type="radio" name="urgency" value="low" checked /> 低</label>
+        </fieldset>
+        <fieldset class="row">
+          <legend>重要</legend>
+          <label><input type="radio" name="importance" value="high" checked /> 高</label>
+          <label><input type="radio" name="importance" value="low" /> 低</label>
+        </fieldset>
+        <label class="field"><input type="checkbox" id="new-today" /> 今日に入れる</label>
+        <label class="field">メモ<textarea id="new-notes" rows="2"></textarea></label>
+        <button type="submit" class="btn primary">保存</button>
+      </form>
+      <p id="new-msg" class="msg"></p>
+    </section>
+  </main>
+
+  <dialog id="edit-dialog">
+    <form method="dialog" id="form-edit">
+      <h3>編集</h3>
+      <input type="hidden" id="edit-id" />
+      <label class="field">タイトル<input type="text" id="edit-title" required /></label>
+      <div class="field">
+        <span>カテゴリ</span>
+        <div class="tag-picker" id="edit-cat-tags" role="group" aria-label="カテゴリ"></div>
+        <input type="hidden" id="edit-category" value="other" />
+      </div>
+      <label class="field">視野
+        <select id="edit-horizon">
+          <option value="day">日</option>
+          <option value="week">週</option>
+          <option value="month">月</option>
+          <option value="someday">いつか</option>
+        </select>
+      </label>
+      <label class="field">期限<input type="date" id="edit-due" /></label>
+      <fieldset class="row">
+        <legend>緊急</legend>
+        <label><input type="radio" name="edit-urgency" value="high" /> 高</label>
+        <label><input type="radio" name="edit-urgency" value="low" /> 低</label>
+      </fieldset>
+      <fieldset class="row">
+        <legend>重要</legend>
+        <label><input type="radio" name="edit-importance" value="high" /> 高</label>
+        <label><input type="radio" name="edit-importance" value="low" /> 低</label>
+      </fieldset>
+      <label class="field">メモ<textarea id="edit-notes" rows="2"></textarea></label>
+      <div class="btn-row">
+        <button type="submit" class="btn primary">更新</button>
+        <button type="button" class="btn ghost" id="edit-cancel">閉じる</button>
+        <button type="button" class="btn danger" id="edit-delete">削除</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="foot">
+    <div class="foot-actions">
+      <button type="button" class="btn ghost compact" id="btn-seed">シード読込</button>
+      <button type="button" class="btn ghost compact" id="btn-import">JSON読込</button>
+      <button type="button" class="btn ghost compact" id="btn-export">JSON保存</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden />
+    </div>
+    <span class="muted">業務統治</span>
+  </footer>
+
+  <script src="seed-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

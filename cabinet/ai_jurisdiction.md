@@ -4,7 +4,7 @@
 >
 > **重要**: 四柱統治フレームワーク（`constitution/four_pillars.md`）にはAI主管を書かない。本ファイルがAI主管の唯一の正本である。
 >
-> **関連**: `constitution/domain_mapping.md`（四柱と6領域の接続）
+> **関連**: `constitution/domain_mapping.md`（四柱と6領域の接続）、`cabinet/ministries.md`（六省＝官庁名）
 
 ---
 

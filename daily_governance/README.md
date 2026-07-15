@@ -26,6 +26,7 @@ AI栄一が設計した戦略を、ここで日々の行動に落とし込む。
 脱線 → impulse_protocol.md  衝動・逃避からの復帰
 夜   → night_review.md      AI尊徳による統治レビュー
 週末 → weekly_review.md     実行振り返り → AI栄一の戦略レビューへ接続
+金〜土 → governance_board.md  NL用の数字・実践（正篤の唯一入力）
 ```
 
 | 時間帯 | ファイル | 担当 | 所要時間 |
@@ -35,6 +36,7 @@ AI栄一が設計した戦略を、ここで日々の行動に落とし込む。
 | **脱線時** | `impulse_protocol.md` | AI尊徳 | 3分以内 |
 | **夜** | `night_review.md` | AI尊徳 | 5〜10分 |
 | **週末** | `weekly_review.md` | AI尊徳 → AI栄一 | 15〜30分 |
+| **金〜土** | `governance_board.md` | 君主（尊徳整形可） | 10〜15分 |
 
 ---
 
@@ -85,6 +87,15 @@ AI尊徳は戦略を勝手に変更しない。変更が必要なときは、週
 | `impulse_protocol.md` | 脱線・衝動時の復帰プロトコル |
 | `night_review.md` | 夜の統治レビュー |
 | `weekly_review.md` | 週末レビュー（AI栄一接続） |
+| `governance_board.md` | NL用・週次の数字と実践（正篤の唯一入力） |
+| `ops_commitments.md` | 支払い・発注・予定・納期の義務台帳 |
+| `ops_reliability.md` | **埋没・緊急・クレーム対策の正本**（重要枠防衛・AIの順番） |
+| `claims_log.md` | クレーム・ミス台帳（信用の数値） |
+| `ONE_SYSTEM.md` | **いま必要なことのやさしい正本**（一台に集約） |
+| `task_system.md` | タスク／期限のくわしいルール |
+| `mobile_capture.md` | 外出先・LINE遅れ防止（捕獲→定時窓→台帳） |
+| `HOW_TO_LOG.md` | 数字・実践の打込み手順（迷ったらここ） |
+| `daily_journal_roadmap.md` | 日報習慣→KPI→分析→改善の段階の進め方 |
 | `parking_lot.md` | 保留・後回し置き場（補助） |
 | `evening_review.md` | 旧夕方振り返り（レガシー。標準は `night_review.md`） |
 
