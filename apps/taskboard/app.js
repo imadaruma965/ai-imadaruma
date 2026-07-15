@@ -82,6 +82,12 @@
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
+  function authHeaders(extra = {}) {
+    const headers = { ...extra };
+    if (window.TASKBOARD_TOKEN) headers["X-Taskboard-Token"] = window.TASKBOARD_TOKEN;
+    return headers;
+  }
+
   function isoFromDate(d) {
     const z = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
@@ -116,6 +122,26 @@
 
   function monthKey(d = new Date()) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function currentWeekDates() {
+    const now = new Date();
+    const dow = now.getDay() || 7; // Mon=1..Sun=7
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow + 1);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return isoFromDate(d);
+    });
+  }
+
+  function last30Dates() {
+    return Array.from({ length: 30 }, (_, i) => addDaysISO(-i));
+  }
+
+  function dayHasShichitoku(dateISO) {
+    const st = (state.plans[`day:${dateISO}`] || {}).shichitoku || {};
+    return Object.values(st).some((v) => String(v || "").trim());
   }
 
   function uid() {
@@ -194,6 +220,7 @@
       importance: t.importance === "high" ? "high" : "low",
       tags: Array.isArray(t.tags) ? t.tags : [],
       forced: !!t.forced,
+      external: !!t.external,
       recurrence,
       recurrenceDay: recurrence === "monthly" ? Number(t.recurrenceDay) || due?.getDate() || null : null,
     };
@@ -222,6 +249,7 @@
       board: mergeBoard(data.board),
       categories,
       sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+      incidents: Array.isArray(data.incidents) ? data.incidents : [],
     };
   }
 
@@ -269,6 +297,7 @@
       board: defaultBoard(),
       categories: initCategories(),
       sontokuChat: {},
+      incidents: [],
     };
   }
 
@@ -281,6 +310,7 @@
       board: state.board,
       categories: state.categories,
       sontokuChat: state.sontokuChat,
+      incidents: state.incidents,
     };
   }
 
@@ -292,6 +322,7 @@
     state.board = next.board;
     state.categories = next.categories;
     state.sontokuChat = next.sontokuChat;
+    state.incidents = next.incidents;
   }
 
   function saveLocal() {
@@ -306,7 +337,7 @@
   }
 
   async function fetchServerState() {
-    const response = await fetch("/api/state", { cache: "no-store" });
+    const response = await fetch("/api/state", { cache: "no-store", headers: authHeaders() });
     if (!response.ok) throw new Error("state_fetch_failed");
     return response.json();
   }
@@ -314,7 +345,7 @@
   async function pushServerState(data, expectedUpdatedAt) {
     const response = await fetch("/api/state", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ updatedAt: expectedUpdatedAt, data }),
     });
     const body = await response.json().catch(() => ({}));
@@ -652,7 +683,19 @@
   }
 
   function activeTasks() {
-    return state.tasks.filter((t) => t.status !== "done");
+    return state.tasks.filter((t) => t.status !== "done" && t.status !== "pending");
+  }
+
+  function pendingTasks() {
+    return state.tasks.filter((t) => t.status === "pending");
+  }
+
+  function inWip(t) {
+    return !t.forced && t.status !== "done" && (!!t.onToday || t.status === "doing");
+  }
+
+  function wipCount() {
+    return state.tasks.filter(inWip).length;
   }
 
   function inDay(t) {
@@ -678,6 +721,9 @@
   function rowHtml(t) {
     const cat = t.category || "other";
     const force = t.forced ? '<span class="force-tag">強制</span>' : "";
+    const external = t.external ? '<span class="external-tag">対外</span>' : "";
+    const doing = t.status === "doing" ? '<span class="doing-tag">着手中</span>' : "";
+    const pending = t.status === "pending" ? '<span class="pending-tag">上奏中</span>' : "";
     const repeat = t.recurrence === "weekly"
       ? '<span class="repeat-tag">毎週</span>'
       : t.recurrence === "monthly"
@@ -687,11 +733,15 @@
     const q = { uu: "今すぐ", un: "見せかけ", nu: "種まき", nn: "減らす" }[quadrant(t)];
     return `<li class="row-item border-${cat} ${t.status === "done" ? "done" : ""} ${t.forced ? "forced" : ""}" data-id="${t.id}">
       <span class="dot dot-${cat}"></span>
-      <span class="row-title">${pill}${force}${repeat}${escapeHtml(t.title)}</span>
+      <span class="row-title">${pill}${force}${external}${doing}${pending}${repeat}${escapeHtml(t.title)}</span>
       <span class="row-meta">${q}${t.dueDate ? " · " + t.dueDate.slice(5) : ""}</span>
       <span class="row-actions">
-        ${t.status !== "done" ? `<button type="button" data-act="done">完</button>` : `<button type="button" data-act="undone">戻</button>`}
-        ${!t.onToday && t.status !== "done" ? `<button type="button" data-act="today">今日</button>` : ""}
+        ${t.status === "pending" ? `<button type="button" data-act="approve">承認</button>` : ""}
+        ${t.status !== "done" && t.status !== "pending" ? `<button type="button" data-act="done">完</button>` : ""}
+        ${t.status === "done" ? `<button type="button" data-act="undone">戻</button>` : ""}
+        ${!t.onToday && t.status !== "done" && t.status !== "pending" ? `<button type="button" data-act="today">今日</button>` : ""}
+        ${t.status === "todo" ? `<button type="button" data-act="start">着手</button>` : ""}
+        ${t.status === "doing" ? `<button type="button" data-act="unstart">戻す</button>` : ""}
         <button type="button" data-act="edit">編</button>
       </span>
     </li>`;
@@ -718,13 +768,22 @@
         } else if (act === "undone") {
           t.status = "todo";
         } else if (act === "today") {
-          const count = state.tasks.filter((x) => x.onToday && x.status !== "done").length;
-          if (count >= 7 && !t.forced) {
-            alert("今日は7件が目安です。");
+          if (!inWip(t) && wipCount() >= 7) {
+            alert("今日・着手中の合計が7件が目安です。");
             return;
           }
           t.onToday = true;
           t.horizon = "day";
+        } else if (act === "start") {
+          if (!inWip(t) && wipCount() >= 7) {
+            alert("今日・着手中の合計が7件が目安です。");
+            return;
+          }
+          t.status = "doing";
+        } else if (act === "unstart") {
+          t.status = "todo";
+        } else if (act === "approve") {
+          t.status = "todo";
         } else if (act === "edit") {
           openEdit(id);
           return;
@@ -743,7 +802,16 @@
     bindRows(ul);
   }
 
+  function renderPendingBanner() {
+    const el = $("#pending-banner");
+    if (!el) return;
+    const n = pendingTasks().length;
+    el.classList.toggle("hidden", n === 0);
+    if (n > 0) el.textContent = `上奏（保留中）が${n}件。一覧タブで「承認」すると通常の任務になる。`;
+  }
+
   function renderHome() {
+    renderPendingBanner();
     const quadGrid = $("#quad-overview");
     const catGrid = $("#cat-overview");
     const quadCounts = { uu: 0, un: 0, nu: 0, nn: 0 };
@@ -839,11 +907,13 @@
     const fq = $("#filter-quad").value;
     const fc = $("#filter-cat").value;
     const fh = $("#filter-horizon").value;
+    const externalOnly = $("#filter-external")?.checked;
     let list = [...state.tasks];
     if (hideDone) list = list.filter((t) => t.status !== "done");
     if (fq !== "all") list = list.filter((t) => quadrant(t) === fq);
     if (fc !== "all") list = list.filter((t) => (t.category || "other") === fc);
     if (fh !== "all") list = list.filter((t) => (t.horizon || "week") === fh);
+    if (externalOnly) list = list.filter((t) => t.external);
     list.sort((a, b) => {
       if (a.status !== b.status) return a.status === "done" ? 1 : -1;
       return (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title);
@@ -999,6 +1069,15 @@
     $("#grate3").value = dayPlan.grate3 || "";
     $("#day-lesson").value = dayPlan.lesson || "";
     $("#day-tomorrow").value = dayPlan.tomorrow || "";
+    const st = dayPlan.shichitoku || {};
+    $("#st-chi").value = st.chi || "";
+    $("#st-shin").value = st.shin || "";
+    $("#st-jin").value = st.jin || "";
+    $("#st-yu").value = st.yu || "";
+    $("#st-gen").value = st.gen || "";
+    $("#st-mei").value = st.mei || "";
+    $("#st-bi").value = st.bi || "";
+    $("#day-strength").value = dayPlan.strength || "";
     $("#week-purpose").value = weekPlan.purpose || weekPlan.goal || "";
     $("#week-numeric").value = weekPlan.numeric || "";
     $("#week-actions").value = weekPlan.actions || "";
@@ -1016,6 +1095,123 @@
     $("#kpi-health").value = kpi.health || "";
     $("#kpi-note").value = kpi.note || "";
     renderBoardMetrics();
+    renderWeeklySummary();
+    renderShichitokuScore();
+  }
+
+  /* —— 七徳スコア・称号（直近30日の記入頻度） —— */
+  const SHICHITOKU_LABELS = { chi: "智慧", shin: "信義", jin: "仁愛", yu: "勇気", gen: "厳正", mei: "明察", bi: "美学" };
+
+  function shichitokuScore() {
+    const dates = last30Dates();
+    const counts = { chi: 0, shin: 0, jin: 0, yu: 0, gen: 0, mei: 0, bi: 0 };
+    let anyDays = 0;
+    dates.forEach((d) => {
+      const st = (state.plans[`day:${d}`] || {}).shichitoku || {};
+      let any = false;
+      Object.keys(counts).forEach((k) => {
+        if (String(st[k] || "").trim()) {
+          counts[k] += 1;
+          any = true;
+        }
+      });
+      if (any) anyDays += 1;
+    });
+    return { counts, anyDays, totalDays: dates.length };
+  }
+
+  function shichitokuTitle(anyDays) {
+    if (anyDays >= 21) return "明君（継続確立）";
+    if (anyDays >= 7) return "精進中";
+    return "見習い";
+  }
+
+  function renderShichitokuScore() {
+    const host = $("#shichitoku-score");
+    if (!host) return;
+    const { counts, anyDays, totalDays } = shichitokuScore();
+    host.innerHTML = `
+      <p class="board-head">称号: ${shichitokuTitle(anyDays)}（直近${totalDays}日中${anyDays}日 記入）</p>
+      <div class="metric-table">
+        ${Object.keys(SHICHITOKU_LABELS)
+          .map(
+            (k) => `<div class="metric-row"><div><div class="label">${SHICHITOKU_LABELS[k]}</div></div><div class="target">${counts[k]}/${totalDays}</div></div>`
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  /* —— 週次御前会議レポート（四本柱バランス・七徳・国難・強みを1画面に集計） —— */
+  function renderWeeklySummary() {
+    const host = $("#week-summary");
+    if (!host) return;
+    const dates = currentWeekDates();
+    const shichitokuDays = dates.filter(dayHasShichitoku).length;
+    const strengthDays = dates.filter((d) => String((state.plans[`day:${d}`] || {}).strength || "").trim()).length;
+    const incidentCount = (state.incidents || []).filter((e) => dates.includes(e.date)).length;
+    const completedCount = state.tasks.filter(
+      (t) => t.status === "done" && dates.includes(String(t.updatedAt || "").slice(0, 10))
+    ).length;
+    host.innerHTML = `
+      <div class="summary-row">七徳チェック記入: ${shichitokuDays}/7日</div>
+      <div class="summary-row">強みの記録: ${strengthDays}/7日</div>
+      <div class="summary-row">国難ログ件数: ${incidentCount}件</div>
+      <div class="summary-row">完了タスク（週内）: ${completedCount}件</div>
+    `;
+  }
+
+  /* —— イマダルマのビジュアル進捗（直近7日の七徳記入率を目の開き具合で表す） —— */
+  function imadarumaProgressRatio() {
+    const dates = currentWeekDates();
+    const filled = dates.filter(dayHasShichitoku).length;
+    return filled / dates.length;
+  }
+
+  function renderImadarumaProgress() {
+    const host = $("#imadaruma-progress");
+    if (!host) return;
+    const ratio = imadarumaProgressRatio();
+    const pct = Math.round(ratio * 100);
+    const openness = (2 + ratio * 6).toFixed(1);
+    host.innerHTML = `
+      <svg viewBox="0 0 120 60" width="56" height="28" role="img" aria-label="七徳記入率 ${pct}%（直近7日）">
+        <circle cx="30" cy="30" r="18" fill="#fff" stroke="#3d7ea6" stroke-width="3"></circle>
+        <circle cx="30" cy="30" r="7" fill="#2f2f2f"></circle>
+        <circle cx="90" cy="30" r="18" fill="#fff" stroke="#3d7ea6" stroke-width="3"></circle>
+        <circle cx="90" cy="30" r="${openness}" fill="#2f2f2f"></circle>
+      </svg>
+      <span class="imadaruma-pct">七徳 直近7日 ${pct}%（片目は自己統治の進捗で開く）</span>
+    `;
+  }
+
+  /* —— 国難ログ（衝動・脱線の記録。impulse_protocol.mdの6分類） —— */
+  function todayIncidents() {
+    return (state.incidents || []).filter((e) => e.date === todayISO());
+  }
+
+  function renderIncidents() {
+    const ul = $("#incident-list");
+    if (!ul) return;
+    const list = todayIncidents();
+    ul.innerHTML = list.length
+      ? list
+          .map(
+            (e) => `<li class="row-item" data-id="${e.id}">
+        <span class="row-title"><span class="repeat-tag">${escapeHtml(e.type)}</span>${escapeHtml(e.note)}</span>
+        <span class="row-actions"><button type="button" data-act="del-incident">消</button></span>
+      </li>`
+          )
+          .join("")
+      : '<li class="empty">なし</li>';
+    ul.querySelectorAll('[data-act="del-incident"]').forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-id]").dataset.id;
+        state.incidents = (state.incidents || []).filter((e) => e.id !== id);
+        save();
+        renderIncidents();
+      });
+    });
   }
 
   /* —— AI尊徳チャット（今日タブ） —— */
@@ -1057,6 +1253,7 @@
       ifthen: (dayPlan.ifthen || "").trim(),
       energy: dayPlan.energy ?? "",
       completedToday: doneToday.length,
+      pendingCount: pendingTasks().length,
       kpis: state.kpis[todayISO()] || {},
       tasks: dayTasks.map((task) => ({
         title: stripCategoryPrefix(task.title, task.category || "other", state.categories),
@@ -1095,7 +1292,7 @@
   async function requestSontoku(payload) {
     const response = await fetch("/api/sontoku", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         date: todayISO(),
         context: sontokuContext(),
@@ -1111,7 +1308,7 @@
 
   async function refreshSontokuStatus() {
     try {
-      const response = await fetch("/api/sontoku/status", { cache: "no-store" });
+      const response = await fetch("/api/sontoku/status", { cache: "no-store", headers: authHeaders() });
       const data = await response.json();
       setSontokuStatus(
         data.connected ? `Cursor接続済み · ${data.model}` : "Cursor APIキー未設定",
@@ -1193,6 +1390,8 @@
     renderCalendar();
     updatePomodoroDisplay();
     renderSontokuChat();
+    renderIncidents();
+    renderImadarumaProgress();
   }
 
   function setView(name) {
@@ -1348,6 +1547,7 @@
     $$("input[name=edit-importance]").forEach((r) => {
       r.checked = r.value === t.importance;
     });
+    $("#edit-external").checked = !!t.external;
     $("#edit-notes").value = t.notes || "";
     $("#edit-dialog").showModal();
   }
@@ -1387,6 +1587,22 @@
   $("#pomo-start").addEventListener("click", startPomodoro);
   $("#pomo-stop").addEventListener("click", stopPomodoro);
 
+  $("#incident-add")?.addEventListener("click", () => {
+    const note = $("#incident-note").value.trim();
+    if (!note) return;
+    if (!Array.isArray(state.incidents)) state.incidents = [];
+    state.incidents.push({
+      id: uid(),
+      date: todayISO(),
+      type: $("#incident-type").value,
+      note,
+      createdAt: new Date().toISOString(),
+    });
+    save();
+    $("#incident-note").value = "";
+    renderIncidents();
+  });
+
   $("#sontoku-form")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const input = $("#sontoku-input");
@@ -1401,6 +1617,7 @@
   $("#hide-done").addEventListener("change", renderAll);
   $("#filter-quad").addEventListener("change", renderAll);
   $("#filter-horizon").addEventListener("change", renderAll);
+  $("#filter-external")?.addEventListener("change", renderAll);
   $("#calendar-prev").addEventListener("click", () => {
     calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
     renderCalendar();
@@ -1451,6 +1668,16 @@
       grate3: $("#grate3").value.trim(),
       lesson: $("#day-lesson").value.trim(),
       tomorrow: $("#day-tomorrow").value.trim(),
+      shichitoku: {
+        chi: $("#st-chi").value.trim(),
+        shin: $("#st-shin").value.trim(),
+        jin: $("#st-jin").value.trim(),
+        yu: $("#st-yu").value.trim(),
+        gen: $("#st-gen").value.trim(),
+        mei: $("#st-mei").value.trim(),
+        bi: $("#st-bi").value.trim(),
+      },
+      strength: $("#day-strength").value.trim(),
     };
     save();
     $("#day-review-msg").textContent = "夕を保存した";
@@ -1511,9 +1738,9 @@
       return;
     }
     let onToday = $("#new-today").checked || horizon === "day";
-    if (onToday && state.tasks.filter((x) => x.onToday && x.status !== "done").length >= 7) {
+    if (onToday && wipCount() >= 7) {
       onToday = false;
-      alert("今日は7件が目安のため、今日ピンは外した。");
+      alert("今日・着手中の合計が7件が目安のため、今日ピンは外した。");
     }
     state.tasks.push(
       normalizeTask({
@@ -1526,8 +1753,9 @@
         recurrenceDay: recurrence === "monthly" ? dateFromISO(dueDate)?.getDate() : null,
         urgency: $("input[name=urgency]:checked").value,
         importance: $("input[name=importance]:checked").value,
-        status: "todo",
-        onToday,
+        status: $("#new-pending").checked ? "pending" : "todo",
+        onToday: $("#new-pending").checked ? false : onToday,
+        external: $("#new-external").checked,
         notes: $("#new-notes").value.trim(),
         tags: [],
         createdAt: new Date().toISOString(),
@@ -1561,6 +1789,7 @@
     t.recurrenceDay = recurrence === "monthly" ? dateFromISO(dueDate)?.getDate() : null;
     t.urgency = $("input[name=edit-urgency]:checked").value;
     t.importance = $("input[name=edit-importance]:checked").value;
+    t.external = $("#edit-external").checked;
     t.notes = $("#edit-notes").value.trim();
     t.updatedAt = new Date().toISOString();
     save();
@@ -1592,6 +1821,7 @@
     state.board = mergeBoard(data.board);
     state.categories = initCategories(data.categories);
     state.sontokuChat = data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {};
+    state.incidents = Array.isArray(data.incidents) ? data.incidents : [];
     ensureRequiredMonthlyTasks();
     ensureForcedMedia();
     save();

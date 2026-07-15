@@ -16,6 +16,8 @@ const PORT = Number(process.env.GYOMU_TOCHI_PORT || 8765);
 const HOST = process.env.GYOMU_TOCHI_HOST || "0.0.0.0";
 const MODEL = process.env.SONTOKU_MODEL || "auto";
 const MAX_BODY_BYTES = 1024 * 1024;
+const SONTOKU_RATE_LIMIT_PER_MINUTE = 10;
+const SONTOKU_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -51,6 +53,26 @@ async function readJsonBody(req) {
 
 function validDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
+function isAuthorized(req) {
+  const token = process.env.TASKBOARD_TOKEN || "";
+  if (!token) return true;
+  return req.headers["x-taskboard-token"] === token;
+}
+
+const sontokuCallLog = new Map();
+
+function checkSontokuRateLimit(date, now = Date.now()) {
+  const windowStart = now - SONTOKU_RATE_LIMIT_WINDOW_MS;
+  const recent = (sontokuCallLog.get(date) || []).filter((t) => t > windowStart);
+  if (recent.length >= SONTOKU_RATE_LIMIT_PER_MINUTE) {
+    sontokuCallLog.set(date, recent);
+    return false;
+  }
+  recent.push(now);
+  sontokuCallLog.set(date, recent);
+  return true;
 }
 
 function clip(value, max = 12000) {
@@ -94,6 +116,7 @@ function sanitizeStateData(raw) {
     board: data.board && typeof data.board === "object" ? data.board : {},
     categories: Array.isArray(data.categories) ? data.categories : [],
     sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+    incidents: Array.isArray(data.incidents) ? data.incidents : [],
   };
 }
 
@@ -204,17 +227,36 @@ function normalizeContext(raw) {
     energy: clip(context.energy, 30),
     kpis: context.kpis && typeof context.kpis === "object" ? context.kpis : {},
     completedToday: Number(context.completedToday || 0),
+    pendingCount: Number(context.pendingCount || 0),
     tasks,
   };
 }
 
+function computeTrackRecord(stateData, referenceDate) {
+  const tasks = Array.isArray(stateData?.tasks) ? stateData.tasks : [];
+  const windowStart = new Date(referenceDate);
+  windowStart.setDate(windowStart.getDate() - 14);
+  const z = (n) => String(n).padStart(2, "0");
+  const windowStartISO = `${windowStart.getFullYear()}-${z(windowStart.getMonth() + 1)}-${z(windowStart.getDate())}`;
+  const completedRecent = tasks.filter(
+    (t) => t.status === "done" && String(t.updatedAt || "").slice(0, 10) >= windowStartISO
+  ).length;
+  const forcedOverdue = tasks.filter(
+    (t) => t.forced && t.status !== "done" && t.dueDate && t.dueDate < referenceDate
+  ).length;
+  const forcedTotal = tasks.filter((t) => t.forced).length;
+  return { completedRecent, forcedOverdue, forcedTotal, windowStartISO };
+}
+
 async function basePrompt(date) {
-  const [persona, skill, recentLog, today] = await Promise.all([
+  const [persona, skill, recentLog, today, stateRecord] = await Promise.all([
     readOptional(path.join(REPO_ROOT, "cabinet", "sontoku.md"), 20000),
     readOptional(path.join(REPO_ROOT, ".claude", "skills", "sontoku", "SKILL.md"), 10000),
     readOptional(path.join(REPO_ROOT, "daily_governance", "sontoku_session_log.md"), 14000),
     readOptional(path.join(REPO_ROOT, "daily_governance", "today.md"), 10000),
+    readStateRecord(),
   ]);
+  const track = computeTrackRecord(stateRecord.data, date);
 
   return `あなたは統治手帳のAI尊徳である。以下の正本と運用規則を採用し、今さんの実行マネージャーとして対話する。
 
@@ -226,6 +268,12 @@ async function basePrompt(date) {
 - 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
 - 分からないことを推測で断定せず、実行に必要な問いを一つずつ返す。
 - 本日は ${date}。
+
+【直近14日間の実績（統治手帳データより・${track.windowStartISO}〜${date}）】
+- 完了タスク数（この期間中に完了扱いになったもの）: ${track.completedRecent}件
+- 強制タスク（発信・定期）の期限超過中: ${track.forcedOverdue}件 / 全${track.forcedTotal}件
+
+介入強度の目安（管理から自治への移行）: 期限超過が0〜1件で、完了数が積み上がっている場合は、事実提示を簡潔にし、確認の問いも最小限にとどめてよい。期限超過が2件以上、または完了数が乏しい場合は、これまで通り強く事実を提示し、確認を行うこと。最終判断は、この数値と直近セッション記録の文脈を合わせて行う。
 
 【人格正本 cabinet/sontoku.md】
 ${persona}
@@ -373,6 +421,16 @@ async function serveStatic(req, res, url) {
   try {
     const stat = await fsp.stat(file);
     if (!stat.isFile()) throw Object.assign(new Error("not_file"), { code: "ENOENT" });
+    const taskboardToken = process.env.TASKBOARD_TOKEN || "";
+    if (taskboardToken && path.basename(file) === "index.html") {
+      const html = (await fsp.readFile(file, "utf8")).replace(
+        "<head>",
+        `<head>\n  <script>window.TASKBOARD_TOKEN = ${JSON.stringify(taskboardToken)};</script>`
+      );
+      res.writeHead(200, { "Content-Type": MIME_TYPES[".html"], "Cache-Control": "no-cache" });
+      res.end(html);
+      return;
+    }
     res.writeHead(200, {
       "Content-Type": MIME_TYPES[path.extname(file)] || "application/octet-stream",
       "Cache-Control": "no-cache",
@@ -388,6 +446,14 @@ async function serveStatic(req, res, url) {
 function createServer() {
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
+
+    if (
+      (url.pathname.startsWith("/api/state") || url.pathname.startsWith("/api/sontoku")) &&
+      !isAuthorized(req)
+    ) {
+      json(res, 401, { error: "unauthorized", message: "認証トークンが正しくありません。" });
+      return;
+    }
 
     if (req.method === "GET" && url.pathname === "/api/info") {
       const access = getAccessUrls();
@@ -458,6 +524,13 @@ function createServer() {
           json(res, 400, { error: "empty_message", message: "メッセージを入力してください。" });
           return;
         }
+        if (!checkSontokuRateLimit(body.date)) {
+          json(res, 429, {
+            error: "rate_limited",
+            message: "短時間に呼び出しが多すぎます。1分待って再試行してください。",
+          });
+          return;
+        }
         const result = await enqueueByDate(body.date, () => runSontokuTurn(body));
         json(res, 200, result);
       } catch (error) {
@@ -515,4 +588,7 @@ module.exports = {
   getLanUrls,
   getTailscaleUrl,
   getAccessUrls,
+  isAuthorized,
+  checkSontokuRateLimit,
+  computeTrackRecord,
 };

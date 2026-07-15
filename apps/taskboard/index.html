@@ -48,6 +48,8 @@
     <!-- 全体 -->
     <section id="view-home" class="view active">
       <p class="lead">未完了の件数だけ先に見る。タップで中身を開く。</p>
+      <p id="pending-banner" class="warn hidden" role="status"></p>
+      <div id="imadaruma-progress" class="imadaruma-progress" aria-hidden="true"></div>
 
       <div class="home-block">
         <h3 class="home-head">優先順位</h3>
@@ -168,6 +170,24 @@
       <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
       <ul class="rows compact" id="list-day"></ul>
 
+      <div class="incident-panel">
+        <h3>国難ログ（衝動・脱線の記録）</h3>
+        <p class="journal-why">impulse_protocol.mdの分類。止める→記録する→最小行動で戻る。</p>
+        <div class="incident-form">
+          <select id="incident-type">
+            <option value="探索衝動">探索衝動</option>
+            <option value="回避衝動">回避衝動</option>
+            <option value="快楽衝動">快楽衝動</option>
+            <option value="完璧衝動">完璧衝動</option>
+            <option value="他者衝動">他者衝動</option>
+            <option value="構想衝動">構想衝動</option>
+          </select>
+          <input type="text" id="incident-note" placeholder="何が起きたか（1行）" />
+          <button type="button" class="btn ghost compact" id="incident-add">記録</button>
+        </div>
+        <ul class="rows compact" id="incident-list"></ul>
+      </div>
+
       <div class="journal-panel pm">
         <h3>夕 · ジャーナル</h3>
         <p class="journal-why">Three Good Things（Seligman）＋感謝（Emmons）：良い点に「なぜ」を付けると効果が強い。終わりは学び1つと翌日の種だけ（反芻しない）。</p>
@@ -189,6 +209,19 @@
         <label class="field">翌日へ渡す一事
           <input type="text" id="day-tomorrow" placeholder="明日の朝の「一事」候補" />
         </label>
+        <label class="field">今日発揮した強み（衝動性の裏返し＝瞬発力・集中力など）
+          <input type="text" id="day-strength" placeholder="例：締切前の集中力で一気に片付けた" />
+        </label>
+        <p class="lead tight">明君七徳チェック（◯/×や一言メモでよい）</p>
+        <div class="shichitoku-grid">
+          <label class="field">智慧<input type="text" id="st-chi" placeholder="今日の本質的行動は何だったか" /></label>
+          <label class="field">信義<input type="text" id="st-shin" placeholder="今日守った約束は何か" /></label>
+          <label class="field">仁愛<input type="text" id="st-jin" placeholder="今日、誰（何）を労ったか" /></label>
+          <label class="field">勇気<input type="text" id="st-yu" placeholder="今日、恐れず踏み出した一歩は何か" /></label>
+          <label class="field">厳正<input type="text" id="st-gen" placeholder="今日、律した脱線・衝動は何か" /></label>
+          <label class="field">明察<input type="text" id="st-mei" placeholder="今日、数字・現実で確認したことは何か" /></label>
+          <label class="field">美学<input type="text" id="st-bi" placeholder="今日、品格を保てた瞬間はどこか" /></label>
+        </div>
         <button type="button" class="btn primary compact" id="day-save-review">夕を保存</button>
         <span id="day-review-msg" class="msg"></span>
       </div>
@@ -218,6 +251,8 @@
     <!-- 週 -->
     <section id="view-week" class="view">
       <h2 class="section-title">今週の計画</h2>
+      <p class="lead tight">週次御前会議（自動集計）</p>
+      <div class="summary-block" id="week-summary"></div>
       <div class="goal-triple">
         <label class="field">目的（なぜこの週か）
           <textarea id="week-purpose" rows="2" placeholder="例：信用を戻し、請求と営業の流れを再開する"></textarea>
@@ -276,6 +311,9 @@
         <p class="board-head">内政</p>
         <div class="metric-table" id="board-naisei"></div>
       </div>
+      <div class="board-block shichitoku">
+        <div id="shichitoku-score"></div>
+      </div>
       <div class="toolbar">
         <button type="button" class="btn primary compact" id="month-save-board">KPIボードを保存</button>
         <span id="month-board-msg" class="msg"></span>
@@ -294,6 +332,7 @@
     <section id="view-all" class="view">
       <div class="filters">
         <label><input type="checkbox" id="hide-done" checked /> 完了を隠す</label>
+        <label><input type="checkbox" id="filter-external" /> 対外のみ</label>
         <select id="filter-quad">
           <option value="all">優先すべて</option>
           <option value="uu">今すぐ対応</option>
@@ -351,6 +390,8 @@
           <label><input type="radio" name="importance" value="low" /> 低</label>
         </fieldset>
         <label class="field"><input type="checkbox" id="new-today" /> 今日に入れる</label>
+        <label class="field"><input type="checkbox" id="new-external" /> 対外約束（external）</label>
+        <label class="field"><input type="checkbox" id="new-pending" /> 上奏として保留する（衝動キャッチャー・すぐには着手しない）</label>
         <label class="field">メモ<textarea id="new-notes" rows="2"></textarea></label>
         <button type="submit" class="btn primary">保存</button>
       </form>
@@ -406,6 +447,7 @@
         <label><input type="radio" name="edit-importance" value="high" /> 高</label>
         <label><input type="radio" name="edit-importance" value="low" /> 低</label>
       </fieldset>
+      <label class="field"><input type="checkbox" id="edit-external" /> 対外約束（external）</label>
       <label class="field">メモ<textarea id="edit-notes" rows="2"></textarea></label>
       <div class="btn-row">
         <button type="submit" class="btn primary">更新</button>

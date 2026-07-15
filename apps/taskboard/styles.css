@@ -759,6 +759,83 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
   background: var(--sky);
 }
 
+.external-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #7a2f55;
+  border: 1px solid #eab5cf;
+  border-radius: 99px;
+  padding: 0 0.28rem;
+  margin-right: 0.22rem;
+  background: #f8d5e8;
+}
+
+.doing-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #355520;
+  border: 1px solid #c7dba0;
+  border-radius: 99px;
+  padding: 0 0.28rem;
+  margin-right: 0.22rem;
+  background: #dff0c9;
+}
+
+.pending-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #7a5a1a;
+  border: 1px solid #f0d9a8;
+  border-radius: 99px;
+  padding: 0 0.28rem;
+  margin-right: 0.22rem;
+  background: var(--butter);
+}
+
+.shichitoku-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.incident-panel {
+  margin: 0.8rem 0;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.incident-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.5rem;
+}
+.incident-form input[type="text"] {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.imadaruma-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.3rem 0 0.6rem;
+}
+.imadaruma-pct {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.summary-block {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+  margin: 0.5rem 0 0.7rem;
+  font-size: 0.82rem;
+}
+.summary-row { padding: 0.1rem 0; }
+
 .tag-picker {
   display: flex;
   flex-wrap: wrap;
