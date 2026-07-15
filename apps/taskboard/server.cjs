@@ -149,11 +149,14 @@ function getLanUrls() {
 }
 
 function getTailscaleUrl() {
-  try {
-    const ip = execFileSync("tailscale", ["ip", "-4"], { encoding: "utf8", timeout: 2000 }).trim();
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) return `http://${ip}:${PORT}/`;
-  } catch {
-    /* tailscale not installed or not connected */
+  const candidates = ["tailscale", "/Applications/Tailscale.app/Contents/MacOS/Tailscale"];
+  for (const bin of candidates) {
+    try {
+      const ip = execFileSync(bin, ["ip", "-4"], { encoding: "utf8", timeout: 2000 }).trim();
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) return `http://${ip}:${PORT}/`;
+    } catch {
+      /* try next */
+    }
   }
   return null;
 }
