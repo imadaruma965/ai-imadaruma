@@ -65,6 +65,26 @@
       </div>
 
       <button type="button" class="btn ghost" id="btn-goto-all">全体一覧へ</button>
+      <div class="toolbar" style="margin-top:0.5rem">
+        <button type="button" class="btn ghost compact" id="btn-goto-done">完了タスク</button>
+        <button type="button" class="btn ghost compact" id="btn-goto-trash">ゴミ箱</button>
+      </div>
+    </section>
+
+    <!-- 完了タスク -->
+    <section id="view-done" class="view">
+      <button type="button" class="linkback" id="btn-back-home-done">← 全体に戻る</button>
+      <h2 class="section-title">完了タスク</h2>
+      <p class="lead tight">誤って完了にしたものは各行の「戻」で戻せる。</p>
+      <ul class="rows compact" id="list-done"></ul>
+    </section>
+
+    <!-- ゴミ箱 -->
+    <section id="view-trash" class="view">
+      <button type="button" class="linkback" id="btn-back-home-trash">← 全体に戻る</button>
+      <h2 class="section-title">ゴミ箱</h2>
+      <p class="lead tight">削除したタスクは7日間ここに残り、その後自動的に完全削除される。</p>
+      <ul class="rows compact" id="list-trash"></ul>
     </section>
 
     <!-- 優先順位詳細 -->
@@ -352,6 +372,48 @@
       <div class="tag-picker" id="filter-cat-tags" role="group" aria-label="カテゴリ絞り込み"></div>
       <input type="hidden" id="filter-cat" value="all" />
       <ul class="rows compact" id="list-all"></ul>
+
+      <h3 class="subhead">新規タスクを追加</h3>
+      <form id="form-list-new">
+        <label class="field">タイトル<input type="text" id="la-title" required /></label>
+        <div class="field">
+          <span>カテゴリ</span>
+          <div class="tag-picker" id="la-cat-tags" role="group" aria-label="カテゴリ"></div>
+          <input type="hidden" id="la-category" value="other" required />
+        </div>
+        <label class="field">視野
+          <select id="la-horizon">
+            <option value="day">日</option>
+            <option value="week" selected>週</option>
+            <option value="month">月</option>
+            <option value="someday">いつか</option>
+          </select>
+        </label>
+        <label class="field">期限<input type="date" id="la-due" /></label>
+        <label class="field">繰り返し
+          <select id="la-recurrence">
+            <option value="none" selected>なし</option>
+            <option value="weekly">毎週（期限と同じ曜日）</option>
+            <option value="monthly">毎月（期限と同じ日）</option>
+          </select>
+        </label>
+        <fieldset class="row">
+          <legend>緊急</legend>
+          <label><input type="radio" name="la-urgency" value="high" /> 高</label>
+          <label><input type="radio" name="la-urgency" value="low" checked /> 低</label>
+        </fieldset>
+        <fieldset class="row">
+          <legend>重要</legend>
+          <label><input type="radio" name="la-importance" value="high" checked /> 高</label>
+          <label><input type="radio" name="la-importance" value="low" /> 低</label>
+        </fieldset>
+        <label class="field"><input type="checkbox" id="la-today" /> 今日に入れる</label>
+        <label class="field"><input type="checkbox" id="la-external" /> 対外約束（external）</label>
+        <label class="field"><input type="checkbox" id="la-pending" /> 上奏として保留する（衝動キャッチャー・すぐには着手しない）</label>
+        <label class="field">メモ<textarea id="la-notes" rows="2"></textarea></label>
+        <button type="submit" class="btn primary">保存</button>
+      </form>
+      <p id="la-msg" class="msg"></p>
     </section>
 
     <!-- 新規 -->

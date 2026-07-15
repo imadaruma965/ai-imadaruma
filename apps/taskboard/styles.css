@@ -836,6 +836,18 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
 }
 .summary-row { padding: 0.1rem 0; }
 
+.week-detail {
+  margin-top: 0.4rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.3rem;
+}
+.week-detail summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 .tag-picker {
   display: flex;
   flex-wrap: wrap;

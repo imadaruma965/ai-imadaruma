@@ -221,6 +221,7 @@
       tags: Array.isArray(t.tags) ? t.tags : [],
       forced: !!t.forced,
       external: !!t.external,
+      deletedAt: t.deletedAt || null,
       recurrence,
       recurrenceDay: recurrence === "monthly" ? Number(t.recurrenceDay) || due?.getDate() || null : null,
     };
@@ -475,6 +476,7 @@
     let changed = false;
     const findLegacy = (def) =>
       state.tasks.find((t) => {
+        if (t.status === "done" || t.deletedAt) return false;
         if (t.scheduleKey === def.key) return true;
         if ((t.category || inferCategory(t.title)) !== def.category) return false;
         if (def.key.endsWith("-billing")) return t.title.includes("請求案内");
@@ -546,7 +548,7 @@
     });
   }
 
-  function mountCatPicker(tagsSel, hiddenSel, { includeAll = false, initial = "other" } = {}) {
+  function mountCatPicker(tagsSel, hiddenSel, { includeAll = false, initial = "other", onSelect } = {}) {
     const wrap = $(tagsSel);
     const hidden = $(hiddenSel);
     if (!wrap || !hidden) return;
@@ -560,6 +562,7 @@
       btn.addEventListener("click", () => {
         setCatValue(hiddenSel, tagsSel, btn.dataset.cat);
         if (includeAll) renderAll();
+        if (onSelect) onSelect(btn.dataset.cat);
       });
     });
     setCatValue(hiddenSel, tagsSel, hidden.value || initial);
@@ -568,7 +571,15 @@
   function fillCategoryPickers() {
     mountCatPicker("#new-cat-tags", "#new-category", { initial: "other" });
     mountCatPicker("#edit-cat-tags", "#edit-category", { initial: "other" });
-    mountCatPicker("#filter-cat-tags", "#filter-cat", { includeAll: true, initial: "all" });
+    mountCatPicker("#filter-cat-tags", "#filter-cat", {
+      includeAll: true,
+      initial: "all",
+      onSelect: (cat) => {
+        if (cat !== "all") setCatValue("#la-category", "#la-cat-tags", cat);
+      },
+    });
+    const filterCat = $("#filter-cat")?.value;
+    mountCatPicker("#la-cat-tags", "#la-category", { initial: filterCat && filterCat !== "all" ? filterCat : "other" });
   }
 
   function ensureForcedMedia() {
@@ -683,15 +694,30 @@
   }
 
   function activeTasks() {
-    return state.tasks.filter((t) => t.status !== "done" && t.status !== "pending");
+    return state.tasks.filter((t) => t.status !== "done" && t.status !== "pending" && !t.deletedAt);
   }
 
   function pendingTasks() {
-    return state.tasks.filter((t) => t.status === "pending");
+    return state.tasks.filter((t) => t.status === "pending" && !t.deletedAt);
+  }
+
+  function doneTasks() {
+    return state.tasks.filter((t) => t.status === "done" && !t.deletedAt);
+  }
+
+  function trashedTasks() {
+    return state.tasks.filter((t) => !!t.deletedAt);
+  }
+
+  function purgeOldTrash() {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const before = state.tasks.length;
+    state.tasks = state.tasks.filter((t) => !(t.deletedAt && new Date(t.deletedAt).getTime() < cutoff));
+    if (state.tasks.length !== before) save();
   }
 
   function inWip(t) {
-    return !t.forced && t.status !== "done" && (!!t.onToday || t.status === "doing");
+    return !t.forced && t.status !== "done" && !t.deletedAt && (!!t.onToday || t.status === "doing");
   }
 
   function wipCount() {
@@ -758,9 +784,21 @@
         if (!t) return;
         if (act === "done") {
           if (t.recurrence === "weekly" || t.recurrence === "monthly") {
+            const nextDue = nextRecurringDue(t);
+            state.tasks.push(
+              normalizeTask({
+                ...t,
+                id: uid(),
+                status: "todo",
+                dueDate: nextDue,
+                onToday: false,
+                lastCompletedAt: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })
+            );
             t.lastCompletedAt = new Date().toISOString();
-            t.dueDate = nextRecurringDue(t);
-            t.status = "todo";
+            t.status = "done";
           } else {
             t.status = "done";
           }
@@ -808,6 +846,57 @@
     const n = pendingTasks().length;
     el.classList.toggle("hidden", n === 0);
     if (n > 0) el.textContent = `上奏（保留中）が${n}件。一覧タブで「承認」すると通常の任務になる。`;
+  }
+
+  function trashRowHtml(t) {
+    const cat = t.category || "other";
+    const daysLeft = Math.max(
+      0,
+      7 - Math.floor((Date.now() - new Date(t.deletedAt).getTime()) / (24 * 60 * 60 * 1000))
+    );
+    return `<li class="row-item border-${cat}" data-id="${t.id}">
+      <span class="dot dot-${cat}"></span>
+      <span class="row-title"><span class="row-cat tag-${cat}">${catTag(cat)}</span>${escapeHtml(t.title)}</span>
+      <span class="row-meta">残り${daysLeft}日で完全削除</span>
+      <span class="row-actions">
+        <button type="button" data-act="restore">復元</button>
+        <button type="button" data-act="purge">完全削除</button>
+      </span>
+    </li>`;
+  }
+
+  function bindTrashRows(ul) {
+    if (!ul) return;
+    ul.querySelectorAll("button[data-act]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.closest(".row-item").dataset.id;
+        const act = btn.dataset.act;
+        const t = state.tasks.find((x) => x.id === id);
+        if (!t) return;
+        if (act === "restore") {
+          t.deletedAt = null;
+          t.updatedAt = new Date().toISOString();
+        } else if (act === "purge") {
+          if (!confirm("完全に削除しますか？元に戻せません。")) return;
+          state.tasks = state.tasks.filter((x) => x.id !== id);
+        }
+        save();
+        render();
+      });
+    });
+  }
+
+  function renderTrash() {
+    const ul = $("#list-trash");
+    if (!ul) return;
+    const list = trashedTasks();
+    ul.innerHTML = list.length ? list.map(trashRowHtml).join("") : '<li class="empty">なし</li>';
+    bindTrashRows(ul);
+  }
+
+  function renderDoneList() {
+    fillList("#list-done", doneTasks());
   }
 
   function renderHome() {
@@ -908,7 +997,9 @@
     const fc = $("#filter-cat").value;
     const fh = $("#filter-horizon").value;
     const externalOnly = $("#filter-external")?.checked;
-    let list = [...state.tasks];
+    const currentMonth = monthKey();
+    let list = state.tasks.filter((t) => !t.deletedAt);
+    list = list.filter((t) => t.recurrence === "none" || !t.dueDate || t.dueDate.slice(0, 7) <= currentMonth);
     if (hideDone) list = list.filter((t) => t.status !== "done");
     if (fq !== "all") list = list.filter((t) => quadrant(t) === fq);
     if (fc !== "all") list = list.filter((t) => (t.category || "other") === fc);
@@ -916,7 +1007,11 @@
     if (externalOnly) list = list.filter((t) => t.external);
     list.sort((a, b) => {
       if (a.status !== b.status) return a.status === "done" ? 1 : -1;
-      return (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title);
+      if (!!a.external !== !!b.external) return a.external ? -1 : 1;
+      const ad = a.dueDate || "9999-99-99";
+      const bd = b.dueDate || "9999-99-99";
+      if (ad !== bd) return ad < bd ? -1 : 1;
+      return a.title.localeCompare(b.title);
     });
     fillList("#list-all", list);
   }
@@ -941,7 +1036,7 @@
       });
     };
 
-    state.tasks.filter((t) => t.status !== "done" && t.dueDate).forEach((task) => {
+    state.tasks.filter((t) => t.status !== "done" && !t.deletedAt && t.dueDate).forEach((task) => {
       const anchor = dateFromISO(task.dueDate);
       if (!anchor) return;
       if (task.recurrence === "monthly") {
@@ -1150,14 +1245,51 @@
     const shichitokuDays = dates.filter(dayHasShichitoku).length;
     const strengthDays = dates.filter((d) => String((state.plans[`day:${d}`] || {}).strength || "").trim()).length;
     const incidentCount = (state.incidents || []).filter((e) => dates.includes(e.date)).length;
-    const completedCount = state.tasks.filter(
-      (t) => t.status === "done" && dates.includes(String(t.updatedAt || "").slice(0, 10))
-    ).length;
+    const weekDone = state.tasks.filter(
+      (t) => t.status === "done" && !t.deletedAt && dates.includes(String(t.updatedAt || "").slice(0, 10))
+    );
+
+    const catCounts = {};
+    const quadCounts = { uu: 0, un: 0, nu: 0, nn: 0 };
+    weekDone.forEach((t) => {
+      const c = t.category || "other";
+      catCounts[c] = (catCounts[c] || 0) + 1;
+      quadCounts[quadrant(t)] += 1;
+    });
+    const quadLabel = { uu: "今すぐ", un: "見せかけ", nu: "種まき", nn: "減らす" };
+    const catRows = Object.keys(catCounts)
+      .map((c) => `<div class="summary-row">${escapeHtml(catLabel(c))}: ${catCounts[c]}件</div>`)
+      .join("");
+    const quadRows = Object.keys(quadCounts)
+      .filter((q) => quadCounts[q] > 0)
+      .map((q) => `<div class="summary-row">${quadLabel[q]}: ${quadCounts[q]}件</div>`)
+      .join("");
+    const detailRows = weekDone
+      .map(
+        (t) =>
+          `<div class="summary-row">${String(t.updatedAt || "").slice(5, 10)} ・ ${escapeHtml(
+            catLabel(t.category || "other")
+          )} ・ ${escapeHtml(t.title)}</div>`
+      )
+      .join("");
+
     host.innerHTML = `
       <div class="summary-row">七徳チェック記入: ${shichitokuDays}/7日</div>
       <div class="summary-row">強みの記録: ${strengthDays}/7日</div>
       <div class="summary-row">国難ログ件数: ${incidentCount}件</div>
-      <div class="summary-row">完了タスク（週内）: ${completedCount}件</div>
+      <div class="summary-row">完了タスク（週内）: ${weekDone.length}件</div>
+      <details class="week-detail">
+        <summary>カテゴリ別バランス</summary>
+        ${catRows || '<div class="summary-row">なし</div>'}
+      </details>
+      <details class="week-detail">
+        <summary>優先度別バランス</summary>
+        ${quadRows || '<div class="summary-row">なし</div>'}
+      </details>
+      <details class="week-detail">
+        <summary>詳細を見る（${weekDone.length}件）</summary>
+        ${detailRows || '<div class="summary-row">なし</div>'}
+      </details>
     `;
   }
 
@@ -1392,6 +1524,8 @@
     renderSontokuChat();
     renderIncidents();
     renderImadarumaProgress();
+    renderDoneList();
+    renderTrash();
   }
 
   function setView(name) {
@@ -1571,6 +1705,7 @@
   scrubStoredTitles();
   ensureForcedMedia();
   ensureRequiredMonthlyTasks();
+  purgeOldTrash();
 
   $$(".tab").forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
   $("#btn-back-home").addEventListener("click", () => setView("home"));
@@ -1612,6 +1747,52 @@
   });
   $$(".sontoku-chip").forEach((btn) => {
     btn.addEventListener("click", () => sendSontokuUserMessage(btn.dataset.chip || btn.textContent));
+  });
+
+  $("#form-list-new")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = $("#la-title").value.trim();
+    const horizon = $("#la-horizon").value;
+    const recurrence = $("#la-recurrence").value;
+    const dueDate = $("#la-due").value || null;
+    if (recurrence !== "none" && !dueDate) {
+      alert("繰り返しタスクには、最初の期限を入れてください。");
+      return;
+    }
+    let onToday = $("#la-today").checked || horizon === "day";
+    if (onToday && wipCount() >= 7) {
+      onToday = false;
+      alert("今日・着手中の合計が7件が目安のため、今日ピンは外した。");
+    }
+    state.tasks.push(
+      normalizeTask({
+        id: uid(),
+        title,
+        dueDate,
+        category: $("#la-category").value,
+        horizon,
+        recurrence,
+        recurrenceDay: recurrence === "monthly" ? dateFromISO(dueDate)?.getDate() : null,
+        urgency: $("input[name=la-urgency]:checked").value,
+        importance: $("input[name=la-importance]:checked").value,
+        status: $("#la-pending").checked ? "pending" : "todo",
+        onToday: $("#la-pending").checked ? false : onToday,
+        external: $("#la-external").checked,
+        notes: $("#la-notes").value.trim(),
+        tags: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    );
+    save();
+    $("#form-list-new").reset();
+    $("#la-recurrence").value = "none";
+    $("input[name=la-urgency][value=low]").checked = true;
+    $("input[name=la-importance][value=high]").checked = true;
+    const currentFilterCat = $("#filter-cat")?.value;
+    setCatValue("#la-category", "#la-cat-tags", currentFilterCat && currentFilterCat !== "all" ? currentFilterCat : "other");
+    render();
+    $("#la-msg").textContent = "追加した";
   });
 
   $("#hide-done").addEventListener("change", renderAll);
@@ -1798,12 +1979,21 @@
   });
   $("#edit-cancel").addEventListener("click", () => $("#edit-dialog").close());
   $("#edit-delete").addEventListener("click", () => {
-    if (!confirm("削除しますか？")) return;
-    state.tasks = state.tasks.filter((x) => x.id !== $("#edit-id").value);
+    if (!confirm("削除しますか？（ゴミ箱に移動し、7日後に完全削除されます）")) return;
+    const t = state.tasks.find((x) => x.id === $("#edit-id").value);
+    if (t) {
+      t.deletedAt = new Date().toISOString();
+      t.updatedAt = t.deletedAt;
+    }
     save();
     $("#edit-dialog").close();
     render();
   });
+
+  $("#btn-goto-done")?.addEventListener("click", () => setView("done"));
+  $("#btn-goto-trash")?.addEventListener("click", () => setView("trash"));
+  $("#btn-back-home-done")?.addEventListener("click", () => setView("home"));
+  $("#btn-back-home-trash")?.addEventListener("click", () => setView("home"));
 
   $("#btn-export").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
