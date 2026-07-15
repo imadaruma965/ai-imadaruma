@@ -1,0 +1,372 @@
+const http = require("node:http");
+const fs = require("node:fs");
+const fsp = require("node:fs/promises");
+const path = require("node:path");
+const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
+
+const APP_DIR = __dirname;
+const REPO_ROOT = path.resolve(APP_DIR, "../..");
+const DATA_DIR = path.join(APP_DIR, "data");
+const SESSION_FILE = path.join(DATA_DIR, ".sontoku-sessions.json");
+const CHAT_LOG_DIR = path.join(REPO_ROOT, "daily_governance", "chat_logs");
+const PORT = Number(process.env.GYOMU_TOCHI_PORT || 8765);
+const MODEL = process.env.SONTOKU_MODEL || "auto";
+const MAX_BODY_BYTES = 1024 * 1024;
+
+const MIME_TYPES = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+};
+
+const dateQueues = new Map();
+
+function json(res, status, body) {
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
+  res.end(JSON.stringify(body));
+}
+
+async function readJsonBody(req) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) throw new Error("request_too_large");
+    chunks.push(chunk);
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+}
+
+function validDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
+function clip(value, max = 12000) {
+  const text = String(value || "");
+  return text.length > max ? text.slice(-max) : text;
+}
+
+async function readOptional(file, max) {
+  try {
+    return clip(await fsp.readFile(file, "utf8"), max);
+  } catch (error) {
+    if (error.code === "ENOENT") return "";
+    throw error;
+  }
+}
+
+async function readSessions() {
+  try {
+    const parsed = JSON.parse(await fsp.readFile(SESSION_FILE, "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    if (error.code === "ENOENT" || error instanceof SyntaxError) return {};
+    throw error;
+  }
+}
+
+async function writeSessions(sessions) {
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  const temporary = `${SESSION_FILE}.tmp`;
+  await fsp.writeFile(temporary, `${JSON.stringify(sessions, null, 2)}\n`, "utf8");
+  await fsp.rename(temporary, SESSION_FILE);
+}
+
+function enqueueByDate(date, operation) {
+  const previous = dateQueues.get(date) || Promise.resolve();
+  const current = previous.catch(() => {}).then(operation);
+  dateQueues.set(date, current);
+  current.then(
+    () => {
+      if (dateQueues.get(date) === current) dateQueues.delete(date);
+    },
+    () => {
+      if (dateQueues.get(date) === current) dateQueues.delete(date);
+    }
+  );
+  return current;
+}
+
+function normalizeContext(raw) {
+  const context = raw && typeof raw === "object" ? raw : {};
+  const tasks = Array.isArray(context.tasks)
+    ? context.tasks.slice(0, 30).map((task) => ({
+        title: clip(task.title, 200),
+        category: clip(task.category, 60),
+        status: clip(task.status, 30),
+        dueDate: clip(task.dueDate, 20),
+        priority: clip(task.priority, 40),
+        onToday: Boolean(task.onToday),
+        forced: Boolean(task.forced),
+      }))
+    : [];
+  return {
+    localTime: clip(context.localTime, 60),
+    goal: clip(context.goal, 500),
+    ifthen: clip(context.ifthen, 500),
+    energy: clip(context.energy, 30),
+    kpis: context.kpis && typeof context.kpis === "object" ? context.kpis : {},
+    completedToday: Number(context.completedToday || 0),
+    tasks,
+  };
+}
+
+async function basePrompt(date) {
+  const [persona, skill, recentLog, today] = await Promise.all([
+    readOptional(path.join(REPO_ROOT, "cabinet", "sontoku.md"), 20000),
+    readOptional(path.join(REPO_ROOT, ".claude", "skills", "sontoku", "SKILL.md"), 10000),
+    readOptional(path.join(REPO_ROOT, "daily_governance", "sontoku_session_log.md"), 14000),
+    readOptional(path.join(REPO_ROOT, "daily_governance", "today.md"), 10000),
+  ]);
+
+  return `あなたは統治手帳のAI尊徳である。以下の正本と運用規則を採用し、今さんの実行マネージャーとして対話する。
+
+重要な境界:
+- 戦略を変更しない。戦略判断はAI栄一の領分である。
+- この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
+- 統治手帳から渡された最新の任務・進捗を事実として扱う。
+- 応答は日本語で簡潔にし、冒頭は必ず「尊徳:」とする。
+- 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
+- 分からないことを推測で断定せず、実行に必要な問いを一つずつ返す。
+- 本日は ${date}。
+
+【人格正本 cabinet/sontoku.md】
+${persona}
+
+【運用規則 .claude/skills/sontoku/SKILL.md】
+${skill}
+
+【直近の尊徳セッション記録】
+${recentLog}
+
+【日次統治の現況】
+${today}`;
+}
+
+function turnPrompt({ date, message, event, context, firstTurn }) {
+  const request =
+    event === "open"
+      ? "今さんが今日の計画を開いた。時刻・任務・進捗に合わせ、挨拶と必要な確認を一つ伝える。"
+      : `今さんの発言:\n${clip(message, 4000)}`;
+  return `${firstTurn ? "ここから統治手帳での継続対話を開始する。\n\n" : ""}【現在時刻・統治手帳の最新情報】
+日付: ${date}
+${JSON.stringify(context, null, 2)}
+
+【今回の入力】
+${request}
+
+AI尊徳として、今さんに直接返答すること。`;
+}
+
+async function openAgent(date, existingId) {
+  const options = {
+    apiKey: process.env.CURSOR_API_KEY,
+    model: { id: MODEL },
+    name: `AI尊徳・統治手帳 ${date}`,
+    mode: "plan",
+    local: {
+      cwd: REPO_ROOT,
+      settingSources: ["project"],
+      sandboxOptions: { enabled: true },
+    },
+  };
+
+  if (existingId) {
+    try {
+      return { agent: await Agent.resume(existingId, options), firstTurn: false };
+    } catch (error) {
+      if (error?.code !== "agent_not_found") throw error;
+    }
+  }
+  return { agent: await Agent.create(options), firstTurn: true };
+}
+
+async function disposeAgent(agent) {
+  if (!agent) return;
+  if (typeof agent[Symbol.asyncDispose] === "function") {
+    await agent[Symbol.asyncDispose]();
+  } else {
+    agent.close();
+  }
+}
+
+function markdownQuote(text) {
+  return String(text || "")
+    .split("\n")
+    .map((line) => `> ${line}`)
+    .join("\n");
+}
+
+async function appendChatLog({ date, message, event, response, agentId, runId }) {
+  await fsp.mkdir(CHAT_LOG_DIR, { recursive: true });
+  const file = path.join(CHAT_LOG_DIR, `sontoku-${date}.md`);
+  let exists = true;
+  try {
+    await fsp.access(file);
+  } catch {
+    exists = false;
+  }
+  const time = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
+  const header = exists
+    ? ""
+    : `# AI尊徳・統治手帳 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> 統治手帳から自動記録。要約は \`daily_governance/sontoku_session_log.md\` に残す。\n\n`;
+  const userText = event === "open" ? "今日の計画を開いた" : message;
+  const entry = `## ${time}\n\n**今さん**\n\n${markdownQuote(userText)}\n\n**尊徳**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
+  await fsp.appendFile(file, `${header}${entry}`, "utf8");
+}
+
+async function runSontokuTurn(payload) {
+  const { date, event = "message" } = payload;
+  const message = String(payload.message || "").trim();
+  const context = normalizeContext(payload.context);
+  const sessions = await readSessions();
+  const { agent, firstTurn } = await openAgent(date, sessions[date]?.agentId);
+  let run;
+  try {
+    const prompt = `${firstTurn ? `${await basePrompt(date)}\n\n` : ""}${turnPrompt({
+      date,
+      message,
+      event,
+      context,
+      firstTurn,
+    })}`;
+    run = await agent.send(prompt, { mode: "plan" });
+    const result = await run.wait();
+    if (result.status !== "finished" || !result.result) {
+      throw new Error(result.error?.message || `Cursor run ended with ${result.status}`);
+    }
+    sessions[date] = {
+      agentId: agent.agentId,
+      lastRunId: result.id,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeSessions(sessions);
+    await appendChatLog({
+      date,
+      message,
+      event,
+      response: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+    });
+    return {
+      reply: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+      model: result.model?.id || MODEL,
+    };
+  } finally {
+    await disposeAgent(agent);
+  }
+}
+
+async function serveStatic(req, res, url) {
+  const pathname = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
+  const file = path.resolve(APP_DIR, `.${pathname}`);
+  if (!file.startsWith(`${APP_DIR}${path.sep}`)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+  try {
+    const stat = await fsp.stat(file);
+    if (!stat.isFile()) throw Object.assign(new Error("not_file"), { code: "ENOENT" });
+    res.writeHead(200, {
+      "Content-Type": MIME_TYPES[path.extname(file)] || "application/octet-stream",
+      "Cache-Control": "no-cache",
+    });
+    fs.createReadStream(file).pipe(res);
+  } catch (error) {
+    if (error.code !== "ENOENT") console.error(error);
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Not found");
+  }
+}
+
+function createServer() {
+  return http.createServer(async (req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
+
+    if (req.method === "GET" && url.pathname === "/api/sontoku/status") {
+      json(res, 200, {
+        connected: Boolean(process.env.CURSOR_API_KEY),
+        provider: "Cursor SDK",
+        model: MODEL,
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/sontoku") {
+      if (!process.env.CURSOR_API_KEY) {
+        json(res, 503, {
+          error: "cursor_api_key_missing",
+          message: "CURSOR_API_KEYが未設定です。.env.localを設定して統治手帳を再起動してください。",
+        });
+        return;
+      }
+      try {
+        const body = await readJsonBody(req);
+        if (!validDate(body.date)) {
+          json(res, 400, { error: "invalid_date", message: "日付が正しくありません。" });
+          return;
+        }
+        if (body.event !== "open" && !String(body.message || "").trim()) {
+          json(res, 400, { error: "empty_message", message: "メッセージを入力してください。" });
+          return;
+        }
+        const result = await enqueueByDate(body.date, () => runSontokuTurn(body));
+        json(res, 200, result);
+      } catch (error) {
+        console.error("[AI尊徳]", error);
+        const authError =
+          error instanceof AuthenticationError ||
+          (error instanceof CursorAgentError && /auth|api.?key|unauthorized/i.test(error.message));
+        json(res, authError ? 401 : 500, {
+          error: authError ? "cursor_auth_failed" : "sontoku_run_failed",
+          message: authError
+            ? "Cursor APIキーを確認してください。"
+            : "AI尊徳との接続に失敗しました。ターミナルのエラーを確認してください。",
+        });
+      }
+      return;
+    }
+
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      res.writeHead(405, { Allow: "GET, HEAD, POST" });
+      res.end();
+      return;
+    }
+    await serveStatic(req, res, url);
+  });
+}
+
+if (require.main === module) {
+  const server = createServer();
+  server.listen(PORT, "127.0.0.1", () => {
+    console.log(`統治手帳: http://127.0.0.1:${PORT}/`);
+    console.log(
+      process.env.CURSOR_API_KEY
+        ? `AI尊徳: Cursor SDK接続準備済み（model: ${MODEL}）`
+        : "AI尊徳: 未接続（apps/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
+    );
+  });
+}
+
+module.exports = {
+  createServer,
+  normalizeContext,
+  turnPrompt,
+  validDate,
+};

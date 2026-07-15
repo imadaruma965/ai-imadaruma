@@ -1,0 +1,5 @@
+node_modules/
+apps/taskboard/.env.local
+apps/taskboard/data/.sontoku-sessions.json
+apps/taskboard/data/state.json
+daily_governance/chat_logs/sontoku-*.md

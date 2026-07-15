@@ -25,6 +25,35 @@ cd /Users/imadatadahito/Desktop/ai-imadaruma/apps/taskboard
 
 ---
 
+## AI尊徳を接続する（初回のみ）
+
+統治手帳のチャットは Cursor SDK でローカルの尊徳エージェントを起動する。
+定型応答ではなく、`cabinet/sontoku.md`、直近の尊徳ログ、今日の任務を踏まえて会話する。
+
+1. [Cursor Dashboard → Integrations](https://cursor.com/dashboard/integrations) で APIキーを作る
+2. `apps/taskboard/.env.local` を作り、次の1行を保存する
+
+```bash
+CURSOR_API_KEY="cursor_ここに自分のキー"
+```
+
+3. 他人が読めないよう、ターミナルで権限を設定する
+
+```bash
+chmod 600 apps/taskboard/.env.local
+```
+
+4. `start.command` または `./start.sh` で起動する
+
+`.env.local` はGitの対象外であり、APIキーはブラウザへ送られない。
+初回起動時は Cursor SDK を自動インストールする。使用モデルは既定で `auto`。
+
+対話は日付ごとのCursorエージェントとして継続し、生ログを
+`daily_governance/chat_logs/sontoku-YYYY-MM-DD.md` に自動保存する。
+エージェントIDとrun IDも記録されるため、Cursor側の実行と照合できる。
+
+---
+
 ## 別のPC／別ブラウザへ続きを移す
 
 データは **そのブラウザの localStorage** にだけ入る。機種を変えるときは JSON で運ぶ。
@@ -42,7 +71,7 @@ cd /Users/imadatadahito/Desktop/ai-imadaruma/apps/taskboard
 ## 毎日の流れ（デスクトップ）
 
 1. `start.command` で起動  
-2. **朝**: 日タブ → 朝の意図を保存  
+2. **朝**: 今日タブ → AI尊徳の確認に答え、朝の意図を保存
 3. **日中**: 今日／カレンダー／象限で予定を確認し、新規で追加
 4. **夕**: 日タブ → ジャーナル保存  
 5. **金曜**: 週タブで目標・振り返り／月タブで KPI ボード更新  
@@ -84,4 +113,6 @@ cd /Users/imadatadahito/Desktop/ai-imadaruma/apps/taskboard
 | 画面が古い | **Cmd+Shift+R** で再読み込み |
 | ポート使用中 | 既に起動済み。ブラウザで http://127.0.0.1:8765/ |
 | データが空 | JSON読込、またはシード読込 |
+| AI尊徳が「APIキー未設定」 | `apps/taskboard/.env.local` を作成し、統治手帳を再起動 |
+| AI尊徳が「接続エラー」 | 起動中のターミナルを確認。APIキーとCursor利用権限も確認 |
 | `start.command` が開けない | 右クリック → 開く。またはターミナルで `chmod +x start.command start.sh` |

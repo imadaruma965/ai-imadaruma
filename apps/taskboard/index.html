@@ -110,7 +110,10 @@
           <span class="sontoku-avatar" aria-hidden="true">尊</span>
           <div>
             <strong>AI尊徳</strong>
-            <p class="sontoku-sub">実行マネージャー · 進捗・壁打ち</p>
+            <p class="sontoku-sub">
+              実行マネージャー · 進捗・壁打ち
+              <span id="sontoku-status" class="sontoku-status">接続確認中</span>
+            </p>
           </div>
         </div>
         <div class="sontoku-messages" id="sontoku-messages" aria-live="polite"></div>
@@ -121,7 +124,7 @@
         </div>
         <form id="sontoku-form" class="sontoku-form">
           <input type="text" id="sontoku-input" placeholder="進捗報告・相談・壁打ち…" autocomplete="off" />
-          <button type="submit" class="btn primary compact">送る</button>
+          <button type="submit" id="sontoku-send" class="btn primary compact">送る</button>
         </form>
       </div>
 

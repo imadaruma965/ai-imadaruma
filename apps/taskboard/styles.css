@@ -316,6 +316,25 @@ body {
   font-size: 0.68rem;
   color: var(--muted);
 }
+.sontoku-status {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.06rem 0.35rem;
+  border-radius: 999px;
+  background: var(--bg);
+}
+.sontoku-status[data-state="connected"] {
+  background: var(--mint);
+  color: var(--ok);
+}
+.sontoku-status[data-state="busy"] {
+  background: var(--butter);
+  color: var(--warn);
+}
+.sontoku-status[data-state="error"] {
+  background: var(--rose);
+  color: #9f3653;
+}
 .sontoku-messages {
   display: flex;
   flex-direction: column;
@@ -349,6 +368,14 @@ body {
   border: 1px solid #b8d9ea;
   color: var(--ink);
 }
+.sontoku-msg.error {
+  align-self: center;
+  max-width: 100%;
+  background: var(--rose);
+  border: 1px solid #efbdca;
+  color: #8d2945;
+  font-size: 0.72rem;
+}
 .sontoku-chips {
   display: flex;
   flex-wrap: wrap;
@@ -367,6 +394,12 @@ body {
 .sontoku-chip:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+.sontoku-chip:disabled,
+.sontoku-form button:disabled,
+.sontoku-form input:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 .sontoku-form {
   display: flex;

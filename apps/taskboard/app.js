@@ -893,6 +893,9 @@
   }
 
   /* —— AI尊徳チャット（今日タブ） —— */
+  let sontokuBusy = false;
+  const sontokuOpeningAttempted = new Set();
+
   function sontokuChatKey() {
     return `day:${todayISO()}`;
   }
@@ -903,156 +906,119 @@
     return state.sontokuChat[key];
   }
 
-  function pushSontokuMessage(role, text) {
-    const msg = { role, text: String(text).trim(), at: new Date().toISOString() };
+  function pushSontokuMessage(role, text, metadata = {}) {
+    const msg = {
+      role,
+      text: String(text).trim(),
+      at: new Date().toISOString(),
+      ...metadata,
+    };
     if (!msg.text) return;
     getSontokuMessages().push(msg);
     save();
     renderSontokuChat();
   }
 
-  function sontokuCtx() {
+  function sontokuContext() {
     const dayTasks = activeTasks().filter(inDay);
-    const pinned = dayTasks.filter((t) => t.onToday);
     const doneToday = state.tasks.filter(
       (t) => t.status === "done" && String(t.updatedAt || "").slice(0, 10) === todayISO()
     );
     const dayPlan = state.plans[sontokuChatKey()] || {};
-    const urgent = dayTasks.filter((t) => quadrant(t) === "uu");
-    const hour = new Date().getHours();
     return {
-      hour,
-      dayTasks,
-      pinned,
-      doneToday,
-      dayPlan,
-      urgent,
+      localTime: new Date().toLocaleString("ja-JP"),
       goal: (dayPlan.goal || "").trim(),
       ifthen: (dayPlan.ifthen || "").trim(),
-      eveningDone: !!(dayPlan.good1 || dayPlan.lesson),
+      energy: dayPlan.energy ?? "",
+      completedToday: doneToday.length,
+      kpis: state.kpis[todayISO()] || {},
+      tasks: dayTasks.map((task) => ({
+        title: stripCategoryPrefix(task.title, task.category || "other", state.categories),
+        category: catLabel(task.category || "other"),
+        status: task.status,
+        dueDate: task.dueDate || "",
+        priority: priorityMeta(quadrant(task)).label,
+        onToday: !!task.onToday,
+        forced: !!task.forced,
+      })),
     };
   }
 
-  function taskSnippet(t) {
-    return stripCategoryPrefix(t.title, t.category || "other", state.categories);
+  function setSontokuStatus(text, stateName = "") {
+    const status = $("#sontoku-status");
+    if (!status) return;
+    status.textContent = text;
+    status.dataset.state = stateName;
   }
 
-  function buildSontokuOpening(ctx) {
-    const total = ctx.dayTasks.length;
-    const done = ctx.doneToday.length;
-    const remain = total;
-    const pinnedN = ctx.pinned.length;
-
-    if (ctx.hour < 12) {
-      let text = `尊徳: おはようございます。今日の任務は${total}件なり`;
-      if (pinnedN) text += `（うち今日に固定${pinnedN}件）`;
-      text += "。";
-      if (!ctx.goal) {
-        text += " 朝の一事がまだ空であるなら、今すぐ対応の一件を選び、if-thenまで書くのが筋なり。";
-      } else {
-        text += ` 今日の一事は「${ctx.goal}」なり。`;
-        if (ctx.ifthen) text += ` if-then「${ctx.ifthen}」も定まっておる。`;
-      }
-      if (ctx.urgent.length) {
-        text += ` 今すぐ対応は${ctx.urgent.length}件——まず「${taskSnippet(ctx.urgent[0])}」から手を付けるのがよいなり。`;
-      }
-      text += " 進捗や迷いがあれば、下の欄に書いてくだされ。";
-      return text;
+  function setSontokuBusy(busy) {
+    sontokuBusy = busy;
+    const input = $("#sontoku-input");
+    const send = $("#sontoku-send");
+    if (input) input.disabled = busy;
+    if (send) {
+      send.disabled = busy;
+      send.textContent = busy ? "思考中…" : "送る";
     }
-
-    if (ctx.hour < 18) {
-      let text = `尊徳: 午後の進捗を確認させていただきたいなり。今日の任務${total}件のうち、完了は${done}件`;
-      if (remain > done) text += `、残り${remain - done}件`;
-      text += "。";
-      if (!ctx.goal) text += " 一事が未定のままなら、今からでも一件に絞るのが分度なり。";
-      else if (done === 0 && total > 0) {
-        text += ` 一事「${ctx.goal}」に向かう一歩は、まだ踏めておらぬようだなり。`;
-      }
-      text += " どこまで進んだか、壁打ちでも構わぬ。送ってくだされ。";
-      return text;
-    }
-
-    let text = `尊徳: 夕刻なり。今日の任務は完了${done}件`;
-    if (total) text += `／残${Math.max(0, total - done)}件`;
-    text += "。";
-    if (!ctx.eveningDone) {
-      text += " よかったこと三つと、教訓一行がまだ空であるなら、振り返りを書く時間なり。";
-    } else {
-      text += " 振り返りは書けておるようだなり。明日の一手があれば、ここで整理してもよい。";
-    }
-    text += " 今日の手応えや迷いを、下の欄に残してくだされ。";
-    return text;
+    $$(".sontoku-chip").forEach((button) => {
+      button.disabled = busy;
+    });
+    if (busy) setSontokuStatus("Cursorで思考中", "busy");
   }
 
-  function replySontoku(input, ctx) {
-    const s = input.trim();
-
-    if (/^(おは|こん|こんばん|はじめ|よろしく)/.test(s) || /挨拶/.test(s)) {
-      if (ctx.hour < 12) return "尊徳: おはようございます。今日も分度を守り、一事に集中するのが筋なり。何から手を付けるか、迷えば一緒に整理いたそう。";
-      if (ctx.hour < 18) return "尊徳: こんにちは。午後の手応えはいかがなり。進捗を一言でもよいので、送ってくだされ。";
-      return "尊徳: こんばんは。一日の締めくくりの時間なり。よかったこと・教訓を一行でも残すと、明日の分度が立ちやすい。";
+  async function requestSontoku(payload) {
+    const response = await fetch("/api/sontoku", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: todayISO(),
+        context: sontokuContext(),
+        ...payload,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.message || "AI尊徳との接続に失敗しました。");
     }
-
-    if (/進捗|報告|できた|終わ|完了|やった|進め/.test(s)) {
-      const total = ctx.dayTasks.length;
-      const done = ctx.doneToday.length;
-      let text = `尊徳: 報告、承りました。今日の任務${total}件に対し、完了${done}件なり。`;
-      if (ctx.goal) text += ` 一事「${ctx.goal}」は、今どの段階であろうか。`;
-      const next = ctx.dayTasks.find((t) => quadrant(t) === "uu") || ctx.dayTasks[0];
-      if (next) text += ` 次の一手として「${taskSnippet(next)}」に向かうのが筋なり。`;
-      else if (done > 0) text += " 任務を片付けておるなら、振り返りか明日の準備に時間を回すのもよい。";
-      return text;
-    }
-
-    if (/脱線|迷|わから|SNS|ダラ|サボ|集中でき|散漫/.test(s)) {
-      let text = "尊徳: 脱線は起きるものなり。責めるより、原因と次の一手を分けるのが我が役目。";
-      if (ctx.ifthen) text += ` if-then「${ctx.ifthen}」に戻るのが定めなり。`;
-      else if (ctx.goal) text += ` 一事「${ctx.goal}」に戻るのが定めなり。`;
-      else text += " まず今日の一事を一行で定め、if-thenまで書くのが定めなり。";
-      text += " 今、何に引っ張られておるか、もう少し具体的に書いてくだされ。";
-      return text;
-    }
-
-    if (/壁|相談|困|悩|どうし|詰ま|迷って/.test(s)) {
-      const top = ctx.urgent[0] || ctx.dayTasks[0];
-      let text = "尊徳: 壁打ち、承ります。戦略の変更は栄一の領分——我は実行の整理に徹するなり。";
-      if (top) text += ` 今いちばん重いのは「${taskSnippet(top)}」であろうか。`;
-      text += " 完璧を目指さず、十五分でできる最小の一歩は何か。それだけ教えてくだされ。";
-      return text;
-    }
-
-    if (/今日|任務|タスク|何を|リスト/.test(s)) {
-      const list = ctx.dayTasks.slice(0, 5);
-      if (!list.length) return "尊徳: 今日の任務は、いま帳簿上は空なり。週や月から一件だけ「今日」に載せるのがよい。";
-      const names = list.map((t) => `・${taskSnippet(t)}`).join("\n");
-      return `尊徳: 今日の任務は次のとおりなり。\n${names}${ctx.dayTasks.length > 5 ? `\n…ほか${ctx.dayTasks.length - 5}件` : ""}`;
-    }
-
-    if (/一事|目標|ゴール/.test(s)) {
-      if (ctx.goal) return `尊徳: 今日の一事は「${ctx.goal}」と記されておるなり。${ctx.ifthen ? `if-thenは「${ctx.ifthen}」。` : "if-thenが空なら、今すぐ一行足すのがよい。"} 他に奪われそうなものがあれば、書いてくだされ。`;
-      return "尊徳: 一事がまだ空なり。今すぐ対応の任務から一件選び、「今日これだけは」と一行で定めるのが筋。決まれば、if-thenも続けて書くとよい。";
-    }
-
-    if (/分度|多すぎ|7|七/.test(s)) {
-      const pinnedN = ctx.pinned.filter((t) => !t.forced).length;
-      if (pinnedN > 7) return `尊徳: 今日に固定した任務が${pinnedN}件——分度の七を超えておるなり。完了か「今日」解除で減らすのが先なり。`;
-      return "尊徳: 分度は一日七件が目安なり。今の件数は許容内と見える。それでも重ければ、見せかけの急ぎを手放すのがよい。";
-    }
-
-    if (/ありがと|感謝|助か/.test(s)) {
-      return "尊徳: どういたしまして。記録と実行は君主の手で、整理は我が役目なり。また迷えば、いつでも送ってくだされ。";
-    }
-
-    if (s.length < 4) {
-      return "尊徳: もう少し具体的に書いてくだされ。進捗・迷い・今日の一手のどれでもよいなり。";
-    }
-
-    return `尊徳: 「${s}」——承りました。${ctx.goal ? `一事「${ctx.goal}」との関係で、` : ""}いま一番引っかかっている一点を、一文で教えてくだされ。そこから次の一手を一緒に整理いたそう。`;
+    return data;
   }
 
-  function ensureSontokuOpening() {
-    if (getSontokuMessages().length > 0) return;
-    pushSontokuMessage("sontoku", buildSontokuOpening(sontokuCtx()));
+  async function refreshSontokuStatus() {
+    try {
+      const response = await fetch("/api/sontoku/status", { cache: "no-store" });
+      const data = await response.json();
+      setSontokuStatus(
+        data.connected ? `Cursor接続済み · ${data.model}` : "Cursor APIキー未設定",
+        data.connected ? "connected" : "error"
+      );
+    } catch {
+      setSontokuStatus("尊徳サーバー未接続", "error");
+    }
+  }
+
+  async function ensureSontokuOpening() {
+    const key = sontokuChatKey();
+    const hasLiveOpening = getSontokuMessages().some(
+      (message) => message.provider === "cursor-sdk" && message.kind === "opening"
+    );
+    if (hasLiveOpening || sontokuOpeningAttempted.has(key) || sontokuBusy) return;
+    sontokuOpeningAttempted.add(key);
+    setSontokuBusy(true);
+    try {
+      const data = await requestSontoku({ event: "open" });
+      pushSontokuMessage("sontoku", data.reply, {
+        provider: "cursor-sdk",
+        kind: "opening",
+        agentId: data.agentId,
+        runId: data.runId,
+      });
+      setSontokuStatus(`Cursor接続済み · ${data.model}`, "connected");
+    } catch (error) {
+      pushSontokuMessage("error", error.message, { provider: "system" });
+      setSontokuStatus("接続エラー", "error");
+    } finally {
+      setSontokuBusy(false);
+    }
   }
 
   function renderSontokuChat() {
@@ -1062,18 +1028,32 @@
     host.innerHTML = msgs
       .map(
         (m) =>
-          `<div class="sontoku-msg ${m.role === "user" ? "user" : "sontoku"}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p></div>`
+          `<div class="sontoku-msg ${["user", "error"].includes(m.role) ? m.role : "sontoku"}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p></div>`
       )
       .join("");
     host.scrollTop = host.scrollHeight;
   }
 
-  function sendSontokuUserMessage(text) {
+  async function sendSontokuUserMessage(text) {
     const trimmed = String(text || "").trim();
-    if (!trimmed) return;
-    pushSontokuMessage("user", trimmed);
-    const reply = replySontoku(trimmed, sontokuCtx());
-    window.setTimeout(() => pushSontokuMessage("sontoku", reply), 380);
+    if (!trimmed || sontokuBusy) return;
+    pushSontokuMessage("user", trimmed, { provider: "local" });
+    setSontokuBusy(true);
+    try {
+      const data = await requestSontoku({ event: "message", message: trimmed });
+      pushSontokuMessage("sontoku", data.reply, {
+        provider: "cursor-sdk",
+        agentId: data.agentId,
+        runId: data.runId,
+      });
+      setSontokuStatus(`Cursor接続済み · ${data.model}`, "connected");
+    } catch (error) {
+      pushSontokuMessage("error", error.message, { provider: "system" });
+      setSontokuStatus("接続エラー", "error");
+    } finally {
+      setSontokuBusy(false);
+      $("#sontoku-input")?.focus();
+    }
   }
 
   function render() {
@@ -1527,4 +1507,5 @@
 
   loadPlanFields();
   render();
+  refreshSontokuStatus();
 })();

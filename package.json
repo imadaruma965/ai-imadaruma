@@ -1,0 +1,23 @@
+{
+  "name": "ai-imadaruma",
+  "version": "1.0.0",
+  "description": "ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣である。",
+  "scripts": {
+    "taskboard": "node apps/taskboard/server.cjs",
+    "test:taskboard": "node --test apps/taskboard/server.test.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imadaruma965/ai-imadaruma.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imadaruma965/ai-imadaruma/issues"
+  },
+  "homepage": "https://github.com/imadaruma965/ai-imadaruma#readme",
+  "dependencies": {
+    "@cursor/sdk": "^1.0.23"
+  }
+}
