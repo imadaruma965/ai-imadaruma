@@ -57,6 +57,17 @@ test("sanitizeStateData normalizes persisted payload", () => {
   assert.equal(data.plans["day:2026-07-15"].goal, "一事");
   assert.equal(Array.isArray(data.categories), true);
   assert.equal(Array.isArray(data.incidents), true);
+  assert.equal(Array.isArray(data.invoices), true);
+  assert.equal(Array.isArray(data.personalFinance.entries), true);
+});
+
+test("sanitizeStateData preserves invoices and personal finance", () => {
+  const data = sanitizeStateData({
+    invoices: [{ id: "inv1", direction: "in", party: "A社", amount: 1000, status: "inbox" }],
+    personalFinance: { entries: [{ id: "e1", type: "out", amount: 500, date: "2026-07-16" }] },
+  });
+  assert.equal(data.invoices[0].party, "A社");
+  assert.equal(data.personalFinance.entries[0].amount, 500);
 });
 
 test("sanitizeStateData preserves incident log entries", () => {

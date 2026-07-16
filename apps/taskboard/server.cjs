@@ -117,6 +117,11 @@ function sanitizeStateData(raw) {
     categories: Array.isArray(data.categories) ? data.categories : [],
     sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
     incidents: Array.isArray(data.incidents) ? data.incidents : [],
+    invoices: Array.isArray(data.invoices) ? data.invoices : [],
+    personalFinance:
+      data.personalFinance && typeof data.personalFinance === "object"
+        ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
+        : { entries: [] },
   };
 }
 

@@ -53,11 +53,37 @@
 
   // メディア戦略（火〜金カルーセル／日NL）。準備は2日前に強制。
   const MEDIA_FORCE = {
-    2: { pub: "火・人格カルーセル 配信日", prep: "火・人格カルーセル 制作（配信2日前）" },
-    3: { pub: "水・内政カルーセル 配信日", prep: "水・内政カルーセル 制作（配信2日前）" },
-    4: { pub: "木・外交カルーセル 配信日", prep: "木・外交カルーセル 制作（配信2日前）" },
-    5: { pub: "金・財政カルーセル 配信日", prep: "金・財政カルーセル 制作（配信2日前）" },
-    0: { pub: "日・ニュースレター 配信日", prep: "日・NL制作（配信2日前＝金）" },
+    2: {
+      pub: "火・人格カルーセル 配信日",
+      prep: "火・人格カルーセル 制作（配信2日前）",
+      pubKey: "media-tue-pub",
+      prepKey: "media-tue-prep",
+    },
+    3: {
+      pub: "水・内政カルーセル 配信日",
+      prep: "水・内政カルーセル 制作（配信2日前）",
+      pubKey: "media-wed-pub",
+      prepKey: "media-wed-prep",
+    },
+    4: {
+      pub: "木・外交カルーセル 配信日",
+      prep: "木・外交カルーセル 制作（配信2日前）",
+      pubKey: "media-thu-pub",
+      prepKey: "media-thu-prep",
+    },
+    5: {
+      pub: "金・財政カルーセル 配信日",
+      prep: "金・財政カルーセル 制作（配信2日前）",
+      pubKey: "media-fri-pub",
+      prepKey: "media-fri-prep",
+    },
+    0: {
+      pub: "日・ニュースレター 配信日",
+      prep: "日・NL制作（配信2日前＝金）",
+      pubKey: "media-nl-pub",
+      prepKey: "media-nl-prep",
+      aliases: ["日曜日（ニュースレター）", "日曜ニュースレター", "日曜NL配信", "日曜日（ニュースレター配信）"],
+    },
   };
 
   const MEDIA_CALENDAR = {
@@ -74,10 +100,52 @@
     { key: "fres-billing", category: "fres", day: 1, title: "請求案内" },
     { key: "fres-guardian", category: "fres", day: 3, title: "保護者案内" },
     { key: "fres-withdrawal", category: "fres", day: 10, title: "引き落とし日" },
+    {
+      key: "fres-deposit-check",
+      category: "fres",
+      day: 12,
+      title: "入金確認（振替後）",
+      notes: "10日引き落とし後の着金確認。未着なら督促。",
+      tags: ["pay", "recurring"],
+    },
     { key: "lex-billing", category: "lex", day: 1, title: "請求案内" },
     { key: "lex-guardian", category: "lex", day: 3, title: "保護者案内" },
     { key: "lex-withdrawal", category: "lex", day: 10, title: "引き落とし日" },
+    {
+      key: "lex-deposit-check",
+      category: "lex",
+      day: 12,
+      title: "入金確認（振替後）",
+      notes: "10日引き落とし後の着金確認。未着なら督促。",
+      tags: ["pay", "recurring"],
+    },
   ];
+
+  const HABIT_AM = [
+    { id: "am1", label: "①５時起床" },
+    { id: "am2", label: "②白湯" },
+    { id: "am3", label: "③洗顔" },
+    { id: "am4", label: "④化粧水" },
+    { id: "am5", label: "⑤神棚" },
+    { id: "am6", label: "⑥ストレッチ" },
+    { id: "am7", label: "⑦筋トレ" },
+    { id: "am8", label: "⑧慈悲瞑想" },
+    { id: "am9", label: "⑨ニュース確認" },
+    { id: "am10", label: "⑩朝日記" },
+  ];
+
+  const HABIT_PM = [
+    { id: "pm1", label: "①夜日記" },
+    { id: "pm2", label: "②洗顔" },
+    { id: "pm3", label: "③化粧水" },
+    { id: "pm4", label: "④神棚" },
+    { id: "pm5", label: "⑤ストレッチ" },
+    { id: "pm6", label: "⑥慈悲瞑想" },
+    { id: "pm7", label: "⑦読書" },
+    { id: "pm8", label: "⑧23時就寝" },
+  ];
+
+  const HABIT_DEFS = [...HABIT_AM, ...HABIT_PM];
 
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -251,6 +319,11 @@
       categories,
       sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
       incidents: Array.isArray(data.incidents) ? data.incidents : [],
+      invoices: Array.isArray(data.invoices) ? data.invoices : [],
+      personalFinance:
+        data.personalFinance && typeof data.personalFinance === "object"
+          ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
+          : { entries: [] },
     };
   }
 
@@ -299,6 +372,8 @@
       categories: initCategories(),
       sontokuChat: {},
       incidents: [],
+      invoices: [],
+      personalFinance: { entries: [] },
     };
   }
 
@@ -312,6 +387,8 @@
       categories: state.categories,
       sontokuChat: state.sontokuChat,
       incidents: state.incidents,
+      invoices: state.invoices || [],
+      personalFinance: state.personalFinance || { entries: [] },
     };
   }
 
@@ -324,6 +401,8 @@
     state.categories = next.categories;
     state.sontokuChat = next.sontokuChat;
     state.incidents = next.incidents;
+    state.invoices = next.invoices || [];
+    state.personalFinance = next.personalFinance || { entries: [] };
   }
 
   function saveLocal() {
@@ -481,11 +560,16 @@
         if ((t.category || inferCategory(t.title)) !== def.category) return false;
         if (def.key.endsWith("-billing")) return t.title.includes("請求案内");
         if (def.key.endsWith("-guardian")) return t.title.includes("保護者案内");
+        if (def.key.endsWith("-deposit-check")) {
+          return t.title.includes("入金確認") || t.title.includes("着金確認");
+        }
         return t.title.includes("引き落とし日") || t.title.includes("引き落とし設定（毎月10日送信）");
       });
 
     REQUIRED_MONTHLY.forEach((def) => {
       let task = findLegacy(def);
+      const defaultTags = def.tags || ["recurring"];
+      const note = def.notes || `毎月${def.day}日`;
       if (!task) {
         task = normalizeTask({
           id: uid(),
@@ -497,8 +581,8 @@
           importance: "high",
           status: "todo",
           onToday: false,
-          notes: `毎月${def.day}日`,
-          tags: ["recurring"],
+          notes: note,
+          tags: defaultTags,
           recurrence: "monthly",
           recurrenceDay: def.day,
           scheduleKey: def.key,
@@ -516,8 +600,8 @@
       task.scheduleKey = def.key;
       task.recurrence = "monthly";
       task.recurrenceDay = def.day;
-      task.tags = [...new Set([...(task.tags || []), "recurring"])];
-      task.notes = `毎月${def.day}日`;
+      task.tags = [...new Set([...(task.tags || []), ...defaultTags])];
+      task.notes = note;
       if (!wasMonthly || !task.dueDate) task.dueDate = monthlyDateISO(def.day);
       task.updatedAt = new Date().toISOString();
       changed = true;
@@ -589,14 +673,37 @@
     const in2 = addDaysISO(2);
     const dowIn2 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).getDay();
 
-    const ensure = (title, due) => {
+    const titleMatches = (taskTitle, canonical, aliases = []) => {
+      const t = String(taskTitle || "");
+      if (t === canonical || t === `【発信・強制】${canonical}` || t.endsWith(canonical)) return true;
+      return aliases.some((a) => t === a || t.includes(a));
+    };
+
+    const ensure = (def, kind, due) => {
+      const title = def[kind];
+      const scheduleKey = def[`${kind}Key`];
+      const aliases = kind === "pub" ? def.aliases || [] : [];
       let t = state.tasks.find(
         (x) =>
+          !x.deletedAt &&
           x.status !== "done" &&
-          (x.title === title ||
-            x.title === `【発信・強制】${title}` ||
-            (x.forced && x.category === "media" && x.title.endsWith(title)))
+          (x.scheduleKey === scheduleKey ||
+            titleMatches(x.title, title, aliases) ||
+            (x.forced && x.category === "media" && titleMatches(x.title, title, aliases)))
       );
+
+      // 別名の重複行はゴミ箱へ（正本1本に寄せる）
+      state.tasks.forEach((x) => {
+        if (!x || x === t || x.deletedAt || x.status === "done") return;
+        if (x.scheduleKey === scheduleKey || titleMatches(x.title, title, aliases)) {
+          if (!t) t = x;
+          else if (x.id !== t.id) {
+            x.deletedAt = new Date().toISOString();
+            x.updatedAt = x.deletedAt;
+          }
+        }
+      });
+
       if (!t) {
         t = {
           id: uid(),
@@ -611,6 +718,7 @@
           notes: "メディア戦略により自動生成（配信日／2日前制作）",
           tags: ["forced", "media"],
           forced: true,
+          scheduleKey,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -619,18 +727,20 @@
         t.title = title;
         t.forced = true;
         t.category = "media";
+        t.scheduleKey = scheduleKey;
+        t.tags = [...new Set([...(t.tags || []), "forced", "media"])];
         if (due === today) t.onToday = true;
         t.dueDate = due;
         t.horizon = "day";
         t.urgency = "high";
         t.importance = "high";
+        t.updatedAt = new Date().toISOString();
       }
     };
 
-    if (MEDIA_FORCE[dow]) ensure(MEDIA_FORCE[dow].pub, today);
-    if (MEDIA_FORCE[dowIn2]) ensure(MEDIA_FORCE[dowIn2].prep, today);
+    if (MEDIA_FORCE[dow]) ensure(MEDIA_FORCE[dow], "pub", today);
+    if (MEDIA_FORCE[dowIn2]) ensure(MEDIA_FORCE[dowIn2], "prep", today);
 
-    // keep today pinned forced ≤ slightly over limit is ok for media force
     save();
   }
 
@@ -1155,7 +1265,7 @@
     const kpi = state.kpis[d] || {};
     $("#day-goal").value = dayPlan.goal || "";
     $("#day-ifthen").value = dayPlan.ifthen || "";
-    $("#day-energy").value = dayPlan.energy ?? "";
+    renderHabitChecks(dayPlan.habits || {});
     $("#good1").value = dayPlan.good1 || "";
     $("#good2").value = dayPlan.good2 || "";
     $("#good3").value = dayPlan.good3 || "";
@@ -1322,6 +1432,153 @@
     return (state.incidents || []).filter((e) => e.date === todayISO());
   }
 
+  function renderHabitChecks(habits = {}) {
+    const fill = (sel, defs) => {
+      const wrap = $(sel);
+      if (!wrap) return;
+      wrap.innerHTML = defs
+        .map(
+          (h) =>
+            `<label class="habit-item"><input type="checkbox" data-habit="${h.id}" ${habits[h.id] ? "checked" : ""} /> ${escapeHtml(h.label)}</label>`
+        )
+        .join("");
+    };
+    fill("#day-habits-am", HABIT_AM);
+    fill("#day-habits-pm", HABIT_PM);
+  }
+
+  function readHabitChecks(scope = "all") {
+    const habits = {};
+    const root =
+      scope === "am" ? "#day-habits-am" : scope === "pm" ? "#day-habits-pm" : "#day-habits-am, #day-habits-pm";
+    $$(`${root} [data-habit]`).forEach((el) => {
+      habits[el.dataset.habit] = !!el.checked;
+    });
+    return habits;
+  }
+
+  function habitSummary(habits = {}) {
+    const done = HABIT_DEFS.filter((h) => habits[h.id]).length;
+    const amDone = HABIT_AM.filter((h) => habits[h.id]).length;
+    const pmDone = HABIT_PM.filter((h) => habits[h.id]).length;
+    return {
+      done,
+      total: HABIT_DEFS.length,
+      amDone,
+      amTotal: HABIT_AM.length,
+      pmDone,
+      pmTotal: HABIT_PM.length,
+      habits,
+    };
+  }
+
+  function syncWeekHabitFromDays() {
+    const dates = currentWeekDates();
+    let habitDone = 0;
+    dates.forEach((d) => {
+      const habits = (state.plans[`day:${d}`] || {}).habits || {};
+      const { done, total } = habitSummary(habits);
+      if (total > 0 && done === total) habitDone += 1;
+    });
+    const w = weekKey();
+    const weekPlan = state.plans[`week:${w}`] || {};
+    weekPlan.habitDone = habitDone;
+    weekPlan.habitTotal = 7;
+    state.plans[`week:${w}`] = weekPlan;
+    if ($("#week-habit-done")) $("#week-habit-done").value = habitDone;
+    if ($("#week-habit-total")) $("#week-habit-total").value = 7;
+  }
+
+  function renderInvoices() {
+    const list = $("#list-invoices");
+    if (!list) return;
+    const rows = (state.invoices || [])
+      .slice()
+      .sort((a, b) => String(a.dueDate || "").localeCompare(String(b.dueDate || "")))
+      .map((inv) => {
+        const dir = inv.direction === "out" ? "送付" : "受取";
+        const status = inv.status || "inbox";
+        const amount = inv.amount != null ? `¥${Number(inv.amount).toLocaleString("ja-JP")}` : "—";
+        return `<li class="row-item" data-invoice-id="${inv.id}">
+          <div class="row-main">
+            <strong>${escapeHtml(dir)} · ${escapeHtml(inv.party || "（相手未記入）")}</strong>
+            <span class="muted">${amount} · 期限 ${escapeHtml(inv.dueDate || "未設定")} · ${escapeHtml(status)}</span>
+            ${inv.notes ? `<span class="muted">${escapeHtml(inv.notes)}</span>` : ""}
+          </div>
+          <div class="row-actions">
+            ${status !== "paid" ? `<button type="button" class="btn ghost compact" data-inv-paid>支払済</button>` : ""}
+            <button type="button" class="btn ghost compact" data-inv-del>削除</button>
+          </div>
+        </li>`;
+      });
+    list.innerHTML = rows.length ? rows.join("") : `<li class="muted">請求書はまだありません</li>`;
+    list.querySelectorAll("[data-inv-paid]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-invoice-id]")?.dataset.invoiceId;
+        const inv = (state.invoices || []).find((x) => x.id === id);
+        if (!inv) return;
+        inv.status = "paid";
+        inv.updatedAt = new Date().toISOString();
+        save();
+        renderInvoices();
+      });
+    });
+    list.querySelectorAll("[data-inv-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-invoice-id]")?.dataset.invoiceId;
+        if (!id || !confirm("この請求書を削除しますか？")) return;
+        state.invoices = (state.invoices || []).filter((x) => x.id !== id);
+        save();
+        renderInvoices();
+      });
+    });
+  }
+
+  function renderPersonalFinance() {
+    const list = $("#list-pf");
+    const sumEl = $("#pf-month-sum");
+    if (!list) return;
+    const month = monthKey();
+    const entries = ((state.personalFinance || {}).entries || [])
+      .filter((e) => String(e.date || "").startsWith(month))
+      .slice()
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    let income = 0;
+    let expense = 0;
+    entries.forEach((e) => {
+      const n = Number(e.amount) || 0;
+      if (e.type === "in") income += n;
+      else expense += n;
+    });
+    if (sumEl) {
+      sumEl.textContent = `今月 入金 ¥${income.toLocaleString("ja-JP")} − 出金 ¥${expense.toLocaleString("ja-JP")} ＝ 差引 ¥${(income - expense).toLocaleString("ja-JP")}`;
+    }
+    list.innerHTML = entries.length
+      ? entries
+          .map(
+            (e) => `<li class="row-item" data-pf-id="${e.id}">
+          <div class="row-main">
+            <strong>${e.type === "in" ? "入金" : "出金"} · ¥${Number(e.amount || 0).toLocaleString("ja-JP")}</strong>
+            <span class="muted">${escapeHtml(e.date || "")} · ${escapeHtml(e.category || "未分類")}${e.memo ? ` · ${escapeHtml(e.memo)}` : ""}</span>
+          </div>
+          <div class="row-actions">
+            <button type="button" class="btn ghost compact" data-pf-del>削除</button>
+          </div>
+        </li>`
+          )
+          .join("")
+      : `<li class="muted">今月の記録はまだありません</li>`;
+    list.querySelectorAll("[data-pf-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-pf-id]")?.dataset.pfId;
+        if (!id) return;
+        state.personalFinance.entries = (state.personalFinance.entries || []).filter((x) => x.id !== id);
+        save();
+        renderPersonalFinance();
+      });
+    });
+  }
+
   function renderIncidents() {
     const ul = $("#incident-list");
     if (!ul) return;
@@ -1383,6 +1640,7 @@
       localTime: new Date().toLocaleString("ja-JP"),
       goal: (dayPlan.goal || "").trim(),
       ifthen: (dayPlan.ifthen || "").trim(),
+      habits: habitSummary(dayPlan.habits || {}),
       energy: dayPlan.energy ?? "",
       completedToday: doneToday.length,
       pendingCount: pendingTasks().length,
@@ -1523,6 +1781,8 @@
     updatePomodoroDisplay();
     renderSontokuChat();
     renderIncidents();
+    renderInvoices();
+    renderPersonalFinance();
     renderImadarumaProgress();
     renderDoneList();
     renderTrash();
@@ -1537,6 +1797,125 @@
     if (["day", "week", "month"].includes(name)) loadPlanFields();
     if (name === "day") ensureSontokuOpening();
     render();
+  }
+
+  let activeVoice = null;
+
+  function speechRecognitionCtor() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function stopActiveVoice() {
+    if (!activeVoice) return;
+    try {
+      activeVoice.recognition.stop();
+    } catch {
+      /* ignore */
+    }
+    if (activeVoice.button) activeVoice.button.classList.remove("listening");
+    activeVoice = null;
+  }
+
+  function startVoiceInput({ targetInput, button, statusEl, onFinal }) {
+    const Ctor = speechRecognitionCtor();
+    if (!Ctor) {
+      const msg = "このブラウザは声入力非対応です。キーボードのマイクで入力してください。";
+      if (statusEl) statusEl.textContent = msg;
+      else alert(msg);
+      return;
+    }
+    if (!window.isSecureContext && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+      const msg = "声入力はHTTPSまたはlocalhostで使えます。iPhoneはキーボードのマイクでも可。";
+      if (statusEl) statusEl.textContent = msg;
+      else alert(msg);
+      return;
+    }
+
+    if (activeVoice && activeVoice.button === button) {
+      stopActiveVoice();
+      if (statusEl) statusEl.textContent = "中止した";
+      return;
+    }
+    stopActiveVoice();
+
+    const recognition = new Ctor();
+    recognition.lang = "ja-JP";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    let finalText = "";
+    activeVoice = { recognition, button };
+    if (button) button.classList.add("listening");
+    if (statusEl) statusEl.textContent = "聞いています…";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const piece = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalText += piece;
+        else interim += piece;
+      }
+      const text = (finalText || interim).trim();
+      if (targetInput && text) targetInput.value = text;
+      if (statusEl) statusEl.textContent = interim ? `認識中: ${interim}` : text ? `「${text}」` : "聞いています…";
+    };
+
+    recognition.onerror = (event) => {
+      const map = {
+        "not-allowed": "マイク許可が必要です",
+        "no-speech": "声が聞こえませんでした",
+        network: "音声認識ネットワークエラー",
+        aborted: "中止した",
+      };
+      if (statusEl) statusEl.textContent = map[event.error] || `エラー: ${event.error}`;
+      if (button) button.classList.remove("listening");
+      activeVoice = null;
+    };
+
+    recognition.onend = () => {
+      if (button) button.classList.remove("listening");
+      const text = (finalText || (targetInput && targetInput.value) || "").trim();
+      if (statusEl && !statusEl.textContent.startsWith("エラー") && !statusEl.textContent.includes("許可")) {
+        statusEl.textContent = text ? `確定: ${text}` : "聞き取れませんでした";
+      }
+      activeVoice = null;
+      if (text && typeof onFinal === "function") onFinal(text);
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      if (statusEl) statusEl.textContent = "開始できませんでした";
+      if (button) button.classList.remove("listening");
+      activeVoice = null;
+    }
+  }
+
+  function addTaskFromVoiceTitle(title) {
+    const clean = stripCategoryPrefix(String(title || "").trim(), "other", state.categories);
+    if (!clean) return null;
+    let onToday = true;
+    if (wipCount() >= 7) onToday = false;
+    const task = normalizeTask({
+      id: uid(),
+      title: clean,
+      dueDate: todayISO(),
+      category: "other",
+      horizon: "day",
+      urgency: "high",
+      importance: "high",
+      status: "todo",
+      onToday,
+      notes: "声で捕獲",
+      tags: ["voice"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    state.tasks.push(task);
+    save();
+    render();
+    return task;
   }
 
   function openCategoryDialog() {
@@ -1682,6 +2061,7 @@
       r.checked = r.value === t.importance;
     });
     $("#edit-external").checked = !!t.external;
+    $("#edit-forced").checked = !!t.forced;
     $("#edit-notes").value = t.notes || "";
     $("#edit-dialog").showModal();
   }
@@ -1721,6 +2101,35 @@
   $("#category-cancel").addEventListener("click", () => $("#category-dialog").close());
   $("#pomo-start").addEventListener("click", startPomodoro);
   $("#pomo-stop").addEventListener("click", stopPomodoro);
+
+  $$(".voice-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.voiceFor);
+      if (!input) return;
+      startVoiceInput({
+        targetInput: input,
+        button: btn,
+        statusEl: btn.dataset.voiceFor === "la-title" ? $("#la-msg") : $("#new-msg"),
+      });
+    });
+  });
+
+  $("#btn-voice-capture")?.addEventListener("click", () => {
+    const btn = $("#btn-voice-capture");
+    const status = $("#voice-capture-status");
+    startVoiceInput({
+      button: btn,
+      statusEl: status,
+      onFinal: (text) => {
+        const task = addTaskFromVoiceTitle(text);
+        if (task) {
+          status.textContent = task.onToday
+            ? `追加: ${task.title}`
+            : `追加（今日は満杯のためピン外し）: ${task.title}`;
+        }
+      },
+    });
+  });
 
   $("#incident-add")?.addEventListener("click", () => {
     const note = $("#incident-note").value.trim();
@@ -1815,12 +2224,14 @@
 
   $("#day-save-morning").addEventListener("click", () => {
     const d = todayISO();
+    const prev = state.plans[`day:${d}`] || {};
     state.plans[`day:${d}`] = {
-      ...(state.plans[`day:${d}`] || {}),
+      ...prev,
       goal: $("#day-goal").value.trim(),
       ifthen: $("#day-ifthen").value.trim(),
-      energy: $("#day-energy").value === "" ? null : Number($("#day-energy").value),
+      habits: { ...(prev.habits || {}), ...readHabitChecks("am") },
     };
+    syncWeekHabitFromDays();
     save();
     $("#day-morning-msg").textContent = "朝を保存した";
   });
@@ -1839,8 +2250,9 @@
 
   $("#day-save-review").addEventListener("click", () => {
     const d = todayISO();
+    const prev = state.plans[`day:${d}`] || {};
     state.plans[`day:${d}`] = {
-      ...(state.plans[`day:${d}`] || {}),
+      ...prev,
       good1: $("#good1").value.trim(),
       good2: $("#good2").value.trim(),
       good3: $("#good3").value.trim(),
@@ -1859,7 +2271,9 @@
         bi: $("#st-bi").value.trim(),
       },
       strength: $("#day-strength").value.trim(),
+      habits: { ...(prev.habits || {}), ...readHabitChecks("pm") },
     };
+    syncWeekHabitFromDays();
     save();
     $("#day-review-msg").textContent = "夕を保存した";
   });
@@ -1971,6 +2385,9 @@
     t.urgency = $("input[name=edit-urgency]:checked").value;
     t.importance = $("input[name=edit-importance]:checked").value;
     t.external = $("#edit-external").checked;
+    t.forced = $("#edit-forced").checked;
+    if (t.forced) t.tags = [...new Set([...(t.tags || []), "forced"])];
+    else t.tags = (t.tags || []).filter((tag) => tag !== "forced");
     t.notes = $("#edit-notes").value.trim();
     t.updatedAt = new Date().toISOString();
     save();
@@ -1988,6 +2405,46 @@
     save();
     $("#edit-dialog").close();
     render();
+  });
+
+  $("#form-invoice")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!Array.isArray(state.invoices)) state.invoices = [];
+    state.invoices.push({
+      id: uid(),
+      direction: $("#inv-direction").value,
+      party: $("#inv-party").value.trim(),
+      amount: $("#inv-amount").value === "" ? null : Number($("#inv-amount").value),
+      dueDate: $("#inv-due").value || null,
+      notes: $("#inv-notes").value.trim(),
+      status: "inbox",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    save();
+    e.target.reset();
+    renderInvoices();
+  });
+
+  $("#form-pf")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!state.personalFinance || typeof state.personalFinance !== "object") {
+      state.personalFinance = { entries: [] };
+    }
+    if (!Array.isArray(state.personalFinance.entries)) state.personalFinance.entries = [];
+    state.personalFinance.entries.push({
+      id: uid(),
+      type: $("#pf-type").value,
+      amount: Number($("#pf-amount").value) || 0,
+      category: $("#pf-category").value.trim(),
+      date: $("#pf-date").value || todayISO(),
+      memo: $("#pf-memo").value.trim(),
+      createdAt: new Date().toISOString(),
+    });
+    save();
+    e.target.reset();
+    if ($("#pf-date")) $("#pf-date").value = todayISO();
+    renderPersonalFinance();
   });
 
   $("#btn-goto-done")?.addEventListener("click", () => setView("done"));
@@ -2012,6 +2469,11 @@
     state.categories = initCategories(data.categories);
     state.sontokuChat = data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {};
     state.incidents = Array.isArray(data.incidents) ? data.incidents : [];
+    state.invoices = Array.isArray(data.invoices) ? data.invoices : [];
+    state.personalFinance =
+      data.personalFinance && typeof data.personalFinance === "object"
+        ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
+        : { entries: [] };
     ensureRequiredMonthlyTasks();
     ensureForcedMedia();
     save();

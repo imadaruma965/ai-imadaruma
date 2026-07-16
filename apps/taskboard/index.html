@@ -165,9 +165,10 @@
         <label class="field">もし脱線したら（if-then）
           <input type="text" id="day-ifthen" placeholder="もしSNSを開いたら、5分で閉じて一事に戻る" />
         </label>
-        <label class="field">今朝のエネルギー（1–5）
-          <input type="number" id="day-energy" min="1" max="5" step="1" placeholder="3" />
-        </label>
+        <div class="field">
+          <span>朝の習慣チェック</span>
+          <div id="day-habits-am" class="habit-list habit-cols" role="group" aria-label="朝の習慣チェック"></div>
+        </div>
         <button type="button" class="btn primary compact" id="day-save-morning">朝を保存</button>
         <span id="day-morning-msg" class="msg"></span>
       </div>
@@ -186,7 +187,11 @@
         </div>
       </div>
 
-      <p class="lead tight">今日の任務（目安≤7）</p>
+      <p class="lead">今日の任務（目安≤7）</p>
+      <div class="voice-capture-bar">
+        <button type="button" class="btn primary compact" id="btn-voice-capture">🎤 声で捕獲</button>
+        <span id="voice-capture-status" class="msg" aria-live="polite"></span>
+      </div>
       <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
       <ul class="rows compact" id="list-day"></ul>
 
@@ -211,6 +216,10 @@
       <div class="journal-panel pm">
         <h3>夕 · ジャーナル</h3>
         <p class="journal-why">Three Good Things（Seligman）＋感謝（Emmons）：良い点に「なぜ」を付けると効果が強い。終わりは学び1つと翌日の種だけ（反芻しない）。</p>
+        <div class="field">
+          <span>夜の習慣チェック</span>
+          <div id="day-habits-pm" class="habit-list habit-cols" role="group" aria-label="夜の習慣チェック"></div>
+        </div>
         <p class="lead tight">よかったこと3つ（各1行・理由も短く）</p>
         <div class="triple">
           <input type="text" id="good1" placeholder="1. … なぜなら…" />
@@ -339,6 +348,41 @@
         <span id="month-board-msg" class="msg"></span>
       </div>
 
+      <div class="board-block invoices">
+        <p class="board-head">請求書管理</p>
+        <p class="lead tight">受取／送付の請求を捕獲する。金額と期限だけ先に残す。</p>
+        <form id="form-invoice" class="mini-form">
+          <select id="inv-direction">
+            <option value="in">受取（払う）</option>
+            <option value="out">送付（もらう）</option>
+          </select>
+          <input type="text" id="inv-party" placeholder="相手先" required />
+          <input type="number" id="inv-amount" placeholder="金額" min="0" step="1" />
+          <input type="date" id="inv-due" />
+          <input type="text" id="inv-notes" placeholder="メモ" />
+          <button type="submit" class="btn primary compact">追加</button>
+        </form>
+        <ul class="rows compact" id="list-invoices"></ul>
+      </div>
+
+      <div class="board-block personal-finance">
+        <p class="board-head">個人の財務統治</p>
+        <p class="lead tight">事業KPIとは別。手元の入出金を月で見る。</p>
+        <p id="pf-month-sum" class="pf-sum"></p>
+        <form id="form-pf" class="mini-form">
+          <select id="pf-type">
+            <option value="out">出金</option>
+            <option value="in">入金</option>
+          </select>
+          <input type="number" id="pf-amount" placeholder="金額" min="0" step="1" required />
+          <input type="text" id="pf-category" placeholder="区分（家賃・食・振込…）" />
+          <input type="date" id="pf-date" />
+          <input type="text" id="pf-memo" placeholder="メモ" />
+          <button type="submit" class="btn primary compact">記録</button>
+        </form>
+        <ul class="rows compact" id="list-pf"></ul>
+      </div>
+
       <ul class="rows compact" id="list-month"></ul>
       <h3 class="subhead">いつか</h3>
       <ul class="rows compact" id="list-someday"></ul>
@@ -375,7 +419,13 @@
 
       <h3 class="subhead">新規タスクを追加</h3>
       <form id="form-list-new">
-        <label class="field">タイトル<input type="text" id="la-title" required /></label>
+        <div class="field">
+          <span>タイトル</span>
+          <div class="title-with-voice">
+            <input type="text" id="la-title" required />
+            <button type="button" class="btn ghost compact voice-btn" data-voice-for="la-title" title="声で入力">🎤</button>
+          </div>
+        </div>
         <div class="field">
           <span>カテゴリ</span>
           <div class="tag-picker" id="la-cat-tags" role="group" aria-label="カテゴリ"></div>
@@ -419,7 +469,13 @@
     <!-- 新規 -->
     <section id="view-new" class="view">
       <form id="form-new">
-        <label class="field">タイトル<input type="text" id="new-title" required /></label>
+        <div class="field">
+          <span>タイトル</span>
+          <div class="title-with-voice">
+            <input type="text" id="new-title" required />
+            <button type="button" class="btn ghost compact voice-btn" data-voice-for="new-title" title="声で入力">🎤</button>
+          </div>
+        </div>
         <div class="field">
           <span>カテゴリ</span>
           <div class="tag-picker" id="new-cat-tags" role="group" aria-label="カテゴリ"></div>
@@ -510,6 +566,7 @@
         <label><input type="radio" name="edit-importance" value="low" /> 低</label>
       </fieldset>
       <label class="field"><input type="checkbox" id="edit-external" /> 対外約束（external）</label>
+      <label class="field"><input type="checkbox" id="edit-forced" /> 強制任務（WIP上限の外・優先表示）</label>
       <label class="field">メモ<textarea id="edit-notes" rows="2"></textarea></label>
       <div class="btn-row">
         <button type="submit" class="btn primary">更新</button>
