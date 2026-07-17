@@ -147,6 +147,14 @@
 
   const HABIT_DEFS = [...HABIT_AM, ...HABIT_PM];
 
+  /** 行動KPI・内政チェック（四柱の内政最低行動） */
+  const NAISEI_KPI = [
+    { id: "sleep", label: "睡眠" },
+    { id: "meal", label: "食事" },
+    { id: "exercise", label: "運動" },
+    { id: "impulse", label: "衝動管理" },
+  ];
+
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
@@ -324,6 +332,18 @@
         data.personalFinance && typeof data.personalFinance === "object"
           ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
           : { entries: [] },
+      appointments: Array.isArray(data.appointments) ? data.appointments : [],
+      liabilities: Array.isArray(data.liabilities) ? data.liabilities.map(normalizeLiability) : [],
+      fiscalMeta:
+        data.fiscalMeta && typeof data.fiscalMeta === "object"
+          ? {
+              defenseLine:
+                data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
+                  ? null
+                  : Number(data.fiscalMeta.defenseLine),
+              note: String(data.fiscalMeta.note || ""),
+            }
+          : { defenseLine: null, note: "" },
     };
   }
 
@@ -374,6 +394,9 @@
       incidents: [],
       invoices: [],
       personalFinance: { entries: [] },
+      appointments: [],
+      liabilities: [],
+      fiscalMeta: { defenseLine: null, note: "" },
     };
   }
 
@@ -389,6 +412,9 @@
       incidents: state.incidents,
       invoices: state.invoices || [],
       personalFinance: state.personalFinance || { entries: [] },
+      appointments: state.appointments || [],
+      liabilities: state.liabilities || [],
+      fiscalMeta: state.fiscalMeta || { defenseLine: null, note: "" },
     };
   }
 
@@ -403,6 +429,9 @@
     state.incidents = next.incidents;
     state.invoices = next.invoices || [];
     state.personalFinance = next.personalFinance || { entries: [] };
+    state.appointments = next.appointments || [];
+    state.liabilities = next.liabilities || [];
+    state.fiscalMeta = next.fiscalMeta || { defenseLine: null, note: "" };
   }
 
   function saveLocal() {
@@ -435,13 +464,38 @@
   }
 
   async function reloadFromServer(record) {
+    const localSnap = snapshotState();
     const remote = record?.data ? record : await fetchServerState();
     serverUpdatedAt = remote.updatedAt || null;
-    applyHydrated(hydrateFromData(remote.data || blankState()));
+    const hydrated = hydrateFromData(remote.data || blankState());
+    const { next, changed: financialMerged } = mergeFinancialFromLocal(localSnap, hydrated);
+    applyHydrated(next);
     saveLocal();
+    if (financialMerged) scheduleServerSave();
     loadPlanFields();
     render();
-    setSyncStatus("最新を反映", "connected");
+    setSyncStatus(financialMerged ? "負債台帳を復元して同期中…" : "最新を反映", "connected");
+  }
+
+  /** 旧サーバー保存分などで liabilities / fiscalMeta が落ちたとき、端末側をマージ */
+  function mergeFinancialFromLocal(localSnap, remoteHydrated) {
+    let changed = false;
+    const next = { ...remoteHydrated };
+    const localLiab = localSnap.liabilities || [];
+    const remoteLiab = next.liabilities || [];
+    if (localLiab.length > 0 && remoteLiab.length === 0) {
+      next.liabilities = localLiab;
+      changed = true;
+    }
+    const localFm = localSnap.fiscalMeta || { defenseLine: null, note: "" };
+    const remoteFm = next.fiscalMeta || { defenseLine: null, note: "" };
+    const localHasFm = localFm.defenseLine != null || String(localFm.note || "").trim();
+    const remoteHasFm = remoteFm.defenseLine != null || String(remoteFm.note || "").trim();
+    if (localHasFm && !remoteHasFm) {
+      next.fiscalMeta = localFm;
+      changed = true;
+    }
+    return { next, changed };
   }
 
   async function refreshFromServerIfNewer() {
@@ -478,13 +532,19 @@
           board: local.board,
           categories: local.categories,
           sontokuChat: local.sontokuChat,
+          incidents: local.incidents || [],
+          invoices: local.invoices || [],
+          personalFinance: local.personalFinance || { entries: [] },
+          appointments: local.appointments || [],
+          liabilities: local.liabilities || [],
+          fiscalMeta: local.fiscalMeta || { defenseLine: null, note: "" },
         };
         const uploaded = await pushServerState(payload, null);
         if (!uploaded.conflict) {
           serverUpdatedAt = uploaded.updatedAt;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
           setSyncStatus("ローカルデータをサーバーへ移行", "connected");
-          return local;
+          return hydrateFromData(payload);
         }
       }
       setSyncStatus("新規開始", "connected");
@@ -502,7 +562,15 @@
         setSyncStatus("保存中…", "busy");
         const result = await pushServerState(snapshotState(), serverUpdatedAt);
         if (result.conflict) {
+          const localSnap = snapshotState();
           await reloadFromServer(result);
+          const stillEmpty = !(state.liabilities || []).length && (localSnap.liabilities || []).length;
+          if (stillEmpty) {
+            state.liabilities = localSnap.liabilities;
+            state.fiscalMeta = localSnap.fiscalMeta || state.fiscalMeta;
+            saveLocal();
+            scheduleServerSave();
+          }
           return;
         }
         serverUpdatedAt = result.updatedAt;
@@ -1263,9 +1331,9 @@
     const weekPlan = state.plans[`week:${w}`] || {};
     const monthPlan = state.plans[`month:${m}`] || {};
     const kpi = state.kpis[d] || {};
-    $("#day-goal").value = dayPlan.goal || "";
     $("#day-ifthen").value = dayPlan.ifthen || "";
     renderHabitChecks(dayPlan.habits || {});
+    if ($("#appt-date") && !$("#appt-date").value) $("#appt-date").value = d;
     $("#good1").value = dayPlan.good1 || "";
     $("#good2").value = dayPlan.good2 || "";
     $("#good3").value = dayPlan.good3 || "";
@@ -1295,13 +1363,56 @@
     $("#month-numeric").value = monthPlan.numeric || "";
     $("#month-actions").value = monthPlan.actions || "";
     $("#month-review").value = monthPlan.review || "";
+    $("#kpi-sales-target").value = kpi.salesTarget ?? "";
+    $("#kpi-media-target").value = kpi.mediaTarget ?? "";
     $("#kpi-sales").value = kpi.sales ?? "";
     $("#kpi-media").value = kpi.media ?? "";
-    $("#kpi-health").value = kpi.health || "";
-    $("#kpi-note").value = kpi.note || "";
+    renderNaiseiChecks(dayPlan.naisei || kpi.naisei || {});
     renderBoardMetrics();
     renderWeeklySummary();
     renderShichitokuScore();
+  }
+
+  function emptyNaiseiMap() {
+    return Object.fromEntries(NAISEI_KPI.map((item) => [item.id, false]));
+  }
+
+  function normalizeNaiseiMap(raw) {
+    const base = emptyNaiseiMap();
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return base;
+    NAISEI_KPI.forEach((item) => {
+      base[item.id] = !!raw[item.id];
+    });
+    return base;
+  }
+
+  function renderNaiseiChecks(values = {}) {
+    const host = $("#day-naisei");
+    if (!host) return;
+    const map = normalizeNaiseiMap(values);
+    host.innerHTML = NAISEI_KPI.map(
+      (item) => `
+        <label class="naisei-check">
+          <input type="checkbox" data-naisei="night" data-id="${item.id}" ${map[item.id] ? "checked" : ""} />
+          <span>${escapeHtml(item.label)}</span>
+        </label>`
+    ).join("");
+  }
+
+  function readNaiseiChecks() {
+    const out = emptyNaiseiMap();
+    $$('[data-naisei="night"]').forEach((el) => {
+      const id = el.dataset.id;
+      if (id in out) out[id] = !!el.checked;
+    });
+    return out;
+  }
+
+  function numOrNull(sel) {
+    const el = $(sel);
+    if (!el || el.value === "") return null;
+    const n = Number(el.value);
+    return Number.isFinite(n) ? n : null;
   }
 
   /* —— 七徳スコア・称号（直近30日の記入頻度） —— */
@@ -1579,6 +1690,393 @@
     });
   }
 
+  const LIAB_KIND_LABEL = {
+    rent: "家賃",
+    tax: "税金",
+    social: "社会保険",
+    card: "カード／借入",
+    utility: "光熱・通信",
+    other: "その他",
+  };
+  const LIAB_STATUS_LABEL = {
+    overdue: "滞納",
+    plan: "分割／予定",
+    ok: "期限内",
+    done: "清算済",
+  };
+
+  function yen(n) {
+    return `¥${Number(n || 0).toLocaleString("ja-JP")}`;
+  }
+
+  function normalizeLiability(item) {
+    const base = item && typeof item === "object" ? item : {};
+    return {
+      id: base.id || uid(),
+      creditor: String(base.creditor || "").trim(),
+      kind: base.kind || "other",
+      balance: Number(base.balance) || 0,
+      minPay: base.minPay == null || base.minPay === "" ? null : Number(base.minPay),
+      dueDate: base.dueDate || null,
+      status: base.status || "ok",
+      notes: String(base.notes || "").trim(),
+      payments: Array.isArray(base.payments)
+        ? base.payments.map((p) => ({
+            id: p.id || uid(),
+            date: p.date || todayISO(),
+            amount: Number(p.amount) || 0,
+            note: String(p.note || "").trim(),
+            balanceAfter: p.balanceAfter == null ? null : Number(p.balanceAfter),
+          }))
+        : [],
+      createdAt: base.createdAt || new Date().toISOString(),
+      updatedAt: base.updatedAt || new Date().toISOString(),
+    };
+  }
+
+  function renderLiabPayHistory(item) {
+    const host = $("#liab-pay-history");
+    if (!host) return;
+    const rows = (item.payments || []).slice().reverse().slice(0, 8);
+    host.innerHTML = rows.length
+      ? rows
+          .map(
+            (p) =>
+              `<li>${escapeHtml(String(p.date || "").slice(0, 10))} · ${yen(p.amount)}${
+                p.balanceAfter != null ? ` → 残 ${yen(p.balanceAfter)}` : ""
+              }${p.note ? ` · ${escapeHtml(p.note)}` : ""}</li>`
+          )
+          .join("")
+      : `<li class="muted">支払履歴はまだありません</li>`;
+  }
+
+  function openLiabEdit(id, focusPay = false) {
+    const item = state.liabilities.find((x) => x.id === id);
+    if (!item) return;
+    const dlg = $("#liab-edit-dialog");
+    if (!dlg) return;
+    $("#liab-edit-id").value = item.id;
+    $("#liab-edit-creditor").value = item.creditor || "";
+    $("#liab-edit-kind").value = item.kind || "other";
+    $("#liab-edit-balance").value = item.balance ?? "";
+    $("#liab-edit-minpay").value = item.minPay == null ? "" : String(item.minPay);
+    $("#liab-edit-due").value = item.dueDate || "";
+    $("#liab-edit-status").value = item.status || "ok";
+    $("#liab-edit-notes").value = item.notes || "";
+    $("#liab-pay-date").value = todayISO();
+    $("#liab-pay-amount").value = "";
+    $("#liab-pay-note").value = "";
+    const msg = $("#liab-pay-msg");
+    if (msg) msg.textContent = "";
+    renderLiabPayHistory(item);
+    dlg.showModal();
+    if (focusPay) $("#liab-pay-amount")?.focus();
+  }
+
+  function applyLiabPayment(item, amount, payDate, payNote) {
+    const paid = Number(amount);
+    if (!Number.isFinite(paid) || paid <= 0) return { ok: false, error: "支払額を入力してください" };
+    const before = Number(item.balance) || 0;
+    const after = Math.max(0, before - paid);
+    if (!Array.isArray(item.payments)) item.payments = [];
+    item.payments.push({
+      id: uid(),
+      date: payDate || todayISO(),
+      amount: paid,
+      note: String(payNote || "").trim(),
+      balanceAfter: after,
+    });
+    item.balance = after;
+    if (after === 0) item.status = "done";
+    else if (item.status === "done") item.status = "plan";
+    item.updatedAt = new Date().toISOString();
+    return { ok: true, after };
+  }
+
+  function renderLiabilities() {
+    const list = $("#list-liabilities");
+    const summary = $("#liab-summary");
+    if (!list) return;
+    if (!Array.isArray(state.liabilities)) state.liabilities = [];
+    if (!state.fiscalMeta || typeof state.fiscalMeta !== "object") {
+      state.fiscalMeta = { defenseLine: null, note: "" };
+    }
+
+    const defenseInput = $("#liab-defense");
+    const noteInput = $("#liab-defense-note");
+    if (defenseInput && document.activeElement !== defenseInput) {
+      defenseInput.value =
+        state.fiscalMeta.defenseLine == null || Number.isNaN(Number(state.fiscalMeta.defenseLine))
+          ? ""
+          : String(state.fiscalMeta.defenseLine);
+    }
+    if (noteInput && document.activeElement !== noteInput) {
+      noteInput.value = state.fiscalMeta.note || "";
+    }
+
+    const open = state.liabilities.filter((x) => x.status !== "done");
+    const balanceTotal = open.reduce((s, x) => s + (Number(x.balance) || 0), 0);
+    const mustPay = open.reduce((s, x) => {
+      const min = x.minPay == null || x.minPay === "" ? Number(x.balance) || 0 : Number(x.minPay) || 0;
+      return s + min;
+    }, 0);
+    const overdueCount = open.filter((x) => x.status === "overdue").length;
+    const defense = state.fiscalMeta.defenseLine;
+    const defenseNum = defense == null || defense === "" ? null : Number(defense);
+
+    if (summary) {
+      summary.innerHTML = `
+        <div class="liab-sum-grid">
+          <div><span class="liab-sum-label">未清算残高</span><strong>${yen(balanceTotal)}</strong></div>
+          <div><span class="liab-sum-label">今月最低支払合計</span><strong>${yen(mustPay)}</strong></div>
+          <div><span class="liab-sum-label">滞納件数</span><strong>${overdueCount}</strong></div>
+          <div><span class="liab-sum-label">防衛ライン</span><strong>${
+            defenseNum == null || Number.isNaN(defenseNum) ? "未設定" : yen(defenseNum)
+          }</strong></div>
+        </div>
+        <p class="liab-sum-note">${
+          defenseNum == null || Number.isNaN(defenseNum)
+            ? "防衛ライン＝今月、事業で最低いくら入金が必要かの目安。負債の最低支払を見て設定せよ。"
+            : `防衛ライン（事業必達の目安） ${yen(defenseNum)} ／ 負債の今月最低支払 ${yen(mustPay)}。`
+        }${state.fiscalMeta.note ? ` · ${escapeHtml(state.fiscalMeta.note)}` : ""}</p>`;
+    }
+
+    const rows = state.liabilities
+      .slice()
+      .sort((a, b) => {
+        const rank = { overdue: 0, plan: 1, ok: 2, done: 3 };
+        const ra = rank[a.status] ?? 9;
+        const rb = rank[b.status] ?? 9;
+        if (ra !== rb) return ra - rb;
+        return String(a.dueDate || "9999").localeCompare(String(b.dueDate || "9999"));
+      })
+      .map((item) => {
+        const kind = LIAB_KIND_LABEL[item.kind] || item.kind || "その他";
+        const st = LIAB_STATUS_LABEL[item.status] || item.status || "";
+        const min =
+          item.minPay == null || item.minPay === ""
+            ? "—"
+            : yen(item.minPay);
+        const payCount = (item.payments || []).length;
+        const payHint = payCount ? ` · 支払${payCount}回` : "";
+        return `<li class="row-item liab-row status-${escapeHtml(item.status || "ok")}" data-liab-id="${item.id}">
+          <div class="row-main">
+            <strong>${escapeHtml(item.creditor || "（未記入）")} · ${escapeHtml(kind)}</strong>
+            <span class="muted">残高 ${yen(item.balance)} · 今月最低 ${min} · 期限 ${escapeHtml(
+              item.dueDate || "未設定"
+            )} · ${escapeHtml(st)}${payHint}</span>
+            ${item.notes ? `<span class="muted">${escapeHtml(item.notes)}</span>` : ""}
+          </div>
+          <div class="row-actions">
+            <button type="button" class="btn ghost compact" data-liab-edit>編集</button>
+            ${
+              item.status !== "done"
+                ? `<button type="button" class="btn ghost compact" data-liab-pay>支払</button>
+                   <button type="button" class="btn ghost compact" data-liab-today>今日へ</button>
+                   <button type="button" class="btn ghost compact" data-liab-done>清算済</button>`
+                : ""
+            }
+            <button type="button" class="btn ghost compact" data-liab-del>削除</button>
+          </div>
+        </li>`;
+      });
+    list.innerHTML = rows.length ? rows.join("") : `<li class="muted">負債はまだありません。滞納・必達から追加せよ。</li>`;
+
+    list.querySelectorAll("[data-liab-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-liab-id]")?.dataset.liabId;
+        if (id) openLiabEdit(id, false);
+      });
+    });
+    list.querySelectorAll("[data-liab-pay]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-liab-id]")?.dataset.liabId;
+        if (id) openLiabEdit(id, true);
+      });
+    });
+    list.querySelectorAll("[data-liab-today]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-liab-id]")?.dataset.liabId;
+        const item = state.liabilities.find((x) => x.id === id);
+        if (!item) return;
+        addLiabilityTask(item);
+      });
+    });
+    list.querySelectorAll("[data-liab-done]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-liab-id]")?.dataset.liabId;
+        const item = state.liabilities.find((x) => x.id === id);
+        if (!item) return;
+        item.status = "done";
+        item.updatedAt = new Date().toISOString();
+        save();
+        renderLiabilities();
+      });
+    });
+    list.querySelectorAll("[data-liab-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-liab-id]")?.dataset.liabId;
+        if (!id || !confirm("この負債を台帳から削除しますか？")) return;
+        state.liabilities = state.liabilities.filter((x) => x.id !== id);
+        save();
+        renderLiabilities();
+      });
+    });
+  }
+
+  function addLiabilityTask(item) {
+    const kind = LIAB_KIND_LABEL[item.kind] || "";
+    const min =
+      item.minPay == null || item.minPay === ""
+        ? Number(item.balance) || 0
+        : Number(item.minPay) || 0;
+    const title = `支払: ${item.creditor || "負債"}（${kind} ${yen(min)}）`;
+    let onToday = true;
+    if (wipCount() >= 7) onToday = false;
+    const task = normalizeTask({
+      id: uid(),
+      title,
+      dueDate: item.dueDate || todayISO(),
+      category: "personal",
+      horizon: "day",
+      urgency: "high",
+      importance: "high",
+      status: "todo",
+      onToday,
+      notes: `負債台帳より。残高 ${yen(item.balance)}${item.notes ? ` / ${item.notes}` : ""}`,
+      tags: ["liability", "pay"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    state.tasks.push(task);
+    save();
+    render();
+    alert(onToday ? "今日の任務に追加した" : "今日が7件超のため、任務には入れたが今日枠は外した");
+  }
+
+  function formatApptWhen(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString("ja-JP", {
+      month: "numeric",
+      day: "numeric",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function renderAppointments() {
+    const list = $("#list-appointments");
+    if (!list) return;
+    const items = (state.appointments || [])
+      .slice()
+      .filter((a) => String(a.startAt || "").slice(0, 10) >= todayISO())
+      .sort((a, b) => String(a.startAt).localeCompare(String(b.startAt)))
+      .slice(0, 12);
+    list.innerHTML = items.length
+      ? items
+          .map((a) => {
+            const rem = Array.isArray(a.remindersMinutes) ? a.remindersMinutes.join("/") : "";
+            return `<li class="row-item">
+          <div class="row-main">
+            <strong>${escapeHtml(a.title)}</strong>
+            <span class="muted">${escapeHtml(formatApptWhen(a.startAt))}〜${escapeHtml(formatApptWhen(a.endAt).split(" ").pop() || "")}${a.location ? ` · ${escapeHtml(a.location)}` : ""}</span>
+            ${rem ? `<span class="muted">通知: ${escapeHtml(rem)}分前</span>` : ""}
+          </div>
+          ${a.gcalHtmlLink ? `<div class="row-actions"><a class="btn ghost compact" href="${escapeHtml(a.gcalHtmlLink)}" target="_blank" rel="noopener">GCal</a></div>` : ""}
+        </li>`;
+          })
+          .join("")
+      : `<li class="muted">手帳から登録した予定の控えはまだありません</li>`;
+  }
+
+  function formatGcalTimeRange(ev) {
+    const start = ev.startAt || "";
+    const end = ev.endAt || "";
+    // all-day: YYYY-MM-DD only
+    if (/^\d{4}-\d{2}-\d{2}$/.test(start)) return "終日";
+    const s = formatApptWhen(start);
+    const e = formatApptWhen(end);
+    const eShort = e.includes(" ") ? e.split(" ").pop() : e;
+    return `${s}〜${eShort}`;
+  }
+
+  async function refreshGcalToday() {
+    const list = $("#list-gcal-today");
+    if (!list) return;
+    list.innerHTML = `<li class="muted">読み込み中…</li>`;
+    try {
+      const res = await fetch(`/api/gcal/today?day=${encodeURIComponent(todayISO())}`, {
+        headers: authHeaders(),
+        cache: "no-store",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        list.innerHTML = `<li class="muted">${escapeHtml(body.message || "取得できませんでした")}</li>`;
+        return;
+      }
+      const items = Array.isArray(body.items) ? body.items : [];
+      if (!items.length) {
+        list.innerHTML = `<li class="muted">本日のGoogle予定はありません</li>`;
+        return;
+      }
+      list.innerHTML = items
+        .map(
+          (ev) => `<li class="row-item">
+          <div class="row-main">
+            <strong>${escapeHtml(ev.title || "(無題)")}</strong>
+            <span class="muted">${escapeHtml(formatGcalTimeRange(ev))}</span>
+          </div>
+          ${
+            ev.htmlLink
+              ? `<div class="row-actions"><a class="btn ghost compact" href="${escapeHtml(ev.htmlLink)}" target="_blank" rel="noopener">開く</a></div>`
+              : ""
+          }
+        </li>`
+        )
+        .join("");
+    } catch {
+      list.innerHTML = `<li class="muted">通信エラー</li>`;
+    }
+  }
+
+  async function refreshGcalStatus() {
+    const el = $("#gcal-status");
+    const row = $("#gcal-connect-row");
+    try {
+      const res = await fetch("/api/gcal/status", { headers: authHeaders(), cache: "no-store" });
+      const body = await res.json();
+      if (!body.configured) {
+        if (el) el.textContent = "未設定（GOOGLE_CALENDAR.md）";
+        const list = $("#list-gcal-today");
+        if (list) list.innerHTML = `<li class="muted">Google連携の設定前です</li>`;
+        return body;
+      }
+      if (el) el.textContent = body.connected ? "接続済み" : "未接続";
+      if (row) {
+        const btn = $("#btn-gcal-connect");
+        if (btn) btn.textContent = body.connected ? "再接続" : "Googleに接続";
+      }
+      if (body.connected) await refreshGcalToday();
+      else {
+        const list = $("#list-gcal-today");
+        if (list) list.innerHTML = `<li class="muted">未接続です。「Googleに接続」から許可してください</li>`;
+      }
+      return body;
+    } catch {
+      if (el) el.textContent = "状態取得失敗";
+      return null;
+    }
+  }
+
+  function localInputToIso(dateStr, timeStr) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const [hh, mm] = timeStr.split(":").map(Number);
+    return new Date(y, m - 1, d, hh, mm || 0, 0, 0).toISOString();
+  }
+
   function renderIncidents() {
     const ul = $("#incident-list");
     if (!ul) return;
@@ -1641,6 +2139,7 @@
       goal: (dayPlan.goal || "").trim(),
       ifthen: (dayPlan.ifthen || "").trim(),
       habits: habitSummary(dayPlan.habits || {}),
+      naisei: dayPlan.naisei || {},
       energy: dayPlan.energy ?? "",
       completedToday: doneToday.length,
       pendingCount: pendingTasks().length,
@@ -1654,6 +2153,17 @@
         onToday: !!task.onToday,
         forced: !!task.forced,
       })),
+      appointments: (state.appointments || [])
+        .filter((a) => {
+          const day = String(a.startAt || "").slice(0, 10);
+          return day >= todayISO() && day <= addDaysISO(1);
+        })
+        .slice(0, 12)
+        .map((a) => ({
+          title: a.title,
+          startAt: a.startAt,
+          endAt: a.endAt,
+        })),
     };
   }
 
@@ -1783,6 +2293,8 @@
     renderIncidents();
     renderInvoices();
     renderPersonalFinance();
+    renderLiabilities();
+    renderAppointments();
     renderImadarumaProgress();
     renderDoneList();
     renderTrash();
@@ -1795,7 +2307,10 @@
     });
     $$(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
     if (["day", "week", "month"].includes(name)) loadPlanFields();
-    if (name === "day") ensureSontokuOpening();
+    if (name === "day") {
+      ensureSontokuOpening();
+      refreshGcalToday();
+    }
     render();
   }
 
@@ -2086,6 +2601,8 @@
   ensureForcedMedia();
   ensureRequiredMonthlyTasks();
   purgeOldTrash();
+  refreshGcalStatus();
+  if ($("#appt-date")) $("#appt-date").value = todayISO();
 
   $$(".tab").forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
   $("#btn-back-home").addEventListener("click", () => setView("home"));
@@ -2227,23 +2744,28 @@
     const prev = state.plans[`day:${d}`] || {};
     state.plans[`day:${d}`] = {
       ...prev,
-      goal: $("#day-goal").value.trim(),
       ifthen: $("#day-ifthen").value.trim(),
       habits: { ...(prev.habits || {}), ...readHabitChecks("am") },
     };
     syncWeekHabitFromDays();
     save();
-    $("#day-morning-msg").textContent = "朝を保存した";
+    $("#day-morning-msg").textContent = "朝のジャーナリングを保存した";
   });
 
   $("#day-save-meta").addEventListener("click", () => {
     const d = todayISO();
+    const prev = state.kpis[d] || {};
     state.kpis[d] = {
-      sales: $("#kpi-sales").value === "" ? null : Number($("#kpi-sales").value),
-      media: $("#kpi-media").value === "" ? null : Number($("#kpi-media").value),
-      health: $("#kpi-health").value.trim(),
-      note: $("#kpi-note").value.trim(),
+      ...prev,
+      salesTarget: numOrNull("#kpi-sales-target"),
+      mediaTarget: numOrNull("#kpi-media-target"),
+      sales: numOrNull("#kpi-sales"),
+      media: numOrNull("#kpi-media"),
     };
+    delete state.kpis[d].health;
+    delete state.kpis[d].note;
+    delete state.kpis[d].naisei;
+    delete state.kpis[d].naiseiTarget;
     save();
     $("#day-meta-msg").textContent = "KPI保存";
   });
@@ -2253,6 +2775,7 @@
     const prev = state.plans[`day:${d}`] || {};
     state.plans[`day:${d}`] = {
       ...prev,
+      naisei: readNaiseiChecks(),
       good1: $("#good1").value.trim(),
       good2: $("#good2").value.trim(),
       good3: $("#good3").value.trim(),
@@ -2275,7 +2798,7 @@
     };
     syncWeekHabitFromDays();
     save();
-    $("#day-review-msg").textContent = "夕を保存した";
+    $("#day-review-msg").textContent = "夜のジャーナリングを保存した";
   });
 
   $("#week-save-goal").addEventListener("click", () => {
@@ -2447,6 +2970,182 @@
     renderPersonalFinance();
   });
 
+  $("#form-liab")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!Array.isArray(state.liabilities)) state.liabilities = [];
+    const minRaw = $("#liab-minpay").value;
+    state.liabilities.push(
+      normalizeLiability({
+        id: uid(),
+        creditor: $("#liab-creditor").value.trim(),
+        kind: $("#liab-kind").value,
+        balance: Number($("#liab-balance").value) || 0,
+        minPay: minRaw === "" ? null : Number(minRaw),
+        dueDate: $("#liab-due").value || null,
+        status: $("#liab-status").value || "ok",
+        notes: $("#liab-notes").value.trim(),
+        payments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    );
+    save();
+    e.target.reset();
+    $("#liab-status").value = "overdue";
+    renderLiabilities();
+  });
+
+  $("#liab-defense-save")?.addEventListener("click", () => {
+    if (!state.fiscalMeta || typeof state.fiscalMeta !== "object") {
+      state.fiscalMeta = { defenseLine: null, note: "" };
+    }
+    const raw = $("#liab-defense").value;
+    state.fiscalMeta.defenseLine = raw === "" ? null : Number(raw);
+    state.fiscalMeta.note = ($("#liab-defense-note").value || "").trim();
+    save();
+    const msg = $("#liab-defense-msg");
+    if (msg) msg.textContent = "防衛ラインを保存した";
+    renderLiabilities();
+  });
+
+  $("#liab-edit-cancel")?.addEventListener("click", () => {
+    $("#liab-edit-dialog")?.close();
+  });
+
+  $("#liab-pay-apply")?.addEventListener("click", () => {
+    const id = $("#liab-edit-id").value;
+    const item = state.liabilities.find((x) => x.id === id);
+    const msg = $("#liab-pay-msg");
+    if (!item) return;
+    const result = applyLiabPayment(
+      item,
+      $("#liab-pay-amount").value,
+      $("#liab-pay-date").value || todayISO(),
+      $("#liab-pay-note").value
+    );
+    if (!result.ok) {
+      if (msg) msg.textContent = result.error;
+      return;
+    }
+    $("#liab-edit-balance").value = item.balance;
+    $("#liab-edit-status").value = item.status;
+    $("#liab-pay-amount").value = "";
+    $("#liab-pay-note").value = "";
+    if (msg) msg.textContent = `記録した。残高 ${yen(result.after)}`;
+    renderLiabPayHistory(item);
+    save();
+    renderLiabilities();
+  });
+
+  $("#form-liab-edit")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = $("#liab-edit-id").value;
+    const item = state.liabilities.find((x) => x.id === id);
+    if (!item) return;
+    const minRaw = $("#liab-edit-minpay").value;
+    item.creditor = $("#liab-edit-creditor").value.trim();
+    item.kind = $("#liab-edit-kind").value;
+    item.balance = Number($("#liab-edit-balance").value) || 0;
+    item.minPay = minRaw === "" ? null : Number(minRaw);
+    item.dueDate = $("#liab-edit-due").value || null;
+    item.status = $("#liab-edit-status").value || "ok";
+    item.notes = $("#liab-edit-notes").value.trim();
+    item.updatedAt = new Date().toISOString();
+    save();
+    renderLiabilities();
+    $("#liab-edit-dialog")?.close();
+  });
+
+  $("#btn-gcal-connect")?.addEventListener("click", async () => {
+    const status = $("#gcal-status");
+    try {
+      const res = await fetch("/api/gcal/auth", { headers: authHeaders(), cache: "no-store" });
+      const body = await res.json();
+      if (!res.ok) {
+        if (status) status.textContent = body.message || "接続開始に失敗";
+        alert(body.message || "Google OAuth が未設定です。GOOGLE_CALENDAR.md を見てください。");
+        return;
+      }
+      window.open(body.url, "_blank", "noopener");
+      if (status) status.textContent = "ブラウザで許可したあと、再読み込みしてください";
+    } catch {
+      if (status) status.textContent = "接続開始に失敗";
+    }
+  });
+
+  $("#btn-gcal-refresh")?.addEventListener("click", () => {
+    refreshGcalToday();
+  });
+
+  $("#form-appointment")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = $("#appt-msg");
+    const title = $("#appt-title").value.trim();
+    const date = $("#appt-date").value;
+    const start = $("#appt-start").value;
+    const end = $("#appt-end").value;
+    if (!title || !date || !start || !end) return;
+    const startAt = localInputToIso(date, start);
+    const endAt = localInputToIso(date, end);
+    if (!(new Date(startAt) < new Date(endAt))) {
+      alert("終了時刻は開始より後にしてください。");
+      return;
+    }
+
+    const post = async (force) => {
+      if (msg) msg.textContent = force ? "強制登録中…" : "登録中…";
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          title,
+          startAt,
+          endAt,
+          location: $("#appt-location").value.trim(),
+          notes: $("#appt-notes").value.trim(),
+          force: !!force,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      return { res, body };
+    };
+
+    try {
+      let { res, body } = await post(false);
+      if (res.status === 409 && body.conflicts?.length) {
+        const names = body.conflicts.map((c) => `・${c.title}（${formatApptWhen(c.startAt)}）`).join("\n");
+        const ok = confirm(`予定が被っています:\n${names}\n\nそれでも登録しますか？`);
+        if (!ok) {
+          if (msg) msg.textContent = "登録を中止（バッティング）";
+          return;
+        }
+        ({ res, body } = await post(true));
+      }
+      if (!res.ok) {
+        if (msg) msg.textContent = body.message || "失敗";
+        alert(body.message || "予定の登録に失敗しました");
+        return;
+      }
+      if (!Array.isArray(state.appointments)) state.appointments = [];
+      state.appointments.push(body.appointment);
+      save();
+      renderAppointments();
+      refreshGcalToday();
+      e.target.reset();
+      if ($("#appt-date")) $("#appt-date").value = todayISO();
+      if ($("#appt-start")) $("#appt-start").value = "10:00";
+      if ($("#appt-end")) $("#appt-end").value = "11:00";
+      const rem = (body.appointment.remindersMinutes || []).join("/");
+      if (msg) {
+        msg.textContent = rem
+          ? `登録完了（通知 ${rem} 分前）`
+          : "登録完了";
+      }
+    } catch {
+      if (msg) msg.textContent = "通信エラー";
+    }
+  });
+
   $("#btn-goto-done")?.addEventListener("click", () => setView("done"));
   $("#btn-goto-trash")?.addEventListener("click", () => setView("trash"));
   $("#btn-back-home-done")?.addEventListener("click", () => setView("home"));
@@ -2474,6 +3173,18 @@
       data.personalFinance && typeof data.personalFinance === "object"
         ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
         : { entries: [] };
+    state.appointments = Array.isArray(data.appointments) ? data.appointments : [];
+    state.liabilities = Array.isArray(data.liabilities) ? data.liabilities : [];
+    state.fiscalMeta =
+      data.fiscalMeta && typeof data.fiscalMeta === "object"
+        ? {
+            defenseLine:
+              data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
+                ? null
+                : Number(data.fiscalMeta.defenseLine),
+            note: String(data.fiscalMeta.note || ""),
+          }
+        : { defenseLine: null, note: "" };
     ensureRequiredMonthlyTasks();
     ensureForcedMedia();
     save();

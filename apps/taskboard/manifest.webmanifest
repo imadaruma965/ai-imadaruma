@@ -1,8 +1,8 @@
 {
-  "name": "統治手帳",
+  "name": "賢いうさぎの統治手帳",
   "short_name": "統治手帳",
   "description": "今日・予定・タスク・振り返り",
-  "start_url": "/",
+  "start_url": "/?source=homescreen",
   "display": "standalone",
   "background_color": "#f3f7fb",
   "theme_color": "#3d7ea6",

@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/imadaruma965/ai-imadaruma#readme",
   "dependencies": {
-    "@cursor/sdk": "^1.0.23"
+    "@cursor/sdk": "^1.0.23",
+    "googleapis": "^173.0.0"
   }
 }

@@ -5,4 +5,5 @@ apps/taskboard/data/state.json
 apps/taskboard/data/mobile-access.txt
 apps/taskboard/data/autostart.log
 apps/taskboard/data/autostart.error.log
+apps/taskboard/data/gcal-token.json
 daily_governance/chat_logs/sontoku-*.md

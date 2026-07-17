@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
+const gcal = require("./gcal.cjs");
 
 const APP_DIR = __dirname;
 const REPO_ROOT = path.resolve(APP_DIR, "../..");
@@ -122,6 +123,17 @@ function sanitizeStateData(raw) {
       data.personalFinance && typeof data.personalFinance === "object"
         ? { entries: Array.isArray(data.personalFinance.entries) ? data.personalFinance.entries : [] }
         : { entries: [] },
+    appointments: Array.isArray(data.appointments) ? data.appointments : [],
+    liabilities: Array.isArray(data.liabilities) ? data.liabilities : [],
+    fiscalMeta:
+      data.fiscalMeta && typeof data.fiscalMeta === "object"
+        ? {
+            defenseLine: data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
+              ? null
+              : Number(data.fiscalMeta.defenseLine),
+            note: String(data.fiscalMeta.note || ""),
+          }
+        : { defenseLine: null, note: "" },
   };
 }
 
@@ -230,10 +242,20 @@ function normalizeContext(raw) {
     goal: clip(context.goal, 500),
     ifthen: clip(context.ifthen, 500),
     energy: clip(context.energy, 30),
+    habits: context.habits && typeof context.habits === "object" ? context.habits : {},
     kpis: context.kpis && typeof context.kpis === "object" ? context.kpis : {},
     completedToday: Number(context.completedToday || 0),
     pendingCount: Number(context.pendingCount || 0),
     tasks,
+    schedule: context.schedule && typeof context.schedule === "object" ? context.schedule : {},
+    appointments: Array.isArray(context.appointments)
+      ? context.appointments.slice(0, 20).map((a) => ({
+          title: clip(a.title, 200),
+          startAt: clip(a.startAt, 40),
+          endAt: clip(a.endAt, 40),
+          conflict: Boolean(a.conflict),
+        }))
+      : [],
   };
 }
 
@@ -269,6 +291,7 @@ async function basePrompt(date) {
 - 戦略を変更しない。戦略判断はAI栄一の領分である。
 - この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
 - 統治手帳から渡された最新の任務・進捗を事実として扱う。
+- 予定・約束は Googleカレンダー連携の情報を事実として扱う。時間が重なる予定（バッティング）があれば、任務の話より先に短く警告する。
 - 応答は日本語で簡潔にし、冒頭は必ず「尊徳:」とする。
 - 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
 - 分からないことを推測で断定せず、実行に必要な問いを一つずつ返す。
@@ -370,10 +393,32 @@ async function appendChatLog({ date, message, event, response, agentId, runId })
   await fsp.appendFile(file, `${header}${entry}`, "utf8");
 }
 
+async function enrichScheduleContext(context) {
+  try {
+    const st = await gcal.status();
+    if (!st.connected) {
+      context.schedule = { connected: false, note: "Googleカレンダー未接続" };
+      return context;
+    }
+    const upcoming = await gcal.upcoming(2);
+    context.schedule = {
+      connected: true,
+      upcoming: upcoming.slice(0, 15),
+      remindersMinutes: st.remindersMinutes,
+    };
+  } catch (error) {
+    context.schedule = {
+      connected: false,
+      error: error.code || error.message || "schedule_error",
+    };
+  }
+  return context;
+}
+
 async function runSontokuTurn(payload) {
   const { date, event = "message" } = payload;
   const message = String(payload.message || "").trim();
-  const context = normalizeContext(payload.context);
+  const context = await enrichScheduleContext(normalizeContext(payload.context));
   const sessions = await readSessions();
   const { agent, firstTurn } = await openAgent(date, sessions[date]?.agentId);
   let run;
@@ -453,7 +498,9 @@ function createServer() {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
 
     if (
-      (url.pathname.startsWith("/api/state") || url.pathname.startsWith("/api/sontoku")) &&
+      (url.pathname.startsWith("/api/state") ||
+        url.pathname.startsWith("/api/sontoku") ||
+        url.pathname.startsWith("/api/appointments")) &&
       !isAuthorized(req)
     ) {
       json(res, 401, { error: "unauthorized", message: "認証トークンが正しくありません。" });
@@ -462,11 +509,13 @@ function createServer() {
 
     if (req.method === "GET" && url.pathname === "/api/info") {
       const access = getAccessUrls();
+      const gcalStatus = await gcal.status().catch(() => ({ configured: false, connected: false }));
       json(res, 200, {
         sync: true,
         port: PORT,
         ...access,
         sontokuConnected: Boolean(process.env.CURSOR_API_KEY),
+        gcal: gcalStatus,
       });
       return;
     }
@@ -548,6 +597,177 @@ function createServer() {
           message: authError
             ? "Cursor APIキーを確認してください。"
             : "AI尊徳との接続に失敗しました。ターミナルのエラーを確認してください。",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/gcal/status") {
+      try {
+        json(res, 200, await gcal.status());
+      } catch (error) {
+        json(res, 500, { error: "gcal_status_failed", message: error.message });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/gcal/auth") {
+      try {
+        if (!gcal.configured()) {
+          json(res, 503, {
+            error: "google_oauth_not_configured",
+            message: "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET を .env.local に設定してください。",
+            redirectUri: gcal.redirectUri(),
+          });
+          return;
+        }
+        json(res, 200, { url: gcal.authUrl() });
+      } catch (error) {
+        json(res, 500, { error: "gcal_auth_failed", message: error.message });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/gcal/callback") {
+      try {
+        const code = url.searchParams.get("code");
+        if (!code) {
+          res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+          res.end("<p>認可コードがありません。</p>");
+          return;
+        }
+        await gcal.exchangeCode(code);
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(
+          "<!doctype html><meta charset=utf-8><title>接続完了</title><p>Googleカレンダー接続が完了しました。このタブを閉じ、統治手帳を再読み込みしてください。</p><script>setTimeout(()=>location.href='/',1200)</script>"
+        );
+      } catch (error) {
+        console.error("[gcal/callback]", error);
+        res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(`<p>接続に失敗しました: ${String(error.message || error)}</p>`);
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/gcal/upcoming") {
+      try {
+        const days = Number(url.searchParams.get("days") || 2);
+        const items = await gcal.upcoming(Number.isFinite(days) ? days : 2);
+        json(res, 200, { items });
+      } catch (error) {
+        const code = error.code === "google_not_connected" ? 503 : 500;
+        json(res, code, {
+          error: error.code || "gcal_upcoming_failed",
+          message:
+            error.code === "google_not_connected"
+              ? "Googleカレンダー未接続です。「接続」から認可してください。"
+              : error.message,
+        });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/gcal/today") {
+      try {
+        const day = url.searchParams.get("day") || undefined;
+        const result = await gcal.todayEvents(day);
+        json(res, 200, result);
+      } catch (error) {
+        const code = error.code === "google_not_connected" ? 503 : 500;
+        json(res, code, {
+          error: error.code || "gcal_today_failed",
+          message:
+            error.code === "google_not_connected"
+              ? "Googleカレンダー未接続です。「接続」から認可してください。"
+              : error.message,
+        });
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/appointments") {
+      try {
+        const body = await readJsonBody(req);
+        const title = String(body.title || "").trim();
+        const startAt = body.startAt;
+        const endAt = body.endAt;
+        if (!title || !startAt || !endAt) {
+          json(res, 400, {
+            error: "invalid_appointment",
+            message: "タイトル・開始・終了が必要です。",
+          });
+          return;
+        }
+        if (!(new Date(startAt) < new Date(endAt))) {
+          json(res, 400, {
+            error: "invalid_time_range",
+            message: "終了は開始より後にしてください。",
+          });
+          return;
+        }
+
+        const conflicts = await gcal.findConflicts(startAt, endAt);
+        if (conflicts.length && !body.force) {
+          json(res, 409, {
+            error: "schedule_conflict",
+            message: "同じ時間帯に別の予定があります。",
+            conflicts,
+          });
+          return;
+        }
+
+        const created = await gcal.createEvent({
+          title,
+          startAt,
+          endAt,
+          location: String(body.location || "").trim(),
+          notes: String(body.notes || "").trim(),
+        });
+
+        const appointment = {
+          id: `ap-${Date.now().toString(36)}`,
+          title,
+          startAt: new Date(startAt).toISOString(),
+          endAt: new Date(endAt).toISOString(),
+          location: String(body.location || "").trim(),
+          notes: String(body.notes || "").trim(),
+          gcalEventId: created.id,
+          gcalHtmlLink: created.htmlLink,
+          remindersMinutes: created.remindersMinutes,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        json(res, 200, {
+          appointment,
+          conflictsWarned: conflicts,
+        });
+      } catch (error) {
+        console.error("[appointments]", error);
+        const map = {
+          google_not_connected: [503, "Googleカレンダー未接続です。先に接続してください。"],
+          google_oauth_not_configured: [503, "Google OAuth が未設定です。GOOGLE_CALENDAR.md を参照。"],
+        };
+        const hit = map[error.code];
+        json(res, hit ? hit[0] : 500, {
+          error: error.code || "appointment_create_failed",
+          message: hit ? hit[1] : error.message || "予定の登録に失敗しました。",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/appointments/check") {
+      try {
+        const body = await readJsonBody(req);
+        const conflicts = await gcal.findConflicts(body.startAt, body.endAt, {
+          excludeEventId: body.excludeEventId,
+        });
+        json(res, 200, { conflicts });
+      } catch (error) {
+        json(res, error.code === "google_not_connected" ? 503 : 500, {
+          error: error.code || "conflict_check_failed",
+          message: error.message,
         });
       }
       return;

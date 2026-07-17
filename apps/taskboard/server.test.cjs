@@ -61,6 +61,21 @@ test("sanitizeStateData normalizes persisted payload", () => {
   assert.equal(Array.isArray(data.personalFinance.entries), true);
 });
 
+test("sanitizeStateData preserves appointments", () => {
+  const data = sanitizeStateData({
+    appointments: [
+      {
+        id: "ap1",
+        title: "面談",
+        startAt: "2026-07-18T01:00:00.000Z",
+        endAt: "2026-07-18T02:00:00.000Z",
+      },
+    ],
+  });
+  assert.equal(data.appointments.length, 1);
+  assert.equal(data.appointments[0].title, "面談");
+});
+
 test("sanitizeStateData preserves invoices and personal finance", () => {
   const data = sanitizeStateData({
     invoices: [{ id: "inv1", direction: "in", party: "A社", amount: 1000, status: "inbox" }],
@@ -68,6 +83,16 @@ test("sanitizeStateData preserves invoices and personal finance", () => {
   });
   assert.equal(data.invoices[0].party, "A社");
   assert.equal(data.personalFinance.entries[0].amount, 500);
+});
+
+test("sanitizeStateData preserves liabilities and fiscalMeta", () => {
+  const data = sanitizeStateData({
+    liabilities: [{ id: "l1", creditor: "大家", balance: 120000, status: "overdue", kind: "rent" }],
+    fiscalMeta: { defenseLine: 300000, note: "家賃＋税" },
+  });
+  assert.equal(data.liabilities[0].creditor, "大家");
+  assert.equal(data.fiscalMeta.defenseLine, 300000);
+  assert.equal(data.fiscalMeta.note, "家賃＋税");
 });
 
 test("sanitizeStateData preserves incident log entries", () => {

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#3d7ea6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="統治手帳" />
-  <title>統治手帳</title>
+  <meta name="apple-mobile-web-app-title" content="賢いうさぎの統治手帳" />
+  <title>賢いうさぎの統治手帳</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icon.svg" />
@@ -16,11 +16,13 @@
   <header class="top">
     <div class="top-main">
       <p class="brand">IMADARUMA</p>
-      <h1>統治手帳</h1>
+      <h1>賢いうさぎの統治手帳</h1>
       <p class="sub">今日・予定・タスク・振り返り</p>
       <div class="today-row">
         <p class="today-date" id="today-date" aria-live="polite"></p>
-        <button type="button" class="btn ghost compact" id="btn-open-calendar">カレンダーを見る</button>
+        <button type="button" class="btn ghost compact" id="btn-reload-app" title="表示を最新にする">表示を更新</button>
+        <button type="button" class="btn ghost compact" id="btn-open-calendar">タスク期限カレンダー</button>
+        <a class="btn primary compact" id="btn-open-gcal" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">予定・約束（Google）</a>
       </div>
     </div>
     <div id="pomodoro-bar" class="pomodoro-bar" aria-live="polite">
@@ -132,12 +134,30 @@
     <!-- 日 -->
     <section id="view-day" class="view">
       <h2 class="section-title">今日の計画</h2>
+      <p class="day-flow-hint">流れ: 尊徳 → 予定 → 任務 → 朝のジャーナリング → 行動KPI → 国難 → 夜</p>
 
       <div class="sontoku-chat" id="sontoku-chat">
         <div class="sontoku-chat-head">
-          <span class="sontoku-avatar" aria-hidden="true">尊</span>
+          <span class="panel-icon sontoku-avatar" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="52" height="52">
+              <circle cx="40" cy="40" r="38" fill="#d8f0e6"/>
+              <circle cx="40" cy="40" r="34" fill="#eef8f1" stroke="#9ecbb3" stroke-width="1.5"/>
+              <path d="M52 18c8.5 0 15 5.2 15 11.6 0 4.4-2.9 8.2-7.2 10.1l1.6 5.2-6.4-3.4c-1 .1-2 .2-3 .2-8.5 0-15-5.2-15-11.6S43.5 18 52 18z" fill="#fff" stroke="#3d7ea6" stroke-width="1.6"/>
+              <circle cx="46.5" cy="29" r="1.7" fill="#3d7ea6"/>
+              <circle cx="52" cy="29" r="1.7" fill="#3d7ea6"/>
+              <circle cx="57.5" cy="29" r="1.7" fill="#3d7ea6"/>
+              <ellipse cx="34" cy="44" rx="16" ry="17" fill="#f3d7b8"/>
+              <path d="M22 40c0-11 6.5-17 12.5-17S47 29 47 40c-2.5-3-6-4.5-13-4.5S24.5 37 22 40z" fill="#3a342e"/>
+              <ellipse cx="34.5" cy="24.5" rx="4.2" ry="3.2" fill="#3a342e"/>
+              <ellipse cx="28.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+              <ellipse cx="39.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+              <path d="M29 50c2.2 2.2 8 2.2 10.2 0" fill="none" stroke="#8a5a3a" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M18 62c4-8 10-12 16-12s12 4 16 12" fill="#3d7ea6"/>
+              <path d="M34 50v12" stroke="#fff" stroke-width="1.5" opacity=".55"/>
+            </svg>
+          </span>
           <div>
-            <strong>AI尊徳</strong>
+            <strong class="panel-title">① AI尊徳</strong>
             <p class="sontoku-sub">
               実行マネージャー · 進捗・壁打ち
               <span id="sontoku-status" class="sontoku-status">接続確認中</span>
@@ -156,47 +176,116 @@
         </form>
       </div>
 
+      <div class="schedule-banner" id="schedule-panel">
+        <div class="schedule-head-row">
+          <div class="panel-head-inline">
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <strong class="panel-title">② 予定・約束</strong>
+          </div>
+          <span id="gcal-status" class="msg">確認中…</span>
+        </div>
+        <p class="muted">本日の時間を押さえる。登録すると Google に入り、通知（1日前／180分前／90分前）も自動。被りがあれば止める。</p>
+        <div class="toolbar" id="gcal-connect-row">
+          <button type="button" class="btn primary compact" id="btn-gcal-connect">Googleに接続</button>
+          <button type="button" class="btn ghost compact" id="btn-gcal-refresh">本日を更新</button>
+          <a class="btn ghost compact" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">カレンダーを見る</a>
+        </div>
+        <p class="lead tight" style="margin-top:0.65rem">本日のGoogle予定</p>
+        <ul class="rows compact" id="list-gcal-today"></ul>
+        <details class="appt-add-details">
+          <summary>予定を追加（Googleへ送る）</summary>
+          <form id="form-appointment" class="appt-form">
+            <div class="title-with-voice">
+              <input type="text" id="appt-title" placeholder="約束の内容（例: レックス面談）" required />
+              <button type="button" class="btn ghost compact voice-btn" data-voice-for="appt-title" title="声で入力">🎤</button>
+            </div>
+            <div class="appt-grid">
+              <label>日<input type="date" id="appt-date" required /></label>
+              <label>開始<input type="time" id="appt-start" required value="10:00" /></label>
+              <label>終了<input type="time" id="appt-end" required value="11:00" /></label>
+              <label>場所<input type="text" id="appt-location" placeholder="任意" /></label>
+            </div>
+            <input type="text" id="appt-notes" placeholder="メモ（任意）" />
+            <div class="toolbar">
+              <button type="submit" class="btn primary compact">Googleに登録</button>
+              <span id="appt-msg" class="msg"></span>
+            </div>
+          </form>
+          <ul class="rows compact" id="list-appointments"></ul>
+        </details>
+      </div>
+
+      <div class="day-tasks-block">
+        <div class="panel-head-inline">
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 6h11M9 12h11M9 18h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.5 6.5l1.2 1.2L8 5.4M4.5 12.5l1.2 1.2L8 11.4M4.5 18.5l1.2 1.2L8 17.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+          <p class="lead day-tasks-head panel-title">③ 今日の任務（目安≤7）</p>
+        </div>
+        <div class="voice-capture-bar">
+          <button type="button" class="btn primary compact" id="btn-voice-capture">🎤 声で捕獲</button>
+          <span id="voice-capture-status" class="msg" aria-live="polite"></span>
+        </div>
+        <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
+        <ul class="rows compact" id="list-day"></ul>
+      </div>
+
       <div class="journal-panel am">
-        <h3>朝 · 意図</h3>
-        <p class="journal-why">実装意図（Gollwitzer）：「一事」と「もし〜ならこうする」を先に書くと実行率が上がる。長文の反省は朝に置かない。</p>
-        <label class="field">今日いちばん守る一事
-          <textarea id="day-goal" rows="2" placeholder="例：レックス請求2件を送る"></textarea>
-        </label>
+        <div class="panel-head-inline">
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <h3 class="panel-title">④ 朝のジャーナリング</h3>
+        </div>
+        <p class="journal-why">脱線したときの戻り方と、朝の習慣チェック。</p>
         <label class="field">もし脱線したら（if-then）
-          <input type="text" id="day-ifthen" placeholder="もしSNSを開いたら、5分で閉じて一事に戻る" />
+          <input type="text" id="day-ifthen" placeholder="もしSNSを開いたら、5分で閉じて任務に戻る" />
         </label>
         <div class="field">
           <span>朝の習慣チェック</span>
           <div id="day-habits-am" class="habit-list habit-cols" role="group" aria-label="朝の習慣チェック"></div>
         </div>
-        <button type="button" class="btn primary compact" id="day-save-morning">朝を保存</button>
+        <button type="button" class="btn primary compact" id="day-save-morning">朝のジャーナリングを保存</button>
         <span id="day-morning-msg" class="msg"></span>
       </div>
 
-      <div class="kpi-box">
-        <p class="kpi-head">今日の行動KPI（現在値）</p>
-        <div class="kpi-grid">
-          <label>売上行動（件）<input type="number" id="kpi-sales" min="0" step="1" /></label>
-          <label>発信／連絡（件）<input type="number" id="kpi-media" min="0" step="1" /></label>
-          <label>内政（○/×）<input type="text" id="kpi-health" placeholder="○ or ×" /></label>
-          <label>メモ<input type="text" id="kpi-note" placeholder="短く1行" /></label>
+      <div class="kpi-box day-kpi">
+        <div class="panel-head-inline">
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 19V5M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 15v-4M12 15V8M16 15v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <p class="kpi-head panel-title">⑤ 今日の行動KPI</p>
+        </div>
+        <p class="kpi-why">左に今日の目標、右に実績。終わったら実績を更新する。</p>
+        <div class="kpi-split">
+          <div class="kpi-split-col target">
+            <h4 class="kpi-split-title">目標</h4>
+            <label class="kpi-num-field">
+              <span class="kpi-label">売上行動</span><span class="kpi-unit">件</span>
+              <input type="number" id="kpi-sales-target" min="0" step="1" placeholder="1" />
+            </label>
+            <label class="kpi-num-field">
+              <span class="kpi-label">発信／連絡</span><span class="kpi-unit">件</span>
+              <input type="number" id="kpi-media-target" min="0" step="1" placeholder="1" />
+            </label>
+          </div>
+          <div class="kpi-split-col actual">
+            <h4 class="kpi-split-title">実績</h4>
+            <label class="kpi-num-field">
+              <span class="kpi-label">売上行動</span><span class="kpi-unit">件</span>
+              <input type="number" id="kpi-sales" min="0" step="1" placeholder="0" />
+            </label>
+            <label class="kpi-num-field">
+              <span class="kpi-label">発信／連絡</span><span class="kpi-unit">件</span>
+              <input type="number" id="kpi-media" min="0" step="1" placeholder="0" />
+            </label>
+          </div>
         </div>
         <div class="toolbar" style="margin:0.55rem 0 0">
-          <button type="button" class="btn ghost compact" id="day-save-meta">行動KPIを保存</button>
+          <button type="button" class="btn primary compact" id="day-save-meta">行動KPIを保存</button>
           <span id="day-meta-msg" class="msg"></span>
         </div>
       </div>
 
-      <p class="lead">今日の任務（目安≤7）</p>
-      <div class="voice-capture-bar">
-        <button type="button" class="btn primary compact" id="btn-voice-capture">🎤 声で捕獲</button>
-        <span id="voice-capture-status" class="msg" aria-live="polite"></span>
-      </div>
-      <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
-      <ul class="rows compact" id="list-day"></ul>
-
       <div class="incident-panel">
-        <h3>国難ログ（衝動・脱線の記録）</h3>
+        <div class="panel-head-inline">
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 4l9 16H3L12 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4M12 16.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <h3 class="panel-title">⑥ 国難ログ（衝動・脱線の記録）</h3>
+        </div>
         <p class="journal-why">impulse_protocol.mdの分類。止める→記録する→最小行動で戻る。</p>
         <div class="incident-form">
           <select id="incident-type">
@@ -214,8 +303,15 @@
       </div>
 
       <div class="journal-panel pm">
-        <h3>夕 · ジャーナル</h3>
-        <p class="journal-why">Three Good Things（Seligman）＋感謝（Emmons）：良い点に「なぜ」を付けると効果が強い。終わりは学び1つと翌日の種だけ（反芻しない）。</p>
+        <div class="panel-head-inline">
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M16 4a8 8 0 1 0 4 14 7 7 0 0 1-4-14z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+          <h3 class="panel-title">⑦ 夜のジャーナリング</h3>
+        </div>
+        <p class="journal-why">内政・習慣・よかったこと・感謝・学び・翌日の種・七徳。</p>
+        <div class="field">
+          <span>内政チェック</span>
+          <div id="day-naisei" class="naisei-checks naisei-checks-grid" role="group" aria-label="内政チェック"></div>
+        </div>
         <div class="field">
           <span>夜の習慣チェック</span>
           <div id="day-habits-pm" class="habit-list habit-cols" role="group" aria-label="夜の習慣チェック"></div>
@@ -251,7 +347,7 @@
           <label class="field">明察<input type="text" id="st-mei" placeholder="今日、数字・現実で確認したことは何か" /></label>
           <label class="field">美学<input type="text" id="st-bi" placeholder="今日、品格を保てた瞬間はどこか" /></label>
         </div>
-        <button type="button" class="btn primary compact" id="day-save-review">夕を保存</button>
+        <button type="button" class="btn primary compact" id="day-save-review">夜のジャーナリングを保存</button>
         <span id="day-review-msg" class="msg"></span>
       </div>
     </section>
@@ -265,7 +361,10 @@
         <button type="button" class="btn ghost compact" id="calendar-next" aria-label="次の月">→</button>
         <button type="button" class="btn ghost compact" id="calendar-today">今月</button>
       </div>
-      <p class="lead">期限付きタスク、毎週・毎月の定期タスク、メディア予定を表示。</p>
+      <p class="lead">期限付き<strong>タスク</strong>、毎週・毎月の定期、メディア予定を表示。面談・約束の時刻表は Googleカレンダーへ。</p>
+      <p class="toolbar" style="margin:0.4rem 0 0.7rem">
+        <a class="btn primary compact" href="https://calendar.google.com/calendar/u/0/r/month" target="_blank" rel="noopener">Googleカレンダー（月）</a>
+      </p>
       <div class="calendar-weekdays" aria-hidden="true">
         <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
       </div>
@@ -346,6 +445,45 @@
       <div class="toolbar">
         <button type="button" class="btn primary compact" id="month-save-board">KPIボードを保存</button>
         <span id="month-board-msg" class="msg"></span>
+      </div>
+
+      <div class="board-block liabilities">
+        <p class="board-head">負債台帳（足元の穴）</p>
+        <p class="lead tight">家賃・税金・カード等の残高と期限。支払い後は「編集」または「支払」で残債を更新。</p>
+        <div id="liab-summary" class="liab-summary" aria-live="polite"></div>
+        <div class="liab-defense">
+          <label class="field">今月の防衛ライン（円）
+            <input type="number" id="liab-defense" min="0" step="1000" placeholder="例: 300000" />
+          </label>
+          <label class="field">メモ（任意）
+            <input type="text" id="liab-defense-note" placeholder="例: 家賃＋税の最低線" />
+          </label>
+          <button type="button" class="btn primary compact" id="liab-defense-save">防衛ラインを保存</button>
+          <span id="liab-defense-msg" class="msg"></span>
+        </div>
+        <form id="form-liab" class="mini-form liab-form">
+          <input type="text" id="liab-creditor" placeholder="債権者（大家・税務署…）" required />
+          <select id="liab-kind">
+            <option value="rent">家賃</option>
+            <option value="tax">税金</option>
+            <option value="social">社会保険</option>
+            <option value="card">カード／借入</option>
+            <option value="utility">光熱・通信</option>
+            <option value="other">その他</option>
+          </select>
+          <input type="number" id="liab-balance" placeholder="残高" min="0" step="1" required />
+          <input type="number" id="liab-minpay" placeholder="今月最低支払" min="0" step="1" />
+          <input type="date" id="liab-due" />
+          <select id="liab-status">
+            <option value="overdue">滞納</option>
+            <option value="plan">分割／予定</option>
+            <option value="ok">期限内</option>
+            <option value="done">清算済</option>
+          </select>
+          <input type="text" id="liab-notes" placeholder="メモ（協議中など）" />
+          <button type="submit" class="btn primary compact">台帳に追加</button>
+        </form>
+        <ul class="rows compact" id="list-liabilities"></ul>
       </div>
 
       <div class="board-block invoices">
@@ -576,6 +714,53 @@
     </form>
   </dialog>
 
+  <dialog id="liab-edit-dialog" class="liab-edit-dialog">
+    <form method="dialog" id="form-liab-edit">
+      <h3>負債の編集</h3>
+      <input type="hidden" id="liab-edit-id" />
+      <label class="field">債権者<input type="text" id="liab-edit-creditor" required /></label>
+      <label class="field">種別
+        <select id="liab-edit-kind">
+          <option value="rent">家賃</option>
+          <option value="tax">税金</option>
+          <option value="social">社会保険</option>
+          <option value="card">カード／借入</option>
+          <option value="utility">光熱・通信</option>
+          <option value="other">その他</option>
+        </select>
+      </label>
+      <label class="field">残高（円）<input type="number" id="liab-edit-balance" min="0" step="1" required /></label>
+      <label class="field">今月最低支払（円）<input type="number" id="liab-edit-minpay" min="0" step="1" placeholder="空欄＝残高と同額扱い" /></label>
+      <label class="field">次の期限<input type="date" id="liab-edit-due" /></label>
+      <label class="field">状態
+        <select id="liab-edit-status">
+          <option value="overdue">滞納</option>
+          <option value="plan">分割／予定</option>
+          <option value="ok">期限内</option>
+          <option value="done">清算済</option>
+        </select>
+      </label>
+      <label class="field">メモ<input type="text" id="liab-edit-notes" placeholder="分割条件・協議中など" /></label>
+
+      <div class="liab-pay-block">
+        <p class="lead tight">支払を記録（残高から差し引く）</p>
+        <div class="liab-pay-row">
+          <label class="field">支払日<input type="date" id="liab-pay-date" /></label>
+          <label class="field">支払額<input type="number" id="liab-pay-amount" min="1" step="1" placeholder="例: 30000" /></label>
+        </div>
+        <label class="field">支払メモ<input type="text" id="liab-pay-note" placeholder="例: 1回目分割" /></label>
+        <button type="button" class="btn primary compact" id="liab-pay-apply">支払を記録して残高更新</button>
+        <span id="liab-pay-msg" class="msg"></span>
+        <ul class="liab-pay-history" id="liab-pay-history"></ul>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn primary">保存</button>
+        <button type="button" class="btn ghost" id="liab-edit-cancel">閉じる</button>
+      </div>
+    </form>
+  </dialog>
+
   <footer class="foot">
     <div class="foot-actions">
       <button type="button" class="btn ghost compact" id="btn-seed">シード読込</button>
@@ -588,9 +773,32 @@
 
   <script src="seed-data.js"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js").catch(() => {});
-    }
+    (function () {
+      const reloadBtn = document.getElementById("btn-reload-app");
+      if (reloadBtn) {
+        reloadBtn.addEventListener("click", function () {
+          location.reload();
+        });
+      }
+      if (!("serviceWorker" in navigator)) return;
+      navigator.serviceWorker
+        .register("/service-worker.js", { updateViaCache: "none" })
+        .then(function (reg) {
+          reg.update().catch(function () {});
+          setInterval(function () {
+            reg.update().catch(function () {});
+          }, 60 * 1000);
+          document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") reg.update().catch(function () {});
+          });
+        })
+        .catch(function () {});
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (sessionStorage.getItem("sw-reloaded")) return;
+        sessionStorage.setItem("sw-reloaded", "1");
+        location.reload();
+      });
+    })();
   </script>
   <script src="app.js"></script>
 </body>

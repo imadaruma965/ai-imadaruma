@@ -37,8 +37,25 @@ URLは `data/mobile-access.txt` にも保存されます。
 
 ## 毎日の運用
 
-1. Macで `./start.sh` を起動（または常時起動）
-2. 携帯・MacBookで Tailscale ON
-3. 外出先URLで統治手帳を開く
+1. 家のMacは **ログインしたまま・本体スリープなし**（下のスリープ防止）
+2. 統治手帳は自動起動（`./install-autostart.sh`）または `./start.sh`
+3. 携帯・MacBookで Tailscale ON
+4. 外出先URLで統治手帳を開く
 
 フッターが **同期済み** ならOK。
+
+## スリープ防止（必須・外出先アクセス用）
+
+電源を落としていなくても、**本体がスリープすると Tailscale が切れ**、外から開けなくなります。
+
+AC電源時だけ本体スリープを止める:
+
+```bash
+cd /Users/imadatadahito/ai-imadaruma/apps/taskboard
+chmod +x disable-sleep-ac.sh
+./disable-sleep-ac.sh
+```
+
+- 画面消灯はそのまま（電気代・焼付き対策）
+- 本体スリープだけ OFF
+- 確認: `pmset -g` で `sleep 0` ならOK
