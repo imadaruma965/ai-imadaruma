@@ -79,7 +79,7 @@
 | imadaruma.capital | 投資 | 50万に含まない | 継続管理 |
 | Reed Blade 本格サロン等 | コミュニティ | 今期やらない戦寄り | 設計のみ／保留 |
 
-発信ハブ例: LinkedIn（火〜金カルーセル等）／ニュースレター『183日…』／LINE／Instagram(@imadaruma_sound)／YouTube など。
+発信ハブ例: LinkedIn（火〜金カルーセル等）／ニュースレター『愚かなウサギが、183日で賢くなる話』（第8号〜）／LINE／Instagram(@imadaruma_sound)／YouTube など。
 
 ---
 
