@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>imadaruma.sound | 音でブランド設計</title>
+  <meta name="description" content="ブランドのDNAを音に翻訳する。テーマ曲・サウンドロゴ・リール用音源の制作。imadaruma.sound / いまだ唯仁。" />
+  <link rel="canonical" href="https://imadaruma.jp/sound/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=Zen+Old+Mincho:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white: #fafaf8;
+      --ink: #1a1a18;
+      --teal: #2a9d8f;
+      --gold: #c9a84c;
+      --gray: #8a8a85;
+      --light: #f0f0ec;
+    }
+    body {
+      background: var(--white);
+      color: var(--ink);
+      font-family: "Shippori Mincho", serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+    a { color: var(--teal); }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 56px;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+    }
+    .top-nav a {
+      text-decoration: none;
+      color: var(--gray);
+    }
+    .top-nav a:hover { color: var(--teal); }
+    .brand {
+      font-family: "DM Serif Display", serif;
+      letter-spacing: 0.35em;
+      color: var(--teal);
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-family: "Zen Old Mincho", serif;
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+    .lead {
+      color: var(--gray);
+      letter-spacing: 0.12em;
+      font-size: 14px;
+      line-height: 2;
+      margin-bottom: 40px;
+    }
+    .divider {
+      width: 36px;
+      height: 1px;
+      background: var(--gold);
+      margin: 0 0 40px;
+    }
+    h2 {
+      font-family: "Zen Old Mincho", serif;
+      font-size: 15px;
+      letter-spacing: 0.35em;
+      color: var(--gray);
+      text-transform: uppercase;
+      margin: 48px 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--light);
+    }
+    ul { list-style: none; }
+    li {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--light);
+      letter-spacing: 0.06em;
+      font-size: 15px;
+    }
+    .cases a {
+      text-decoration: none;
+      color: var(--ink);
+      display: block;
+    }
+    .cases a:hover .case-title { color: var(--teal); }
+    .case-title {
+      font-family: "Zen Old Mincho", serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      transition: color 0.25s ease;
+    }
+    .case-desc {
+      font-size: 12px;
+      color: var(--gray);
+      letter-spacing: 0.12em;
+    }
+    .flow {
+      counter-reset: step;
+    }
+    .flow li {
+      counter-increment: step;
+      padding-left: 2.2em;
+      position: relative;
+    }
+    .flow li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 14px;
+      color: var(--teal);
+      font-family: "DM Serif Display", serif;
+      font-size: 14px;
+    }
+    .note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--gray);
+      letter-spacing: 0.08em;
+    }
+    .cta {
+      margin-top: 56px;
+      padding: 32px 28px;
+      background: var(--ink);
+      color: var(--white);
+      text-align: center;
+    }
+    .cta p {
+      letter-spacing: 0.15em;
+      font-size: 13px;
+      margin-bottom: 20px;
+      color: rgba(250, 250, 248, 0.75);
+    }
+    .cta a {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--ink);
+      background: var(--white);
+      padding: 12px 28px;
+      letter-spacing: 0.2em;
+      font-size: 12px;
+      transition: opacity 0.25s ease;
+    }
+    .cta a:hover { opacity: 0.88; }
+    .cta .mail {
+      display: block;
+      margin-top: 18px;
+      color: rgba(250, 250, 248, 0.45);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-decoration: none;
+    }
+    footer {
+      margin-top: 64px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--gray);
+    }
+    footer a { color: var(--gray); text-decoration: none; }
+    footer a:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="top-nav">
+      <a href="https://imadaruma.jp/">← imadaruma</a>
+      <a href="https://www.instagram.com/imadaruma_sound/" target="_blank" rel="noopener">Instagram</a>
+    </nav>
+
+    <p class="brand">imadaruma.sound</p>
+    <h1>ブランドのDNAを、<br />音に翻訳する。</h1>
+    <p class="lead">
+      テーマ曲・サウンドロゴ・リール用音源まで。<br />
+      ヒアリングから曲づくり、ショート動画への落とし込みまで一貫して設計します。
+    </p>
+    <div class="divider" aria-hidden="true"></div>
+
+    <h2>できること</h2>
+    <ul>
+      <li>テーマ曲制作（目安90秒）</li>
+      <li>ブランドの音の設計（世界観に合わせた楽曲）</li>
+      <li>リール／ショート用への映像・音の落とし込み</li>
+      <li>必要に応じてロゴ・コピーとの一体設計</li>
+    </ul>
+
+    <h2>制作事例</h2>
+    <ul class="cases">
+      <li>
+        <a href="https://www.instagram.com/imadaruma_sound/" target="_blank" rel="noopener">
+          <p class="case-title">BRIDGE HAIR（甘木）</p>
+          <p class="case-desc">美容室テーマ曲（エビスビーツ調）＋ショート</p>
+        </a>
+      </li>
+      <li>
+        <a href="https://www.instagram.com/imadaruma_sound/" target="_blank" rel="noopener">
+          <p class="case-title">大神農園</p>
+          <p class="case-desc">菌床椎茸テーマ曲「しいたけ、たけたけ。」</p>
+        </a>
+      </li>
+      <li>
+        <a href="https://www.instagram.com/imadaruma_sound/" target="_blank" rel="noopener">
+          <p class="case-title">その他</p>
+          <p class="case-desc">画家・ショップ等の音ブランディング事例 → Instagram</p>
+        </a>
+      </li>
+    </ul>
+
+    <h2>料金</h2>
+    <p class="note">内容・尺・納品物により異なります。ヒアリングのうえお見積りします。</p>
+    <ul>
+      <li>入口パック（テーマ曲＋ショート等）… お問い合わせください</li>
+      <li>本格パッケージ（世界観一式）… お問い合わせください</li>
+    </ul>
+
+    <h2>依頼の流れ</h2>
+    <ul class="flow">
+      <li>InstagramのDM、またはメールでご連絡</li>
+      <li>ヒアリング（想い・世界観・使い所）</li>
+      <li>デモ提示</li>
+      <li>本制作・納品</li>
+    </ul>
+
+    <div class="cta">
+      <p>制作・依頼のご相談</p>
+      <a href="https://ig.me/m/imadaruma_sound" target="_blank" rel="noopener">InstagramでDMする</a>
+      <a class="mail" href="mailto:sound@imadaruma.jp">sound@imadaruma.jp</a>
+    </div>
+
+    <footer>
+      <p><a href="https://imadaruma.jp/">imadaruma.jp</a> · いまだ唯仁</p>
+      <p style="margin-top:10px">© 2026 imadaruma.sound</p>
+    </footer>
+  </div>
+</body>
+</html>
