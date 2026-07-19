@@ -1,0 +1,30 @@
+---
+description: ChatGPT inbox（sources/chatgpt/inbox）の壁打ち全文を蒸留し、extractsとセッションログへ申し送る
+globs: sources/chatgpt/**/*
+alwaysApply: false
+---
+
+# ChatGPT inbox 処理ルール
+
+ユーザーが「inboxを処理」「ChatGPTを取り込んで」等と言ったとき、または `sources/chatgpt/inbox/` に未処理ファイルがあるとき、次を実行する。
+
+## 手順
+
+1. `git status` を確認（作業憲法どおり）
+2. `sources/chatgpt/inbox/` の `.md` を列挙（`.gitkeep` 除く）
+3. 各ファイルを読み、`sources/chatgpt/EXTRACT_TEMPLATE.md` に沿って  
+   `sources/chatgpt/extracts/YYYY-MM-DD_短い題.md` を作成
+4. 領域に応じて短く申し送る（勝手に戦略を書き換えない）:
+   - 商品・価格・導線 → `strategy/eiichi_session_log.md` に数行
+   - 発信文・SNS文案の学び → `strategy/masahiro_session_log.md` に数行
+   - 実行習慣 → 必要なら `daily_governance` 側へ1手だけ提案（未指示なら書かない）
+5. 原文を `sources/chatgpt/processed/` へ `git mv`（または移動）
+6. 旧表記禁止を侵していないかざっと確認
+7. **commit / push は君主の明示指示があるまでしない**
+8. 処理結果（extractパス・申し送り先）を短く報告
+
+## 原則
+
+- 全文をそのまま正本にしない。学びは extracts、運用記憶はログ
+- ChatGPTの案とリポの正式構造が矛盾したらリポ（憲法・主管）を優先
+- 顧客の個人情報・秘密はマスクしてから extracts に残す

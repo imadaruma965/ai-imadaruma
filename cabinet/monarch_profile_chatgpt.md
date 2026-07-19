@@ -102,6 +102,16 @@
 
 ---
 
+## 壁打ちのリポ格納（毎回）
+
+終了時に `sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` を貼り、出力をコピーして PowerBook で:
+
+```bash
+./scripts/chatgpt_inbox_save.sh （タグ例: sound-ds-ig）
+```
+
+その後 Cursor で「inboxを処理して」。詳細は `sources/chatgpt/README.md`。
+
 ## 貼り方（ChatGPT）
 
 1. Settings → Personalization → **Custom instructions** に「ChatGPTへの指示」＋セクション1〜6を貼る  
