@@ -134,98 +134,100 @@
     <!-- 日 -->
     <section id="view-day" class="view">
       <h2 class="section-title">今日の計画</h2>
-      <p class="day-flow-hint">流れ: 尊徳 → 予定 → 任務 → 朝のジャーナリング → 行動KPI → 国難 → 夜</p>
+      <p class="day-flow-hint">Mac: 左で尊徳、右で任務。下が余れば本日の予定。下に朝〜夜の記録。</p>
 
-      <div class="sontoku-chat" id="sontoku-chat">
-        <div class="sontoku-chat-head">
-          <span class="panel-icon sontoku-avatar" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="52" height="52">
-              <circle cx="40" cy="40" r="38" fill="#d8f0e6"/>
-              <circle cx="40" cy="40" r="34" fill="#eef8f1" stroke="#9ecbb3" stroke-width="1.5"/>
-              <path d="M52 18c8.5 0 15 5.2 15 11.6 0 4.4-2.9 8.2-7.2 10.1l1.6 5.2-6.4-3.4c-1 .1-2 .2-3 .2-8.5 0-15-5.2-15-11.6S43.5 18 52 18z" fill="#fff" stroke="#3d7ea6" stroke-width="1.6"/>
-              <circle cx="46.5" cy="29" r="1.7" fill="#3d7ea6"/>
-              <circle cx="52" cy="29" r="1.7" fill="#3d7ea6"/>
-              <circle cx="57.5" cy="29" r="1.7" fill="#3d7ea6"/>
-              <ellipse cx="34" cy="44" rx="16" ry="17" fill="#f3d7b8"/>
-              <path d="M22 40c0-11 6.5-17 12.5-17S47 29 47 40c-2.5-3-6-4.5-13-4.5S24.5 37 22 40z" fill="#3a342e"/>
-              <ellipse cx="34.5" cy="24.5" rx="4.2" ry="3.2" fill="#3a342e"/>
-              <ellipse cx="28.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
-              <ellipse cx="39.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
-              <path d="M29 50c2.2 2.2 8 2.2 10.2 0" fill="none" stroke="#8a5a3a" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M18 62c4-8 10-12 16-12s12 4 16 12" fill="#3d7ea6"/>
-              <path d="M34 50v12" stroke="#fff" stroke-width="1.5" opacity=".55"/>
-            </svg>
-          </span>
-          <div>
-            <strong class="panel-title">① AI尊徳</strong>
-            <p class="sontoku-sub">
-              実行マネージャー · 進捗・壁打ち
-              <span id="sontoku-status" class="sontoku-status">接続確認中</span>
-            </p>
+      <div class="day-workbench">
+        <div class="sontoku-chat" id="sontoku-chat">
+          <div class="sontoku-chat-head">
+            <span class="panel-icon sontoku-avatar" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="52" height="52">
+                <circle cx="40" cy="40" r="38" fill="#d8f0e6"/>
+                <circle cx="40" cy="40" r="34" fill="#eef8f1" stroke="#9ecbb3" stroke-width="1.5"/>
+                <path d="M52 18c8.5 0 15 5.2 15 11.6 0 4.4-2.9 8.2-7.2 10.1l1.6 5.2-6.4-3.4c-1 .1-2 .2-3 .2-8.5 0-15-5.2-15-11.6S43.5 18 52 18z" fill="#fff" stroke="#3d7ea6" stroke-width="1.6"/>
+                <circle cx="46.5" cy="29" r="1.7" fill="#3d7ea6"/>
+                <circle cx="52" cy="29" r="1.7" fill="#3d7ea6"/>
+                <circle cx="57.5" cy="29" r="1.7" fill="#3d7ea6"/>
+                <ellipse cx="34" cy="44" rx="16" ry="17" fill="#f3d7b8"/>
+                <path d="M22 40c0-11 6.5-17 12.5-17S47 29 47 40c-2.5-3-6-4.5-13-4.5S24.5 37 22 40z" fill="#3a342e"/>
+                <ellipse cx="34.5" cy="24.5" rx="4.2" ry="3.2" fill="#3a342e"/>
+                <ellipse cx="28.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+                <ellipse cx="39.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+                <path d="M29 50c2.2 2.2 8 2.2 10.2 0" fill="none" stroke="#8a5a3a" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M18 62c4-8 10-12 16-12s12 4 16 12" fill="#3d7ea6"/>
+                <path d="M34 50v12" stroke="#fff" stroke-width="1.5" opacity=".55"/>
+              </svg>
+            </span>
+            <div>
+              <strong class="panel-title">① AI尊徳</strong>
+              <p class="sontoku-sub">
+                実行マネージャー · 進捗・壁打ち
+                <span id="sontoku-status" class="sontoku-status">接続確認中</span>
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="sontoku-messages" id="sontoku-messages" aria-live="polite"></div>
-        <div class="sontoku-chips">
-          <button type="button" class="sontoku-chip" data-chip="進捗を報告します">進捗報告</button>
-          <button type="button" class="sontoku-chip" data-chip="迷っています">壁打ち</button>
-          <button type="button" class="sontoku-chip" data-chip="今日の任務を教えて">今日の任務</button>
-        </div>
-        <form id="sontoku-form" class="sontoku-form">
-          <input type="text" id="sontoku-input" placeholder="進捗報告・相談・壁打ち…" autocomplete="off" />
-          <button type="submit" id="sontoku-send" class="btn primary compact">送る</button>
-        </form>
-      </div>
-
-      <div class="schedule-banner" id="schedule-panel">
-        <div class="schedule-head-row">
-          <div class="panel-head-inline">
-            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-            <strong class="panel-title">② 予定・約束</strong>
+          <div class="sontoku-messages" id="sontoku-messages" aria-live="polite"></div>
+          <div class="sontoku-chips">
+            <button type="button" class="sontoku-chip" data-chip="進捗を報告します">進捗報告</button>
+            <button type="button" class="sontoku-chip" data-chip="迷っています">壁打ち</button>
+            <button type="button" class="sontoku-chip" data-chip="今日の任務を教えて">今日の任務</button>
           </div>
-          <span id="gcal-status" class="msg">確認中…</span>
-        </div>
-        <p class="muted">本日の時間を押さえる。登録すると Google に入り、通知（1日前／180分前／90分前）も自動。被りがあれば止める。</p>
-        <div class="toolbar" id="gcal-connect-row">
-          <button type="button" class="btn primary compact" id="btn-gcal-connect">Googleに接続</button>
-          <button type="button" class="btn ghost compact" id="btn-gcal-refresh">本日を更新</button>
-          <a class="btn ghost compact" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">カレンダーを見る</a>
-        </div>
-        <p class="lead tight" style="margin-top:0.65rem">本日のGoogle予定</p>
-        <ul class="rows compact" id="list-gcal-today"></ul>
-        <details class="appt-add-details">
-          <summary>予定を追加（Googleへ送る）</summary>
-          <form id="form-appointment" class="appt-form">
-            <div class="title-with-voice">
-              <input type="text" id="appt-title" placeholder="約束の内容（例: レックス面談）" required />
-              <button type="button" class="btn ghost compact voice-btn" data-voice-for="appt-title" title="声で入力">🎤</button>
-            </div>
-            <div class="appt-grid">
-              <label>日<input type="date" id="appt-date" required /></label>
-              <label>開始<input type="time" id="appt-start" required value="10:00" /></label>
-              <label>終了<input type="time" id="appt-end" required value="11:00" /></label>
-              <label>場所<input type="text" id="appt-location" placeholder="任意" /></label>
-            </div>
-            <input type="text" id="appt-notes" placeholder="メモ（任意）" />
-            <div class="toolbar">
-              <button type="submit" class="btn primary compact">Googleに登録</button>
-              <span id="appt-msg" class="msg"></span>
-            </div>
+          <form id="sontoku-form" class="sontoku-form">
+            <input type="text" id="sontoku-input" placeholder="進捗報告・相談・壁打ち…" autocomplete="off" />
+            <button type="submit" id="sontoku-send" class="btn primary compact">送る</button>
           </form>
-          <ul class="rows compact" id="list-appointments"></ul>
-        </details>
-      </div>
+        </div>
 
-      <div class="day-tasks-block">
-        <div class="panel-head-inline">
-          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 6h11M9 12h11M9 18h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.5 6.5l1.2 1.2L8 5.4M4.5 12.5l1.2 1.2L8 11.4M4.5 18.5l1.2 1.2L8 17.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
-          <p class="lead day-tasks-head panel-title">③ 今日の任務（目安≤7）</p>
+        <div class="day-tasks-block">
+          <div class="panel-head-inline">
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 6h11M9 12h11M9 18h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4.5 6.5l1.2 1.2L8 5.4M4.5 12.5l1.2 1.2L8 11.4M4.5 18.5l1.2 1.2L8 17.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+            <p class="lead day-tasks-head panel-title">③ 今日の任務（目安≤7）</p>
+          </div>
+          <div class="voice-capture-bar">
+            <button type="button" class="btn primary compact" id="btn-voice-capture">🎤 声で捕獲</button>
+            <span id="voice-capture-status" class="msg" aria-live="polite"></span>
+          </div>
+          <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
+          <ul class="rows compact" id="list-day"></ul>
         </div>
-        <div class="voice-capture-bar">
-          <button type="button" class="btn primary compact" id="btn-voice-capture">🎤 声で捕獲</button>
-          <span id="voice-capture-status" class="msg" aria-live="polite"></span>
+
+        <div class="schedule-banner" id="schedule-panel">
+          <div class="schedule-head-row">
+            <div class="panel-head-inline">
+              <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+              <strong class="panel-title">② 予定・約束</strong>
+            </div>
+            <span id="gcal-status" class="msg">確認中…</span>
+          </div>
+          <p class="muted">本日の時間を押さえる。登録すると Google に入り、通知も自動。被りがあれば止める。</p>
+          <div class="toolbar" id="gcal-connect-row">
+            <button type="button" class="btn primary compact" id="btn-gcal-connect">Googleに接続</button>
+            <button type="button" class="btn ghost compact" id="btn-gcal-refresh">本日を更新</button>
+            <a class="btn ghost compact" href="https://calendar.google.com/calendar/u/0/r/day" target="_blank" rel="noopener">カレンダーを見る</a>
+          </div>
+          <p class="lead tight" style="margin-top:0.65rem">本日のGoogle予定</p>
+          <ul class="rows compact" id="list-gcal-today"></ul>
+          <details class="appt-add-details">
+            <summary>予定を追加（Googleへ送る）</summary>
+            <form id="form-appointment" class="appt-form">
+              <div class="title-with-voice">
+                <input type="text" id="appt-title" placeholder="約束の内容（例: レックス面談）" required />
+                <button type="button" class="btn ghost compact voice-btn" data-voice-for="appt-title" title="声で入力">🎤</button>
+              </div>
+              <div class="appt-grid">
+                <label>日<input type="date" id="appt-date" required /></label>
+                <label>開始<input type="time" id="appt-start" required value="10:00" /></label>
+                <label>終了<input type="time" id="appt-end" required value="11:00" /></label>
+                <label>場所<input type="text" id="appt-location" placeholder="任意" /></label>
+              </div>
+              <input type="text" id="appt-notes" placeholder="メモ（任意）" />
+              <div class="toolbar">
+                <button type="submit" class="btn primary compact">Googleに登録</button>
+                <span id="appt-msg" class="msg"></span>
+              </div>
+            </form>
+            <ul class="rows compact" id="list-appointments"></ul>
+          </details>
         </div>
-        <p id="day-warn" class="warn hidden">7件超過。削るか明日へ。</p>
-        <ul class="rows compact" id="list-day"></ul>
       </div>
 
       <div class="journal-panel am">
