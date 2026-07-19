@@ -812,6 +812,70 @@
     save();
   }
 
+  /** 正本の外部AI同期（ChatGPT／Claude）を忘れないための週次強制任務 */
+  function ensureForcedAiSync() {
+    const scheduleKey = "ops-ai-canon-sync";
+    const title = "正本をChatGPT／Claudeへ再貼付";
+    const today = todayISO();
+    const note = [
+      "正本: cabinet/monarch_profile_chatgpt.md",
+      "手順: Custom instructions／Project／Memory に貼り直し",
+      "戦略・主管を大きく変えた日は週次を待たず即実施",
+      "ChatGPT壁打ちの重要分は inbox へ → Cursorで「inboxを処理して」",
+      "詳細: sources/chatgpt/README.md / daily_governance/chatgpt_capture.md",
+    ].join("\n");
+
+    // 次の日曜（今日が日曜なら今日）
+    const now = new Date();
+    const daysUntilSun = (7 - now.getDay()) % 7;
+    const due = addDaysISO(daysUntilSun);
+
+    let t = state.tasks.find(
+      (x) => !x.deletedAt && (x.scheduleKey === scheduleKey || x.title === title)
+    );
+
+    if (!t) {
+      t = {
+        id: uid(),
+        title,
+        dueDate: due,
+        category: "personal",
+        horizon: "week",
+        urgency: "high",
+        importance: "high",
+        status: "todo",
+        onToday: due === today,
+        notes: note,
+        tags: ["forced", "ops", "ai-sync"],
+        forced: true,
+        recurrence: "weekly",
+        scheduleKey,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      state.tasks.push(t);
+    } else {
+      t.title = title;
+      t.forced = true;
+      t.scheduleKey = scheduleKey;
+      t.recurrence = "weekly";
+      t.category = "personal";
+      t.horizon = "week";
+      t.urgency = "high";
+      t.importance = "high";
+      t.notes = note;
+      t.tags = [...new Set([...(t.tags || []), "forced", "ops", "ai-sync"])];
+      // 完了済みは触らない（完了時に nextRecurringDue で翌週へ出る）
+      if (t.status !== "done") {
+        if (!t.dueDate || t.dueDate < today) t.dueDate = due;
+        if (t.dueDate === today) t.onToday = true;
+      }
+      t.updatedAt = new Date().toISOString();
+    }
+
+    save();
+  }
+
   function importSeed({ replace = false } = {}) {
     const seed = window.TASKBOARD_SEED;
     if (!seed || !Array.isArray(seed.tasks)) return 0;
@@ -859,6 +923,7 @@
     ensureRequiredMonthlyTasks();
     save();
     ensureForcedMedia();
+    ensureForcedAiSync();
     return added;
   }
 
@@ -2599,6 +2664,7 @@
   fillCategoryPickers();
   scrubStoredTitles();
   ensureForcedMedia();
+  ensureForcedAiSync();
   ensureRequiredMonthlyTasks();
   purgeOldTrash();
   refreshGcalStatus();
@@ -3187,6 +3253,7 @@
         : { defenseLine: null, note: "" };
     ensureRequiredMonthlyTasks();
     ensureForcedMedia();
+    ensureForcedAiSync();
     save();
     loadPlanFields();
     render();

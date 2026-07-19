@@ -44,6 +44,7 @@ window.TASKBOARD_SEED = {
     { title: "営業リスト出し", category: "sound", horizon: "week", urgency: "low", importance: "high", tags: [] },
     { title: "インスタグラム投稿", category: "media", horizon: "week", urgency: "low", importance: "low", tags: [] },
     { title: "DM営業", category: "sound", horizon: "week", urgency: "low", importance: "high", tags: [] },
+    { title: "正本をChatGPT／Claudeへ再貼付", category: "personal", horizon: "week", urgency: "high", importance: "high", recurrence: "weekly", scheduleKey: "ops-ai-canon-sync", tags: ["forced", "ops", "ai-sync"], notes: "cabinet/monarch_profile_chatgpt.md をCustom指示／Projectへ。戦略変更時は即。壁打ちはinboxへ。" },
 
     // —— DS / 発信 / 執筆 ——
     { title: "クラウドに入れるベースファイル項目だし", category: "ds", horizon: "week", urgency: "low", importance: "high", tags: [] },
