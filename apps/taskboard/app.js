@@ -2366,6 +2366,7 @@
         agentId: data.agentId,
         runId: data.runId,
       });
+      window.VoiceService?.speak(data.reply);
       setSontokuStatus(`Cursor接続済み · ${data.model}`, "connected");
     } catch (error) {
       pushSontokuMessage("error", error.message, { provider: "system" });
@@ -2373,6 +2374,39 @@
     } finally {
       setSontokuBusy(false);
     }
+  }
+
+  // Morning Flow（Phase 3-A）: 起動時→国家状態→AI尊徳→今日の一事→Google予定→25分開始への一本道。
+  // 1日1回だけ実処理を行う（ensureSontokuOpening/refreshGcalToday自体は既存どおり毎回呼ばれる）。
+  let morningFlowState = { date: null, done: false };
+
+  async function runMorningFlow() {
+    const today = todayISO();
+    if (morningFlowState.date === today && morningFlowState.done) return;
+    morningFlowState.date = today;
+
+    renderGovernanceStatus();
+    await ensureSontokuOpening();
+
+    const dayPlan = state.plans[`day:${today}`] || {};
+    if (!(dayPlan.goal || "").trim()) {
+      $("#day-goal")?.focus();
+      $("#day-goal")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    await refreshGcalToday();
+
+    if (window.TaskboardGovernance) {
+      const ctx = window.TaskboardGovernance.buildGovernanceContext(state);
+      const { topAlert, oneLineSummary } = ctx.governanceSummary;
+      const speech = [oneLineSummary, topAlert ? `最重要警報、${topAlert.title}。` : ""].filter(Boolean).join(" ");
+      window.VoiceService?.speak(speech);
+    }
+
+    $("#pomodoro-bar")?.scrollIntoView({ behavior: "smooth", block: "end" });
+    $("#pomo-start")?.focus();
+
+    morningFlowState.done = true;
   }
 
   function renderSontokuChat() {
@@ -2442,6 +2476,7 @@
     if (name === "day") {
       ensureSontokuOpening();
       refreshGcalToday();
+      runMorningFlow();
     }
     render();
   }
@@ -3369,4 +3404,20 @@
   loadPlanFields();
   render();
   refreshSontokuStatus();
+
+  // GovernanceMonitor（Phase 3-A）: 60秒ごとに未統治警報を再チェックし、新規のものだけ通知する。
+  const governanceMonitor =
+    window.GovernanceMonitor && window.TaskboardGovernance
+      ? window.GovernanceMonitor.createGovernanceMonitor({
+          getState: () => state,
+          computeAlerts: window.TaskboardGovernance.getGovernanceAlerts,
+          onNewAlert: (alert) =>
+            window.NotificationService?.notify({
+              type: alert.type,
+              title: alert.title,
+              message: alert.message,
+            }),
+        })
+      : null;
+  governanceMonitor?.start();
 })();
