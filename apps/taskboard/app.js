@@ -1091,6 +1091,56 @@
     if (n > 0) el.textContent = `上奏（保留中）が${n}件。一覧タブで「承認」すると通常の任務になる。`;
   }
 
+  function renderGovernanceStatus() {
+    const el = $("#governance-status");
+    if (!el || !window.TaskboardGovernance) return;
+    el.classList.remove("hidden");
+
+    const domains = window.TaskboardGovernance.assessDomains(state);
+    const domainsHost = $("#governance-domains");
+    if (domainsHost) {
+      domainsHost.innerHTML = domains
+        .map((d) => {
+          const reasons = (d.reasons || []).slice(0, 2);
+          const reasonsHtml = reasons.length
+            ? `<ul class="governance-domain-reasons">${reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`
+            : "";
+          const actionHtml = d.recommendedAction
+            ? `<p class="governance-domain-action">→ ${escapeHtml(d.recommendedAction)}</p>`
+            : "";
+          return `<div class="governance-domain status-${d.status}">
+            <span class="governance-domain-name">${escapeHtml(d.name)}</span>
+            <span class="governance-domain-score">${d.score}</span>
+            <p class="governance-domain-summary">${escapeHtml(d.summary)}</p>
+            ${reasonsHtml}
+            ${actionHtml}
+          </div>`;
+        })
+        .join("");
+    }
+
+    const alerts = window.TaskboardGovernance.getGovernanceAlerts(state);
+    const alertsHost = $("#governance-alerts");
+    if (alertsHost) {
+      if (!alerts.length) {
+        alertsHost.innerHTML = "";
+      } else {
+        const severityOrder = { urgent: 0, caution: 1, info: 2 };
+        const sorted = [...alerts].sort((a, b) => (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3));
+        const itemHtml = (a) => `<li class="governance-alert severity-${a.severity}">${escapeHtml(a.title)}</li>`;
+        const top = sorted.slice(0, 3);
+        const rest = sorted.slice(3);
+        let html = `<ul class="governance-alert-list">${top.map(itemHtml).join("")}</ul>`;
+        if (rest.length) {
+          html += `<details class="governance-alert-more"><summary>すべて見る（他${rest.length}件）</summary><ul class="governance-alert-list">${rest
+            .map(itemHtml)
+            .join("")}</ul></details>`;
+        }
+        alertsHost.innerHTML = html;
+      }
+    }
+  }
+
   function trashRowHtml(t) {
     const cat = t.category || "other";
     const daysLeft = Math.max(
@@ -1396,6 +1446,8 @@
     const weekPlan = state.plans[`week:${w}`] || {};
     const monthPlan = state.plans[`month:${m}`] || {};
     const kpi = state.kpis[d] || {};
+    const yesterdayPlan = state.plans[`day:${addDaysISO(-1)}`] || {};
+    $("#day-goal").value = dayPlan.goal || yesterdayPlan.tomorrow || "";
     $("#day-ifthen").value = dayPlan.ifthen || "";
     renderHabitChecks(dayPlan.habits || {});
     if ($("#appt-date") && !$("#appt-date").value) $("#appt-date").value = d;
@@ -2229,6 +2281,20 @@
           startAt: a.startAt,
           endAt: a.endAt,
         })),
+      domainAssessments: window.TaskboardGovernance
+        ? window.TaskboardGovernance.assessDomains(state).map((dm) => ({
+            id: dm.id,
+            name: dm.name,
+            status: dm.status,
+            score: dm.score,
+            summary: dm.summary,
+          }))
+        : [],
+      activeAlerts: window.TaskboardGovernance
+        ? window.TaskboardGovernance.getGovernanceAlerts(state)
+            .slice(0, 5)
+            .map((a) => ({ type: a.type, severity: a.severity, title: a.title, message: a.message }))
+        : [],
     };
   }
 
@@ -2363,6 +2429,7 @@
     renderImadarumaProgress();
     renderDoneList();
     renderTrash();
+    renderGovernanceStatus();
   }
 
   function setView(name) {
@@ -2810,11 +2877,13 @@
     const prev = state.plans[`day:${d}`] || {};
     state.plans[`day:${d}`] = {
       ...prev,
+      goal: $("#day-goal").value.trim(),
       ifthen: $("#day-ifthen").value.trim(),
       habits: { ...(prev.habits || {}), ...readHabitChecks("am") },
     };
     syncWeekHabitFromDays();
     save();
+    renderGovernanceStatus();
     $("#day-morning-msg").textContent = "朝のジャーナリングを保存した";
   });
 

@@ -256,6 +256,23 @@ function normalizeContext(raw) {
           conflict: Boolean(a.conflict),
         }))
       : [],
+    domainAssessments: Array.isArray(context.domainAssessments)
+      ? context.domainAssessments.slice(0, 5).map((dm) => ({
+          id: clip(dm.id, 30),
+          name: clip(dm.name, 30),
+          status: clip(dm.status, 20),
+          score: Number(dm.score) || 0,
+          summary: clip(dm.summary, 200),
+        }))
+      : [],
+    activeAlerts: Array.isArray(context.activeAlerts)
+      ? context.activeAlerts.slice(0, 5).map((al) => ({
+          type: clip(al.type, 60),
+          severity: clip(al.severity, 20),
+          title: clip(al.title, 100),
+          message: clip(al.message, 300),
+        }))
+      : [],
   };
 }
 

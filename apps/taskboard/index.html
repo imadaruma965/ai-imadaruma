@@ -133,6 +133,11 @@
 
     <!-- 日 -->
     <section id="view-day" class="view">
+      <div id="governance-status" class="governance-status hidden">
+        <div class="governance-domains" id="governance-domains"></div>
+        <div class="governance-alerts" id="governance-alerts"></div>
+      </div>
+
       <h2 class="section-title">今日の計画</h2>
       <p class="day-flow-hint">Mac: 左で尊徳、右で任務。下が余れば本日の予定。下に朝〜夜の記録。</p>
 
@@ -236,6 +241,9 @@
           <h3 class="panel-title">④ 朝のジャーナリング</h3>
         </div>
         <p class="journal-why">脱線したときの戻り方と、朝の習慣チェック。</p>
+        <label class="field">今日の一事（最優先で進める一つ）
+          <input type="text" id="day-goal" placeholder="翌日へ渡す一事があれば自動で入る" />
+        </label>
         <label class="field">もし脱線したら（if-then）
           <input type="text" id="day-ifthen" placeholder="もしSNSを開いたら、5分で閉じて任務に戻る" />
         </label>
@@ -774,6 +782,9 @@
   </footer>
 
   <script src="seed-data.js"></script>
+  <script src="governance.js"></script>
+  <script src="notification-service.js"></script>
+  <script src="voice-service.js"></script>
   <script>
     (function () {
       const reloadBtn = document.getElementById("btn-reload-app");

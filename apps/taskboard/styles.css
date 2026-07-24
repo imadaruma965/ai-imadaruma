@@ -16,6 +16,7 @@
   --sky: #d6ebfa;
   --warn: #b45309;
   --ok: #2f7a4f;
+  --danger: #b4235a;
   --radius: 12px;
   /*
    * iOS: Helvetica / Latin-first stacks fall back Japanese to Mincho.
@@ -664,6 +665,80 @@ body {
   font-size: var(--text-sm);
   font-weight: var(--weight-normal);
 }
+
+/* 国家状態（五領域診断）・未統治警報 */
+.governance-status {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.governance-status.hidden { display: none; }
+.governance-domains {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.5rem;
+}
+.governance-domain {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: var(--bg);
+}
+.governance-domain-name {
+  display: inline-block;
+  font-weight: var(--weight-bold, 600);
+  font-size: var(--text-sm);
+}
+.governance-domain-score {
+  float: right;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.governance-domain-summary {
+  margin: 0.2rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.governance-domain-reasons {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.governance-domain-reasons li { margin: 0.1rem 0; }
+.governance-domain-action {
+  margin: 0.3rem 0 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold, 600);
+}
+.governance-domain.status-stable { border-color: var(--ok); background: var(--mint); }
+.governance-domain.status-stable .governance-domain-summary { color: var(--ok); }
+.governance-domain.status-caution { border-color: var(--warn); background: var(--peach); }
+.governance-domain.status-caution .governance-domain-summary { color: var(--warn); }
+.governance-domain.status-danger { border-color: var(--danger); background: var(--rose); }
+.governance-domain.status-danger .governance-domain-summary { color: var(--danger); }
+.governance-alerts { margin-top: 0.6rem; }
+.governance-alert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.governance-alert {
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  font-size: var(--text-sm);
+  background: var(--peach);
+  color: var(--warn);
+}
+.governance-alert.severity-urgent { background: var(--rose); color: var(--danger); }
+.governance-alert.severity-info { background: var(--bg); color: var(--muted); }
+.governance-alert-more { margin-top: 0.35rem; font-size: var(--text-sm); color: var(--muted); }
+.governance-alert-more > summary { cursor: pointer; }
 
 /* 今日タブ: 尊徳 × 任務の作業台 */
 .day-workbench {

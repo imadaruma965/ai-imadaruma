@@ -4,7 +4,7 @@
   "description": "ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣である。",
   "scripts": {
     "taskboard": "node apps/taskboard/server.cjs",
-    "test:taskboard": "node --test apps/taskboard/server.test.cjs"
+    "test:taskboard": "node --test apps/taskboard/server.test.cjs apps/taskboard/governance.test.cjs apps/taskboard/notification-service.test.cjs apps/taskboard/voice-service.test.cjs"
   },
   "repository": {
     "type": "git",
