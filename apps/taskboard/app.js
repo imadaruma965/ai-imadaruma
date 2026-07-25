@@ -15,6 +15,21 @@
     { id: "other", label: "その他" },
   ];
 
+  // カテゴリ→四柱＋憲法の割り当て（今さん決定・2026-07-26）。フィット感より、5府すべてに
+  // タスク一覧を持たせる統一感を優先する。
+  const CATEGORY_DOMAIN = {
+    fres: "diplomacy",
+    lex: "diplomacy",
+    sound: "diplomacy",
+    media: "diplomacy",
+    invest: "finance",
+    personal: "naisei",
+    write: "personality",
+    ds: "constitution",
+    design: "constitution",
+    other: "constitution",
+  };
+
   const PRIORITIES = [
     { id: "uu", label: "今すぐ対応", hint: "急ぎで大事（締切・クレーム）", accent: false },
     { id: "un", label: "見せかけの急ぎ", hint: "急ぎだが大事でない → 任せる・まとめる", accent: false },
@@ -616,6 +631,7 @@
 
   let openCategory = null;
   let openQuadrant = null;
+  let openDomain = null;
   let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let pomodoro = { phase: null, taskId: null, taskTitle: "", endsAt: null, timer: null };
 
@@ -1108,15 +1124,21 @@
           const actionHtml = d.recommendedAction
             ? `<p class="governance-domain-action">→ ${escapeHtml(d.recommendedAction)}</p>`
             : "";
-          return `<div class="governance-domain status-${d.status}">
+          return `<button type="button" class="governance-domain status-${d.status}" data-domain="${d.id}">
             <span class="governance-domain-name">${escapeHtml(d.name)}</span>
             <span class="governance-domain-score">${d.score}</span>
             <p class="governance-domain-summary">${escapeHtml(d.summary)}</p>
             ${reasonsHtml}
             ${actionHtml}
-          </div>`;
+          </button>`;
         })
         .join("");
+      domainsHost.querySelectorAll("[data-domain]").forEach((card) => {
+        card.addEventListener("click", () => {
+          openDomain = card.dataset.domain;
+          setView("domain");
+        });
+      });
     }
 
     const alerts = window.TaskboardGovernance.getGovernanceAlerts(state);
@@ -1127,7 +1149,10 @@
       } else {
         const severityOrder = { urgent: 0, caution: 1, info: 2 };
         const sorted = [...alerts].sort((a, b) => (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3));
-        const itemHtml = (a) => `<li class="governance-alert severity-${a.severity}">${escapeHtml(a.title)}</li>`;
+        const itemHtml = (a) =>
+          a.type === "morning_governance_not_started"
+            ? `<li class="governance-alert severity-${a.severity}"><button type="button" class="governance-alert-btn" data-alert-id="${a.type}">${escapeHtml(a.title)}</button></li>`
+            : `<li class="governance-alert severity-${a.severity}">${escapeHtml(a.title)}</li>`;
         const top = sorted.slice(0, 3);
         const rest = sorted.slice(3);
         let html = `<ul class="governance-alert-list">${top.map(itemHtml).join("")}</ul>`;
@@ -1137,6 +1162,9 @@
             .join("")}</ul></details>`;
         }
         alertsHost.innerHTML = html;
+        alertsHost.querySelectorAll('[data-alert-id="morning_governance_not_started"]').forEach((btn) => {
+          btn.addEventListener("click", () => setView("reflect"));
+        });
       }
     }
   }
@@ -1260,13 +1288,16 @@
     fillList("#list-quad", list);
   }
 
-  function renderBoard() {
-    const buckets = { uu: [], un: [], nu: [], nn: [] };
-    activeTasks().forEach((t) => buckets[quadrant(t)].push(t));
-    Object.keys(buckets).forEach((q) => {
-      $(`#c-${q}`).textContent = String(buckets[q].length);
-      fillList(`#list-${q}`, buckets[q]);
-    });
+  function renderDomain() {
+    const id = openDomain || "personality";
+    const domains = window.TaskboardGovernance ? window.TaskboardGovernance.assessDomains(state) : [];
+    const assessment = domains.find((d) => d.id === id);
+    const names = window.TaskboardGovernance ? window.TaskboardGovernance.DOMAIN_NAMES : {};
+    $("#domain-detail-title").textContent = `${names[id] || id} · 未完了`;
+    const summaryEl = $("#domain-detail-summary");
+    if (summaryEl) summaryEl.textContent = assessment ? assessment.summary : "";
+    const list = activeTasks().filter((t) => CATEGORY_DOMAIN[t.category || "other"] === id);
+    fillList("#list-domain", list);
   }
 
   function renderHorizons() {
@@ -2451,7 +2482,7 @@
     renderHome();
     renderQuad();
     renderCat();
-    renderBoard();
+    renderDomain();
     renderHorizons();
     renderAll();
     renderCalendar();
@@ -2470,11 +2501,11 @@
 
   function setView(name) {
     $$(".tab").forEach((t) => {
-      if (name === "cat" || name === "quad") t.classList.remove("active");
+      if (name === "cat" || name === "quad" || name === "domain") t.classList.remove("active");
       else t.classList.toggle("active", t.dataset.view === name);
     });
     $$(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
-    if (["day", "week", "month"].includes(name)) loadPlanFields();
+    if (["day", "week", "month", "reflect"].includes(name)) loadPlanFields();
     if (name === "day") {
       ensureSontokuOpening();
       refreshGcalToday();
@@ -2777,6 +2808,7 @@
   $$(".tab").forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
   $("#btn-back-home").addEventListener("click", () => setView("home"));
   $("#btn-back-home-quad").addEventListener("click", () => setView("home"));
+  $("#btn-back-home-domain").addEventListener("click", () => setView("day"));
   $("#btn-goto-all").addEventListener("click", () => setView("all"));
   $("#btn-open-calendar").addEventListener("click", () => setView("calendar"));
   $("#btn-calendar-back").addEventListener("click", () => setView("home"));

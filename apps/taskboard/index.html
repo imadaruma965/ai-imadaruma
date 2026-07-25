@@ -38,8 +38,8 @@
 
   <nav class="tabs" role="tablist">
     <button type="button" class="tab active" data-view="home">全体</button>
-    <button type="button" class="tab" data-view="board">優先順位</button>
     <button type="button" class="tab" data-view="day">今日</button>
+    <button type="button" class="tab" data-view="reflect">内省</button>
     <button type="button" class="tab" data-view="week">週</button>
     <button type="button" class="tab" data-view="month">月</button>
     <button type="button" class="tab" data-view="all">一覧</button>
@@ -104,31 +104,12 @@
       <ul class="rows" id="list-cat"></ul>
     </section>
 
-    <!-- 優先順位（コヴィの4分類） -->
-    <section id="view-board" class="view">
-      <p class="lead">コヴィの4分類。<strong>「大事だが急がない」を毎日ひとつは空けない。</strong></p>
-      <div class="matrix">
-        <div class="quad">
-          <h2>今すぐ対応 <span class="count" id="c-uu">0</span></h2>
-          <p class="hint">急ぎで大事（締切・クレーム）</p>
-          <ul class="rows" id="list-uu"></ul>
-        </div>
-        <div class="quad">
-          <h2>見せかけの急ぎ <span class="count" id="c-un">0</span></h2>
-          <p class="hint">急ぎだが大事でない → 任せる・まとめる</p>
-          <ul class="rows" id="list-un"></ul>
-        </div>
-        <div class="quad accent">
-          <h2>大事・種まき <span class="count" id="c-nu">0</span></h2>
-          <p class="hint">大事だが急がない（営業・学び・健康）→ 毎日ひとつ</p>
-          <ul class="rows" id="list-nu"></ul>
-        </div>
-        <div class="quad">
-          <h2>減らす <span class="count" id="c-nn">0</span></h2>
-          <p class="hint">急ぎでも大事でもない → 削る</p>
-          <ul class="rows" id="list-nn"></ul>
-        </div>
-      </div>
+    <!-- 四柱＋憲法 詳細 -->
+    <section id="view-domain" class="view">
+      <button type="button" class="linkback" id="btn-back-home-domain">← 今日に戻る</button>
+      <h2 id="domain-detail-title" class="section-title"></h2>
+      <p id="domain-detail-summary" class="lead tight"></p>
+      <ul class="rows" id="list-domain"></ul>
     </section>
 
     <!-- 日 -->
@@ -234,11 +215,17 @@
           </details>
         </div>
       </div>
+    </section>
+
+    <!-- 内省（朝晩の記録） -->
+    <section id="view-reflect" class="view">
+      <h2 class="section-title">内省</h2>
+      <p class="day-flow-hint">朝晩のジャーナリング・行動KPI・国難ログをここに記録する。</p>
 
       <div class="journal-panel am">
         <div class="panel-head-inline">
           <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-          <h3 class="panel-title">④ 朝のジャーナリング</h3>
+          <h3 class="panel-title">① 朝のジャーナリング</h3>
         </div>
         <p class="journal-why">脱線したときの戻り方と、朝の習慣チェック。</p>
         <label class="field">今日の一事（最優先で進める一つ）
@@ -258,7 +245,7 @@
       <div class="kpi-box day-kpi">
         <div class="panel-head-inline">
           <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 19V5M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 15v-4M12 15V8M16 15v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-          <p class="kpi-head panel-title">⑤ 今日の行動KPI</p>
+          <p class="kpi-head panel-title">② 今日の行動KPI</p>
         </div>
         <p class="kpi-why">左に今日の目標、右に実績。終わったら実績を更新する。</p>
         <div class="kpi-split">
@@ -294,7 +281,7 @@
       <div class="incident-panel">
         <div class="panel-head-inline">
           <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 4l9 16H3L12 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4M12 16.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-          <h3 class="panel-title">⑥ 国難ログ（衝動・脱線の記録）</h3>
+          <h3 class="panel-title">③ 国難ログ（衝動・脱線の記録）</h3>
         </div>
         <p class="journal-why">impulse_protocol.mdの分類。止める→記録する→最小行動で戻る。</p>
         <div class="incident-form">
@@ -315,7 +302,7 @@
       <div class="journal-panel pm">
         <div class="panel-head-inline">
           <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M16 4a8 8 0 1 0 4 14 7 7 0 0 1-4-14z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
-          <h3 class="panel-title">⑦ 夜のジャーナリング</h3>
+          <h3 class="panel-title">④ 夜のジャーナリング</h3>
         </div>
         <p class="journal-why">内政・習慣・よかったこと・感謝・学び・翌日の種・七徳。</p>
         <div class="field">

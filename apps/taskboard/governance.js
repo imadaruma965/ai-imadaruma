@@ -421,9 +421,9 @@
           {
             severity: "caution",
             title: "朝の統治が未開始です",
-            message: "if-then・朝の習慣・AI尊徳との対話がまだ記録されていません。",
-            recommendedAction: "朝のジャーナリングを開く",
-            actionLabel: "朝のジャーナリングへ",
+            message: "if-then・朝の習慣・AI尊徳との対話がまだ記録されていません。「内省」タブで朝のジャーナリングを記録してください。",
+            recommendedAction: "内省タブで朝のジャーナリングを開く",
+            actionLabel: "内省タブへ",
           },
           now
         )
@@ -667,6 +667,7 @@
 
   const api = {
     GOVERNANCE_DOMAINS,
+    DOMAIN_NAMES,
     GovernanceEvent,
     assessDomains,
     detectGovernanceAlerts,
