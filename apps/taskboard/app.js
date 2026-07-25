@@ -2221,6 +2221,8 @@
   /* —— AI尊徳チャット（今日タブ） —— */
   let sontokuBusy = false;
   const sontokuOpeningAttempted = new Set();
+  // 二宮尊徳の人格に合わせ、端末にあれば男性の日本語音声を優先する（無ければ既定のja-JP音声にフォールバック）。
+  const SONTOKU_VOICE_OPTS = { lang: "ja-JP", voiceNames: ["Otoya", "Hattori", "Ichiro"] };
 
   function sontokuChatKey() {
     return `day:${todayISO()}`;
@@ -2366,7 +2368,7 @@
         agentId: data.agentId,
         runId: data.runId,
       });
-      window.VoiceService?.speak(data.reply);
+      window.VoiceService?.speak(data.reply, SONTOKU_VOICE_OPTS);
       setSontokuStatus(`Cursor接続済み · ${data.model}`, "connected");
     } catch (error) {
       pushSontokuMessage("error", error.message, { provider: "system" });
@@ -2400,7 +2402,7 @@
       const ctx = window.TaskboardGovernance.buildGovernanceContext(state);
       const { topAlert, oneLineSummary } = ctx.governanceSummary;
       const speech = [oneLineSummary, topAlert ? `最重要警報、${topAlert.title}。` : ""].filter(Boolean).join(" ");
-      window.VoiceService?.speak(speech);
+      window.VoiceService?.speak(speech, SONTOKU_VOICE_OPTS);
     }
 
     $("#pomodoro-bar")?.scrollIntoView({ behavior: "smooth", block: "end" });

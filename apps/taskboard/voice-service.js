@@ -10,6 +10,25 @@
     );
   }
 
+  // opts.voiceNames: 優先したい音声名の部分一致リスト（例: 男性声 ["Otoya", "Hattori", "Ichiro"]）。
+  // 一致する音声が端末にインストールされていない場合は opts.lang のデフォルト音声にフォールバックする。
+  function pickVoice(opts) {
+    if (!hasSpeechSynthesis()) return null;
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return null;
+    const names = opts.voiceNames || [];
+    for (const name of names) {
+      const match = voices.find((v) => v.name.toLowerCase().includes(name.toLowerCase()));
+      if (match) return match;
+    }
+    if (opts.lang) {
+      const shortLang = opts.lang.split("-")[0];
+      const match = voices.find((v) => v.lang === opts.lang || v.lang.startsWith(shortLang));
+      if (match) return match;
+    }
+    return null;
+  }
+
   const VoiceService = {
     speak(text, opts = {}) {
       const value = String(text || "").trim();
@@ -18,8 +37,10 @@
         const utterance = new window.SpeechSynthesisUtterance(value);
         if (opts.lang) utterance.lang = opts.lang;
         if (opts.rate) utterance.rate = opts.rate;
+        const voice = pickVoice(opts);
+        if (voice) utterance.voice = voice;
         window.speechSynthesis.speak(utterance);
-        return { ok: true, method: "speechSynthesis", text: value };
+        return { ok: true, method: "speechSynthesis", text: value, voice: voice ? voice.name : null };
       }
       console.log("[VoiceService.speak] SpeechSynthesis未対応環境のスタブ", value);
       return { ok: true, method: "stub", text: value };
@@ -43,5 +64,7 @@
   }
   if (typeof window !== "undefined") {
     window.VoiceService = VoiceService;
+    // Chrome等は音声リストを非同期で読み込むため、早めに一度呼んで読み込みを開始させる。
+    if (hasSpeechSynthesis()) window.speechSynthesis.getVoices();
   }
 })(typeof globalThis !== "undefined" ? globalThis : this);
