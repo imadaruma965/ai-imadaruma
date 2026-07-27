@@ -35,7 +35,7 @@ async function main() {
   const gcal = require("./gcal.cjs");
   const st = await gcal.status();
   if (!st.connected) {
-    console.error("Googleカレンダー未接続です。統治手帳で接続してから再実行してください。");
+    console.error("Googleカレンダー未接続です。キングダムOSで接続してから再実行してください。");
     process.exit(1);
   }
 
@@ -83,7 +83,7 @@ async function main() {
       title: "サッカー指導",
       startAt: startAt.toISOString(),
       endAt: endAt.toISOString(),
-      notes: `統治手帳シード: 毎週${s.label}曜日の定期指導`,
+      notes: `キングダムOSシード: 毎週${s.label}曜日の定期指導`,
       timeZone: "Asia/Tokyo",
       recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${s.byday}`],
     });

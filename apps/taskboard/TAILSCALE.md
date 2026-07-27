@@ -1,4 +1,4 @@
-# 統治手帳 · どこでもアクセス（Tailscale）
+# キングダムOS · どこでもアクセス（Tailscale）
 
 ## 1. Macに Tailscale を入れる
 
@@ -38,9 +38,9 @@ URLは `data/mobile-access.txt` にも保存されます。
 ## 毎日の運用
 
 1. 家のMacは **ログインしたまま・本体スリープなし**（下のスリープ防止）
-2. 統治手帳は自動起動（`./install-autostart.sh`）または `./start.sh`
+2. キングダムOSは自動起動（`./install-autostart.sh`）または `./start.sh`
 3. 携帯・MacBookで Tailscale ON
-4. 外出先URLで統治手帳を開く
+4. 外出先URLでキングダムOSを開く
 
 フッターが **同期済み** ならOK。
 

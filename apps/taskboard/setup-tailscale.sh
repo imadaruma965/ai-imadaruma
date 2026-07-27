@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 統治手帳を外出先からも携帯アプリのように使う（Tailscale）
+# キングダムOSを外出先からも携帯アプリのように使う（Tailscale）
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,7 +12,7 @@ elif [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]]; then
   TAILSCALE_BIN="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 fi
 
-echo "統治手帳 · Tailscale セットアップ"
+echo "キングダムOS · Tailscale セットアップ"
 echo ""
 
 if [[ -z "$TAILSCALE_BIN" ]]; then
@@ -60,7 +60,7 @@ fi
 
 mkdir -p "$DIR/data"
 cat > "$DIR/data/mobile-access.txt" <<EOF
-# 統治手帳 · 携帯アクセスURL（自動生成）
+# キングダムOS · 携帯アクセスURL（自動生成）
 # 更新: $(date '+%Y-%m-%d %H:%M')
 
 外出先（Tailscale）: ${URL}

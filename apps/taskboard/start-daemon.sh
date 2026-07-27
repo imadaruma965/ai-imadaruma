@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 統治手帳 — 自動起動用（launchd から呼ばれる。ブラウザは開かない）
+# キングダムOS — 自動起動用（launchd から呼ばれる。ブラウザは開かない）
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,5 +27,5 @@ if [[ ! -d "$ROOT/node_modules/@cursor/sdk" ]]; then
   npm install --prefix "$ROOT"
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] 統治手帳サーバーを起動します（自動起動）"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] キングダムOSサーバーを起動します（自動起動）"
 exec node "$DIR/server.cjs"

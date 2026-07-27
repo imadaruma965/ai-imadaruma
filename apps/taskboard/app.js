@@ -2684,7 +2684,7 @@
       /* no audio */
     }
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("統治手帳", { body: message });
+      new Notification("キングダムOS", { body: message });
     }
   }
 

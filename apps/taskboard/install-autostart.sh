@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 統治手帳 — ログイン時の自動起動を設定/解除する（macOS launchd）
+# キングダムOS — ログイン時の自動起動を設定/解除する（macOS launchd）
 #
 # 使い方:
 #   ./install-autostart.sh            自動起動を有効化
@@ -98,6 +98,6 @@ echo "  ラベル : $LABEL"
 echo "  対象   : $DAEMON"
 echo "  ログ   : $LOG_OUT"
 echo ""
-echo "これで再起動・ログインのたびに統治手帳サーバーが自動で立ち上がります。"
+echo "これで再起動・ログインのたびにキングダムOSサーバーが自動で立ち上がります。"
 echo "状態確認 : ./install-autostart.sh status"
 echo "解除     : ./install-autostart.sh uninstall"

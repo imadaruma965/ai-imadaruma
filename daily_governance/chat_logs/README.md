@@ -1,6 +1,6 @@
-# 統治手帳・対話生ログ
+# キングダムOS・対話生ログ
 
-統治手帳からCursor SDKを介して行ったAI尊徳との対話を、日付別に自動保存する。
+キングダムOSからCursor SDKを介して行ったAI尊徳との対話を、日付別に自動保存する。
 
 - ファイル名: `sontoku-YYYY-MM-DD.md`
 - 内容: 発言、応答、Cursor agent ID、run ID

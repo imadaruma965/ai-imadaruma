@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 統治手帳 — デスクトップ起動
+# キングダムOS — デスクトップ起動
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,7 +49,7 @@ if is_listening; then
   exit 0
 fi
 
-echo "統治手帳を起動します（ポート ${PORT}）"
+echo "キングダムOSを起動します（ポート ${PORT}）"
 if [[ -z "${CURSOR_API_KEY:-}" ]]; then
   echo "AI尊徳: APIキー未設定（閲覧は可能、チャットは未接続）"
 fi

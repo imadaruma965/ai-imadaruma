@@ -1,6 +1,6 @@
-# 統治手帳 × Googleカレンダー連携
+# キングダムOS × Googleカレンダー連携
 
-予定を統治手帳に入れると **自動で Googleカレンダーへ登録**し、
+予定をキングダムOSに入れると **自動で Googleカレンダーへ登録**し、
 
 - **バッティング検知**（被っていたら確認）
 - **通知の自動設定**（既定: 1日前／180分前／90分前）
@@ -55,7 +55,7 @@ cd apps/taskboard && ./install-autostart.sh
 # または ./start.sh
 ```
 
-統治手帳 → **今日** → **Googleに接続** → ブラウザで許可。
+キングダムOS → **今日** → **Googleに接続** → ブラウザで許可。
 
 トークンは `apps/taskboard/data/gcal-token.json` に保存（Git対象外）。
 

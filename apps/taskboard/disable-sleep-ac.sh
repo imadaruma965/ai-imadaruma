@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 統治手帳 — AC電源時のスリープ防止（外出先Tailscale用）
+# キングダムOS — AC電源時のスリープ防止（外出先Tailscale用）
 #
 # 使い方:
 #   ./disable-sleep-ac.sh

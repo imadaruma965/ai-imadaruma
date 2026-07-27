@@ -155,7 +155,7 @@ async function createEvent({ title, startAt, endAt, location, notes, recurrence,
   const body = {
     summary: title,
     location: location || undefined,
-    description: notes || "統治手帳から登録",
+    description: notes || "キングダムOSから登録",
     start: { dateTime: startDate.toISOString(), timeZone: tz },
     end: { dateTime: endDate.toISOString(), timeZone: tz },
     reminders: {

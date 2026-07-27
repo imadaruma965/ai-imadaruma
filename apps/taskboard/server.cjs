@@ -302,19 +302,19 @@ async function basePrompt(date) {
   ]);
   const track = computeTrackRecord(stateRecord.data, date);
 
-  return `あなたは統治手帳のAI尊徳である。以下の正本と運用規則を採用し、今さんの実行マネージャーとして対話する。
+  return `あなたはキングダムOSのAI尊徳である。以下の正本と運用規則を採用し、今さんの実行マネージャーとして対話する。
 
 重要な境界:
 - 戦略を変更しない。戦略判断はAI栄一の領分である。
 - この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
-- 統治手帳から渡された最新の任務・進捗を事実として扱う。
+- キングダムOSから渡された最新の任務・進捗を事実として扱う。
 - 予定・約束は Googleカレンダー連携の情報を事実として扱う。時間が重なる予定（バッティング）があれば、任務の話より先に短く警告する。
 - 応答は日本語で簡潔にし、冒頭は必ず「尊徳:」とする。
 - 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
 - 分からないことを推測で断定せず、実行に必要な問いを一つずつ返す。
 - 本日は ${date}。
 
-【直近14日間の実績（統治手帳データより・${track.windowStartISO}〜${date}）】
+【直近14日間の実績（キングダムOSデータより・${track.windowStartISO}〜${date}）】
 - 完了タスク数（この期間中に完了扱いになったもの）: ${track.completedRecent}件
 - 強制タスク（発信・定期）の期限超過中: ${track.forcedOverdue}件 / 全${track.forcedTotal}件
 
@@ -338,7 +338,7 @@ function turnPrompt({ date, message, event, context, firstTurn }) {
     event === "open"
       ? "今さんが今日の計画を開いた。時刻・任務・進捗に合わせ、挨拶と必要な確認を一つ伝える。"
       : `今さんの発言:\n${clip(message, 4000)}`;
-  return `${firstTurn ? "ここから統治手帳での継続対話を開始する。\n\n" : ""}【現在時刻・統治手帳の最新情報】
+  return `${firstTurn ? "ここからキングダムOSでの継続対話を開始する。\n\n" : ""}【現在時刻・キングダムOSの最新情報】
 日付: ${date}
 ${JSON.stringify(context, null, 2)}
 
@@ -352,7 +352,7 @@ async function openAgent(date, existingId) {
   const options = {
     apiKey: process.env.CURSOR_API_KEY,
     model: { id: MODEL },
-    name: `AI尊徳・統治手帳 ${date}`,
+    name: `AI尊徳・キングダムOS ${date}`,
     mode: "plan",
     local: {
       cwd: REPO_ROOT,
@@ -404,7 +404,7 @@ async function appendChatLog({ date, message, event, response, agentId, runId })
   }).format(new Date());
   const header = exists
     ? ""
-    : `# AI尊徳・統治手帳 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> 統治手帳から自動記録。要約は \`daily_governance/sontoku_session_log.md\` に残す。\n\n`;
+    : `# AI尊徳・キングダムOS 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。要約は \`daily_governance/sontoku_session_log.md\` に残す。\n\n`;
   const userText = event === "open" ? "今日の計画を開いた" : message;
   const entry = `## ${time}\n\n**今さん**\n\n${markdownQuote(userText)}\n\n**尊徳**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
   await fsp.appendFile(file, `${header}${entry}`, "utf8");
@@ -581,7 +581,7 @@ function createServer() {
       if (!process.env.CURSOR_API_KEY) {
         json(res, 503, {
           error: "cursor_api_key_missing",
-          message: "CURSOR_API_KEYが未設定です。.env.localを設定して統治手帳を再起動してください。",
+          message: "CURSOR_API_KEYが未設定です。.env.localを設定してキングダムOSを再起動してください。",
         });
         return;
       }
@@ -656,7 +656,7 @@ function createServer() {
         await gcal.exchangeCode(code);
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         res.end(
-          "<!doctype html><meta charset=utf-8><title>接続完了</title><p>Googleカレンダー接続が完了しました。このタブを閉じ、統治手帳を再読み込みしてください。</p><script>setTimeout(()=>location.href='/',1200)</script>"
+          "<!doctype html><meta charset=utf-8><title>接続完了</title><p>Googleカレンダー接続が完了しました。このタブを閉じ、キングダムOSを再読み込みしてください。</p><script>setTimeout(()=>location.href='/',1200)</script>"
         );
       } catch (error) {
         console.error("[gcal/callback]", error);
@@ -803,7 +803,7 @@ if (require.main === module) {
   const server = createServer();
   server.listen(PORT, HOST, () => {
     const { urls, tailscaleUrl, mobileUrl } = getAccessUrls();
-    console.log("統治手帳:");
+    console.log("キングダムOS:");
     urls.forEach((entry) => console.log(`  ${entry}`));
     console.log(`携帯（同じWi-Fi）: ${mobileUrl}`);
     if (tailscaleUrl) {
