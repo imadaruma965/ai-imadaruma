@@ -14,13 +14,14 @@
     "paused",
   ];
 
+  // 運用名（sales_pipeline.md）↔ 内部値。内部値は壊さない。
   const STATUS_LABELS = {
-    candidate: "候補",
+    candidate: "未接触",
     contacted: "接触済み",
     applied: "応募済み",
     replied: "返信あり",
-    meeting: "面談",
-    proposal: "提案・見積",
+    meeting: "ヒアリング／商談",
+    proposal: "提案準備〜提案済み",
     won: "受注",
     lost: "失注",
     paused: "保留",
@@ -78,6 +79,12 @@
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     };
+    const toWinProbability = (v) => {
+      if (v == null || v === "") return null;
+      const n = Number(v);
+      if (!Number.isFinite(n)) return null;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    };
     return {
       id: r.id || (typeof opts.uid === "function" ? opts.uid() : fallbackId()),
       companyName: String(r.companyName || "").trim(),
@@ -87,6 +94,7 @@
       status,
       proposalType,
       estimatedAmount: toAmount(r.estimatedAmount),
+      winProbability: toWinProbability(r.winProbability),
       nextAction: String(r.nextAction || "").trim(),
       nextActionDate: isIsoDate(r.nextActionDate) ? r.nextActionDate : null,
       lastContactDate: isIsoDate(r.lastContactDate) ? r.lastContactDate : null,
@@ -118,13 +126,17 @@
     const today = todayISO(opts.now);
     const counts = Object.fromEntries(SALES_STATUSES.map((s) => [s, 0]));
     let estimatedTotal = 0;
+    let weightedEstimatedTotal = 0;
     let overdueCount = 0;
     let unbilledWonCount = 0;
     list.forEach((raw) => {
       const r = normalizeSalesRecord(raw);
       if (counts[r.status] != null) counts[r.status] += 1;
       if (OPEN_PIPELINE_STATUSES.includes(r.status) && r.estimatedAmount) {
-        estimatedTotal += Number(r.estimatedAmount) || 0;
+        const amt = Number(r.estimatedAmount) || 0;
+        estimatedTotal += amt;
+        const p = r.winProbability == null ? 0 : Number(r.winProbability) || 0;
+        weightedEstimatedTotal += (amt * p) / 100;
       }
       if (isOverdueRecord(r, today)) overdueCount += 1;
       if (r.status === "won" && r.invoiceStatus !== "issued") unbilledWonCount += 1;
@@ -133,6 +145,7 @@
       ...counts,
       total: list.length,
       estimatedTotal,
+      weightedEstimatedTotal,
       overdueCount,
       unbilledWonCount,
     };

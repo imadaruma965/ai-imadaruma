@@ -331,6 +331,34 @@
     });
   }
 
+  function emptyFiscalMeta() {
+    return {
+      defenseLine: null,
+      note: "",
+      currentBalance: null,
+      confirmedInflow: null,
+      expectedInflow: null,
+      fixedCosts: null,
+      variableCosts: null,
+      scheduledPayments: null,
+    };
+  }
+
+  function normalizeFiscalMeta(raw) {
+    const fm = raw && typeof raw === "object" ? raw : {};
+    const num = (v) => (v == null || v === "" ? null : Number(v));
+    return {
+      defenseLine: num(fm.defenseLine),
+      note: String(fm.note || ""),
+      currentBalance: num(fm.currentBalance),
+      confirmedInflow: num(fm.confirmedInflow),
+      expectedInflow: num(fm.expectedInflow),
+      fixedCosts: num(fm.fixedCosts),
+      variableCosts: num(fm.variableCosts),
+      scheduledPayments: num(fm.scheduledPayments),
+    };
+  }
+
   function hydrateFromData(data) {
     const categories = initCategories(data.categories);
     return {
@@ -352,16 +380,7 @@
       salesPipeline: Array.isArray(data.salesPipeline)
         ? data.salesPipeline.map((r) => window.TaskboardSales.normalizeSalesRecord(r, { uid }))
         : [],
-      fiscalMeta:
-        data.fiscalMeta && typeof data.fiscalMeta === "object"
-          ? {
-              defenseLine:
-                data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
-                  ? null
-                  : Number(data.fiscalMeta.defenseLine),
-              note: String(data.fiscalMeta.note || ""),
-            }
-          : { defenseLine: null, note: "" },
+      fiscalMeta: normalizeFiscalMeta(data.fiscalMeta),
     };
   }
 
@@ -415,7 +434,7 @@
       appointments: [],
       liabilities: [],
       salesPipeline: [],
-      fiscalMeta: { defenseLine: null, note: "" },
+      fiscalMeta: emptyFiscalMeta(),
     };
   }
 
@@ -434,7 +453,7 @@
       appointments: state.appointments || [],
       liabilities: state.liabilities || [],
       salesPipeline: state.salesPipeline || [],
-      fiscalMeta: state.fiscalMeta || { defenseLine: null, note: "" },
+      fiscalMeta: normalizeFiscalMeta(state.fiscalMeta),
     };
   }
 
@@ -452,7 +471,7 @@
     state.appointments = next.appointments || [];
     state.liabilities = next.liabilities || [];
     state.salesPipeline = next.salesPipeline || [];
-    state.fiscalMeta = next.fiscalMeta || { defenseLine: null, note: "" };
+    state.fiscalMeta = normalizeFiscalMeta(next.fiscalMeta);
   }
 
   function saveLocal() {
@@ -558,7 +577,7 @@
           personalFinance: local.personalFinance || { entries: [] },
           appointments: local.appointments || [],
           liabilities: local.liabilities || [],
-          fiscalMeta: local.fiscalMeta || { defenseLine: null, note: "" },
+          fiscalMeta: normalizeFiscalMeta(local.fiscalMeta),
         };
         const uploaded = await pushServerState(payload, null);
         if (!uploaded.conflict) {
@@ -1947,13 +1966,54 @@
     return { ok: true, after };
   }
 
+  function renderFinanceSnapshot() {
+    if (!window.TaskboardFinance) return;
+    if (!state.fiscalMeta || typeof state.fiscalMeta !== "object") {
+      state.fiscalMeta = emptyFiscalMeta();
+    }
+    const fm = normalizeFiscalMeta(state.fiscalMeta);
+    state.fiscalMeta = fm;
+    const setVal = (id, v) => {
+      const el = $(id);
+      if (el) el.value = v == null || Number.isNaN(Number(v)) ? "" : String(v);
+    };
+    setVal("#fin-current", fm.currentBalance);
+    setVal("#fin-confirmed", fm.confirmedInflow);
+    setVal("#fin-expected", fm.expectedInflow);
+    setVal("#fin-fixed", fm.fixedCosts);
+    setVal("#fin-variable", fm.variableCosts);
+    setVal("#fin-scheduled", fm.scheduledPayments);
+    setVal("#fin-defense", fm.defenseLine);
+    const noteEl = $("#fin-note");
+    if (noteEl) noteEl.value = fm.note || "";
+
+    const sales = window.TaskboardSales
+      ? window.TaskboardSales.summarizeSalesPipeline(state.salesPipeline || [], { now: new Date() })
+      : { estimatedTotal: 0, weightedEstimatedTotal: 0 };
+    const computed = window.TaskboardFinance.computeFinanceSnapshot(fm);
+    const host = $("#finance-snap-result");
+    if (host) {
+      host.innerHTML = `
+        <div class="sales-sum-grid">
+          <div><span class="sales-sum-label">月末予測残高</span><strong>${yen(computed.projectedMonthEnd)}</strong></div>
+          <div><span class="sales-sum-label">資金不足額</span><strong>${yen(computed.shortfall)}</strong></div>
+          <div><span class="sales-sum-label">今月必要売上</span><strong>${yen(computed.neededRevenue)}</strong></div>
+          <div><span class="sales-sum-label">月50万との差額</span><strong>${yen(computed.gapToMonthlyTarget)}</strong></div>
+          <div><span class="sales-sum-label">営業見込み売上</span><strong>${yen(sales.estimatedTotal || 0)}</strong></div>
+          <div><span class="sales-sum-label">確度加重売上</span><strong>${yen(Math.round(sales.weightedEstimatedTotal || 0))}</strong></div>
+        </div>`;
+    }
+  }
+
   function renderLiabilities() {
     const list = $("#list-liabilities");
     const summary = $("#liab-summary");
     if (!list) return;
     if (!Array.isArray(state.liabilities)) state.liabilities = [];
     if (!state.fiscalMeta || typeof state.fiscalMeta !== "object") {
-      state.fiscalMeta = { defenseLine: null, note: "" };
+      state.fiscalMeta = emptyFiscalMeta();
+    } else {
+      state.fiscalMeta = normalizeFiscalMeta(state.fiscalMeta);
     }
 
     const defenseInput = $("#liab-defense");
@@ -2123,6 +2183,7 @@
     const overdue = Sales.isOverdueRecord(r, todayISO());
     const dueToday = Sales.isDueTodayRecord(r, todayISO());
     const amount = r.estimatedAmount != null ? yen(r.estimatedAmount) : "—";
+    const winP = r.winProbability != null ? `${r.winProbability}%` : "—";
     const wonBlock =
       r.status === "won"
         ? `<span class="muted">受注: 確定額 ${r.agreedAmount != null ? yen(r.agreedAmount) : "未記入"} ・ 納期 ${escapeHtml(
@@ -2136,7 +2197,7 @@
         <strong>${escapeHtml(r.companyName || "（未記入）")}${r.contactName ? ` · ${escapeHtml(r.contactName)}` : ""}</strong>
         <span class="muted">${escapeHtml(r.channel || "チャネル未設定")} ・ ${escapeHtml(r.service || "サービス未設定")} ・ ${escapeHtml(
       Sales.PROPOSAL_TYPE_LABELS[r.proposalType] || r.proposalType
-    )} ・ 見込 ${amount}</span>
+    )} ・ 見込 ${amount} ・ 確度 ${winP}</span>
         <span class="muted">次の行動: ${escapeHtml(r.nextAction || "未記入")}${
       r.memo ? ` ・ ${escapeHtml(r.memo)}` : ""
     }</span>
@@ -2167,13 +2228,14 @@
     if (summaryHost) {
       summaryHost.innerHTML = `
         <div class="sales-sum-grid">
-          <div><span class="sales-sum-label">候補</span><strong>${summary.candidate}</strong></div>
+          <div><span class="sales-sum-label">未接触</span><strong>${summary.candidate}</strong></div>
           <div><span class="sales-sum-label">接触・応募済み</span><strong>${summary.contacted + summary.applied}</strong></div>
           <div><span class="sales-sum-label">返信</span><strong>${summary.replied}</strong></div>
-          <div><span class="sales-sum-label">面談</span><strong>${summary.meeting}</strong></div>
-          <div><span class="sales-sum-label">提案・見積</span><strong>${summary.proposal}</strong></div>
+          <div><span class="sales-sum-label">ヒアリング／商談</span><strong>${summary.meeting}</strong></div>
+          <div><span class="sales-sum-label">提案</span><strong>${summary.proposal}</strong></div>
           <div><span class="sales-sum-label">受注</span><strong>${summary.won}</strong></div>
           <div><span class="sales-sum-label">見込売上合計</span><strong>${yen(summary.estimatedTotal)}</strong></div>
+          <div><span class="sales-sum-label">確度加重売上</span><strong>${yen(Math.round(summary.weightedEstimatedTotal || 0))}</strong></div>
           <div><span class="sales-sum-label">次回対応期限超過</span><strong>${summary.overdueCount}</strong></div>
         </div>`;
     }
@@ -2250,6 +2312,7 @@
     $("#sales-edit-status").value = r.status;
     $("#sales-edit-proposal-type").value = r.proposalType;
     $("#sales-edit-amount").value = r.estimatedAmount ?? "";
+    $("#sales-edit-win-prob").value = r.winProbability ?? "";
     $("#sales-edit-next-action").value = r.nextAction || "";
     $("#sales-edit-next-date").value = r.nextActionDate || "";
     $("#sales-edit-last-contact").value = r.lastContactDate || "";
@@ -2683,6 +2746,7 @@
     renderInvoices();
     renderPersonalFinance();
     renderLiabilities();
+    renderFinanceSnapshot();
     renderSalesPipeline();
     renderSalesHomeSummary();
     renderAppointments();
@@ -3394,7 +3458,7 @@
 
   $("#liab-defense-save")?.addEventListener("click", () => {
     if (!state.fiscalMeta || typeof state.fiscalMeta !== "object") {
-      state.fiscalMeta = { defenseLine: null, note: "" };
+      state.fiscalMeta = emptyFiscalMeta();
     }
     const raw = $("#liab-defense").value;
     state.fiscalMeta.defenseLine = raw === "" ? null : Number(raw);
@@ -3403,6 +3467,44 @@
     const msg = $("#liab-defense-msg");
     if (msg) msg.textContent = "防衛ラインを保存した";
     renderLiabilities();
+    renderFinanceSnapshot();
+  });
+
+  $("#form-finance-snap")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const num = (id) => {
+      const v = $(id)?.value;
+      return v === "" || v == null ? null : Number(v);
+    };
+    state.fiscalMeta = normalizeFiscalMeta({
+      currentBalance: num("#fin-current"),
+      confirmedInflow: num("#fin-confirmed"),
+      expectedInflow: num("#fin-expected"),
+      fixedCosts: num("#fin-fixed"),
+      variableCosts: num("#fin-variable"),
+      scheduledPayments: num("#fin-scheduled"),
+      defenseLine: num("#fin-defense"),
+      note: ($("#fin-note")?.value || "").trim(),
+    });
+    if ($("#liab-defense")) {
+      $("#liab-defense").value =
+        state.fiscalMeta.defenseLine == null ? "" : String(state.fiscalMeta.defenseLine);
+    }
+    if ($("#liab-defense-note")) $("#liab-defense-note").value = state.fiscalMeta.note || "";
+    save();
+    renderFinanceSnapshot();
+    renderLiabilities();
+    const msg = $("#fin-msg");
+    if (msg) msg.textContent = "財政スナップショットを保存した";
+  });
+
+  $("#fin-clear")?.addEventListener("click", () => {
+    state.fiscalMeta = emptyFiscalMeta();
+    save();
+    renderFinanceSnapshot();
+    renderLiabilities();
+    const msg = $("#fin-msg");
+    if (msg) msg.textContent = "財政入力をクリアした";
   });
 
   $("#liab-edit-cancel")?.addEventListener("click", () => {
@@ -3457,6 +3559,7 @@
     e.preventDefault();
     if (!Array.isArray(state.salesPipeline)) state.salesPipeline = [];
     const amountRaw = $("#sales-amount").value;
+    const winRaw = $("#sales-win-prob")?.value;
     const record = window.TaskboardSales.normalizeSalesRecord(
       {
         id: uid(),
@@ -3467,6 +3570,7 @@
         status: $("#sales-status").value,
         proposalType: $("#sales-proposal-type").value,
         estimatedAmount: amountRaw === "" ? null : Number(amountRaw),
+        winProbability: winRaw === "" || winRaw == null ? null : Number(winRaw),
         nextAction: $("#sales-next-action").value.trim(),
         nextActionDate: $("#sales-next-date").value || null,
         lastContactDate: $("#sales-last-contact").value || null,
@@ -3484,6 +3588,7 @@
     $("#sales-proposal-type").value = "light";
     renderSalesPipeline();
     renderSalesHomeSummary();
+    renderFinanceSnapshot();
   });
 
   ["#sales-filter-status", "#sales-filter-channel", "#sales-filter-proposal", "#sales-filter-overdue", "#sales-filter-today"].forEach(
@@ -3503,6 +3608,7 @@
     save();
     renderSalesPipeline();
     renderSalesHomeSummary();
+    renderFinanceSnapshot();
     $("#sales-edit-dialog")?.close();
   });
 
@@ -3512,6 +3618,7 @@
     const r = (state.salesPipeline || []).find((x) => x.id === id);
     if (!r) return;
     const amountRaw = $("#sales-edit-amount").value;
+    const winRaw = $("#sales-edit-win-prob")?.value;
     const agreedRaw = $("#sales-edit-agreed-amount").value;
     r.companyName = $("#sales-edit-company").value.trim();
     r.contactName = $("#sales-edit-contact").value.trim();
@@ -3520,6 +3627,7 @@
     r.status = $("#sales-edit-status").value;
     r.proposalType = $("#sales-edit-proposal-type").value;
     r.estimatedAmount = amountRaw === "" ? null : Number(amountRaw);
+    r.winProbability = winRaw === "" || winRaw == null ? null : Number(winRaw);
     r.nextAction = $("#sales-edit-next-action").value.trim();
     r.nextActionDate = $("#sales-edit-next-date").value || null;
     r.lastContactDate = $("#sales-edit-last-contact").value || null;
@@ -3533,6 +3641,7 @@
     save();
     renderSalesPipeline();
     renderSalesHomeSummary();
+    renderFinanceSnapshot();
     $("#sales-edit-dialog")?.close();
   });
 
@@ -3655,16 +3764,7 @@
         : { entries: [] };
     state.appointments = Array.isArray(data.appointments) ? data.appointments : [];
     state.liabilities = Array.isArray(data.liabilities) ? data.liabilities : [];
-    state.fiscalMeta =
-      data.fiscalMeta && typeof data.fiscalMeta === "object"
-        ? {
-            defenseLine:
-              data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
-                ? null
-                : Number(data.fiscalMeta.defenseLine),
-            note: String(data.fiscalMeta.note || ""),
-          }
-        : { defenseLine: null, note: "" };
+    state.fiscalMeta = normalizeFiscalMeta(data.fiscalMeta);
     ensureRequiredMonthlyTasks();
     ensureForcedMedia();
     ensureForcedAiSync();

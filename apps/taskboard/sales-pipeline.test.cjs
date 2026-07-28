@@ -242,3 +242,23 @@ test("buildHomeSalesSummary: 期限超過・本日対応・面談予定・未請
   assert.equal(s.meetingCount, 1);
   assert.equal(s.unbilledWonCount, 1);
 });
+
+test("営業レコードの正規化: winProbability は 0-100 に丸め、空は null", () => {
+  assert.equal(normalizeSalesRecord({ winProbability: 50 }).winProbability, 50);
+  assert.equal(normalizeSalesRecord({ winProbability: "" }).winProbability, null);
+  assert.equal(normalizeSalesRecord({ winProbability: 150 }).winProbability, 100);
+  assert.equal(normalizeSalesRecord({ winProbability: -5 }).winProbability, 0);
+});
+
+test("確度加重売上: open案件のみ見込み×確度/100", () => {
+  const summary = summarizeSalesPipeline(
+    [
+      { status: "meeting", estimatedAmount: 100000, winProbability: 50 },
+      { status: "won", estimatedAmount: 200000, winProbability: 100 },
+      { status: "lost", estimatedAmount: 999999, winProbability: 100 },
+    ],
+    { now: new Date("2026-07-28T12:00:00") }
+  );
+  assert.equal(summary.estimatedTotal, 100000);
+  assert.equal(summary.weightedEstimatedTotal, 50000);
+});

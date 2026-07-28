@@ -30,7 +30,7 @@
 | 案件名 | `companyName`+`service` または memo | |
 | ステータス | `status` | 下表 |
 | 見込み金額 | `estimatedAmount` | |
-| 受注確度 | 週次で本ファイルまたは memo に 高/中/低 | OSに独立欄が無い場合は memo |
+| 受注確度 | `winProbability`（0–100%） | OS営業タブで入力。確度加重＝見込み×確度÷100 |
 | 最終接触日 | `lastContactDate` | |
 | 次回対応日 | `nextActionDate` | **期限超過抽出のキー** |
 | 次の行動 | `nextAction` | |

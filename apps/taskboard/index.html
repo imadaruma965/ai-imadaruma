@@ -450,6 +450,25 @@
         <span id="month-board-msg" class="msg"></span>
       </div>
 
+      <div class="board-block finance-gov">
+        <p class="board-head">財政スナップショット（月末予測）</p>
+        <p class="lead tight">finance_board.md と同式。入力は state.fiscalMeta。確度加重は営業タブから自動。</p>
+        <form id="form-finance-snap" class="mini-form finance-snap-form">
+          <input type="number" id="fin-current" placeholder="現在残高" min="0" step="1" />
+          <input type="number" id="fin-confirmed" placeholder="確定入金" min="0" step="1" />
+          <input type="number" id="fin-expected" placeholder="入金予定" min="0" step="1" />
+          <input type="number" id="fin-fixed" placeholder="固定費" min="0" step="1" />
+          <input type="number" id="fin-variable" placeholder="変動費" min="0" step="1" />
+          <input type="number" id="fin-scheduled" placeholder="支払予定" min="0" step="1" />
+          <input type="number" id="fin-defense" placeholder="最低必要残高（防衛ライン）" min="0" step="1" />
+          <input type="text" id="fin-note" placeholder="メモ（任意）" />
+          <button type="submit" class="btn primary compact">財政を保存・再計算</button>
+          <button type="button" class="btn ghost compact" id="fin-clear">入力クリア</button>
+          <span id="fin-msg" class="msg"></span>
+        </form>
+        <div id="finance-snap-result" class="sales-summary" aria-live="polite"></div>
+      </div>
+
       <div class="board-block liabilities">
         <p class="board-head">負債台帳（足元の穴）</p>
         <p class="lead tight">家賃・税金・カード等の残高と期限。支払い後は「編集」または「支払」で残債を更新。</p>
@@ -566,12 +585,12 @@
           </select>
           <input type="text" id="sales-service" placeholder="サービス（例: フレスト個別指導）" required />
           <select id="sales-status" required>
-            <option value="candidate">候補</option>
+            <option value="candidate">未接触</option>
             <option value="contacted">接触済み</option>
             <option value="applied">応募済み</option>
             <option value="replied">返信あり</option>
-            <option value="meeting">面談</option>
-            <option value="proposal">提案・見積</option>
+            <option value="meeting">ヒアリング／商談</option>
+            <option value="proposal">提案準備〜提案済み</option>
             <option value="won">受注</option>
             <option value="lost">失注</option>
             <option value="paused">保留</option>
@@ -582,6 +601,7 @@
             <option value="followup">追客</option>
           </select>
           <input type="number" id="sales-amount" placeholder="見込金額（円・任意）" min="0" step="1" />
+          <input type="number" id="sales-win-prob" placeholder="受注確度%（0-100）" min="0" max="100" step="1" />
           <input type="text" id="sales-next-action" placeholder="次の行動" required />
           <input type="date" id="sales-next-date" required />
           <input type="date" id="sales-last-contact" placeholder="最終接触日（任意）" />
@@ -594,12 +614,12 @@
       <div class="filters">
         <select id="sales-filter-status">
           <option value="">すべてのステータス</option>
-          <option value="candidate">候補</option>
+          <option value="candidate">未接触</option>
           <option value="contacted">接触済み</option>
           <option value="applied">応募済み</option>
           <option value="replied">返信あり</option>
-          <option value="meeting">面談</option>
-          <option value="proposal">提案・見積</option>
+          <option value="meeting">ヒアリング／商談</option>
+          <option value="proposal">提案準備〜提案済み</option>
           <option value="won">受注</option>
           <option value="lost">失注</option>
           <option value="paused">保留</option>
@@ -882,12 +902,12 @@
       <label class="field">サービス<input type="text" id="sales-edit-service" /></label>
       <label class="field">ステータス
         <select id="sales-edit-status">
-          <option value="candidate">候補</option>
+          <option value="candidate">未接触</option>
           <option value="contacted">接触済み</option>
           <option value="applied">応募済み</option>
           <option value="replied">返信あり</option>
-          <option value="meeting">面談</option>
-          <option value="proposal">提案・見積</option>
+          <option value="meeting">ヒアリング／商談</option>
+          <option value="proposal">提案準備〜提案済み</option>
           <option value="won">受注</option>
           <option value="lost">失注</option>
           <option value="paused">保留</option>
@@ -901,6 +921,7 @@
         </select>
       </label>
       <label class="field">見込金額（円）<input type="number" id="sales-edit-amount" min="0" step="1" /></label>
+      <label class="field">受注確度（%）<input type="number" id="sales-edit-win-prob" min="0" max="100" step="1" /></label>
       <label class="field">次の行動<input type="text" id="sales-edit-next-action" /></label>
       <label class="field">次回対応日<input type="date" id="sales-edit-next-date" /></label>
       <label class="field">最終接触日<input type="date" id="sales-edit-last-contact" /></label>
@@ -947,6 +968,7 @@
   <script src="seed-data.js"></script>
   <script src="governance.js"></script>
   <script src="sales-pipeline.js"></script>
+  <script src="finance-board.js"></script>
   <script src="notification-service.js"></script>
   <script src="voice-service.js"></script>
   <script src="governance-monitor.js"></script>
