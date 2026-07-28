@@ -1,17 +1,30 @@
-# ChatGPT壁打ちの捕獲（運用メモ）
+# AI対話のKnowledge取込（運用メモ）
 
-> **詳細正本**: `sources/chatgpt/README.md`  
-> **接続**: ChatGPT → `sources/chatgpt/inbox/` → Cursor蒸留 → セッションログ／extracts  
-> **管轄**: 尊徳（習慣化）／君主（投下）
+> **正本**: `/Users/imadatadahito/Documents/imada-knowledge/05_AI対話/`  
+> **設計**: Vault `Knowledge_Gateway設計.md`（KG-0）／本リポ Smart Rabbit は MCP 検索のみ（KG-1）  
+> **旧経路**: `sources/chatgpt/` は **deprecated**（即削除しない）。詳細は `sources/chatgpt/README.md`
 
-## 固定手順（毎回同じ）
+## AI別・当面の保存方法
 
-1. 壁打ち終了時に `sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` をChatGPTへ貼る  
-2. 出力をコピー  
-3. PowerBookで `./scripts/chatgpt_inbox_save.sh （タグ）`  
-4. Cursorで「inboxを処理して」  
-5. 確認後に commit（指示時）
+| AI | 方法 |
+|----|------|
+| Claude Code | SessionEnd 自動（継続）。手動追加は不要が原則 |
+| ChatGPT | 重要分のみコピー → Vault で `aistock chatgpt "題名"` または AIインポート＋`aipull` |
+| Cursor | 重要セッション終了時のみ明示保存（`aistock cursor "..."` 等） |
+| Gemini | エクスポート／コピー → `aistock` / `aipull` |
+| Claude（ブラウザ） | エクスポート／コピー → `aiimport` / `aistock` |
 
-キングダムOS: 起動時に週次任務「正本をChatGPT／Claudeへ再貼付」が自動生成される（日曜期限・完了後は翌週）。
+**保存する**: 決定・設計・重要な壁打ち・プロジェクト進行  
+**保存しない**: 雑談全文、個人情報、顧客生データ
 
-外出先では全文を無理に処理しない。メモ1行＋帰宅後にinbox投下でよい。
+## 国家OS側に残すもの
+
+- 数えられるタスク・申し送り → `daily_governance` / Smart Rabbit ログ  
+- 戦略・発信の短い学び → `strategy/*_session_log.md`（原本ではない）  
+- 原本会話 → **必ず Vault**（このリポへ複製しない）
+
+## 旧ChatGPT手順（非推奨）
+
+`./scripts/chatgpt_inbox_save.sh` → `sources/chatgpt/inbox` → Cursor「inboxを処理して」は使わない。
+
+外出先: メモ1行でよい。帰宅後に Vault へ `aistock`。

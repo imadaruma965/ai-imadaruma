@@ -102,15 +102,21 @@
 
 ---
 
-## 壁打ちのリポ格納（毎回）
+## 壁打ちのKnowledge格納（毎回・重要分のみ）
 
-終了時に `sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` を貼り、出力をコピーして PowerBook で:
+**正本は `imada-knowledge`。このリポの `sources/chatgpt/` には原本を置かない**（旧経路は deprecated。詳細: `sources/chatgpt/README.md` / `daily_governance/chatgpt_capture.md`）。
+
+終了時（決定・設計・重要な壁打ちがあるとき）:
+
+1. 必要なら `sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` で書き出しを整える  
+2. コピーした本文を Vault 側で保存する:
 
 ```bash
-./scripts/chatgpt_inbox_save.sh （タグ例: sound-ds-ig）
+aistock chatgpt "題名"（タグ例: sound-ds-ig）
 ```
 
-その後 Cursor で「inboxを処理して」。詳細は `sources/chatgpt/README.md`。
+または Vault の `00_受信箱/AIインポート/ChatGPT/` へ投下して `aipull`。  
+国家OSへの短い申し送りだけが必要なら `strategy/*_session_log.md` に1行（原本はVault）。
 
 ## 貼り方（ChatGPT）
 

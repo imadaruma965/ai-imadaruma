@@ -1,6 +1,7 @@
-# 蒸留テンプレ（ChatGPT壁打ち）
+# 蒸留テンプレ（ChatGPT壁打ち）— DEPRECATED な置き場向け
 
-> 1スレ（または1ファイル）につき1枚。`sources/chatgpt/extracts/YYYY-MM-DD_題名.md` に保存。
+> **原本の正本は imada-knowledge。** このテンプレの欄の移管先は `sources/chatgpt/README.md` を見ること。  
+> 1スレにつき1枚を旧 `sources/chatgpt/extracts/` に置く運用は非推奨。申し送りは session_log / daily_governance へ。
 
 ---
 

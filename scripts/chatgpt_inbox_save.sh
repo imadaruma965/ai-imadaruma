@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
-# ChatGPTのコピー内容を sources/chatgpt/inbox/ に時刻付きで保存する
+# DEPRECATED (KG-2 / 2026-07-28): 新規原本は imada-knowledge へ保存すること。
+#   推奨: Vault で `aistock chatgpt "題名"` または 00_受信箱/AIインポート → aipull
+#   このスクリプトは移行期間の互換用。実行ロジックは変更していない。
+#   詳細: sources/chatgpt/README.md / daily_governance/chatgpt_capture.md
+# ChatGPTのコピー内容を sources/chatgpt/inbox/ に時刻付きで保存する（非推奨）
 set -euo pipefail
+echo "警告: chatgpt_inbox_save.sh は deprecated。正本は imada-knowledge（aistock）です。" >&2
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 INBOX="$ROOT/sources/chatgpt/inbox"
