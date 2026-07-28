@@ -1,9 +1,12 @@
 node_modules/
 apps/taskboard/.env.local
+apps/taskboard/.env.local.save
 apps/taskboard/data/.sontoku-sessions.json
+apps/taskboard/data/.smartrabbit-sessions.json
 apps/taskboard/data/state.json
 apps/taskboard/data/mobile-access.txt
 apps/taskboard/data/autostart.log
 apps/taskboard/data/autostart.error.log
 apps/taskboard/data/gcal-token.json
 daily_governance/chat_logs/sontoku-*.md
+daily_governance/chat_logs/smart-rabbit-*.md
