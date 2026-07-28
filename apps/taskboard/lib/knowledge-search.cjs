@@ -1,5 +1,6 @@
 "use strict";
 
+const os = require("node:os");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
@@ -8,7 +9,7 @@ const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 // imada-knowledge is a sibling repo on the same machine (not nested in this repo).
 // Override with IMADA_KNOWLEDGE_VAULT_PATH if the two repos are not checked out
 // as siblings under the same parent directory.
-const DEFAULT_VAULT_ROOT = path.resolve(REPO_ROOT, "..", "..", "Documents", "imada-knowledge");
+const DEFAULT_VAULT_ROOT = path.join(os.homedir(), "Documents", "imada-knowledge");
 const VAULT_ROOT = process.env.IMADA_KNOWLEDGE_VAULT_PATH
   ? path.resolve(process.env.IMADA_KNOWLEDGE_VAULT_PATH)
   : DEFAULT_VAULT_ROOT;
@@ -151,6 +152,7 @@ module.exports = {
   MODE_CONFIG,
   DEFAULT_MODE,
   DEFAULT_CASCADE,
+  DEFAULT_VAULT_ROOT,
   VAULT_LIB_PATH,
   listModes,
   resolveMode,

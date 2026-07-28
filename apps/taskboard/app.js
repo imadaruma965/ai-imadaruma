@@ -518,13 +518,22 @@
     const remote = record?.data ? record : await fetchServerState();
     serverUpdatedAt = remote.updatedAt || null;
     const hydrated = hydrateFromData(remote.data || blankState());
-    const { next, changed: financialMerged } = mergeFinancialFromLocal(localSnap, hydrated);
+    const { next: financialNext, changed: financialMerged } = mergeFinancialFromLocal(localSnap, hydrated);
+    const { next, changed: smartRabbitMerged } = mergeSmartRabbitFromLocal(localSnap, financialNext);
     applyHydrated(next);
     saveLocal();
-    if (financialMerged) scheduleServerSave();
+    if (financialMerged || smartRabbitMerged) scheduleServerSave();
     loadPlanFields();
     render();
-    setSyncStatus(financialMerged ? "負債台帳を復元して同期中…" : "最新を反映", "connected");
+    if (financialMerged && smartRabbitMerged) {
+      setSyncStatus("会話と財政データを復元して同期中…", "connected");
+    } else if (financialMerged) {
+      setSyncStatus("負債台帳を復元して同期中…", "connected");
+    } else if (smartRabbitMerged) {
+      setSyncStatus("相談セッションを復元して同期中…", "connected");
+    } else {
+      setSyncStatus("最新を反映", "connected");
+    }
   }
 
   /** 旧サーバー保存分などで liabilities / fiscalMeta が落ちたとき、端末側をマージ */
@@ -548,6 +557,37 @@
     return { next, changed };
   }
 
+  function mergeSmartRabbitFromLocal(localSnap, remoteHydrated) {
+    let changed = false;
+    const next = {
+      ...remoteHydrated,
+      smartRabbitChat: { ...(remoteHydrated.smartRabbitChat || {}) },
+    };
+    const localSessions = localSnap.smartRabbitChat || {};
+    const remoteSessions = next.smartRabbitChat;
+    Object.entries(localSessions).forEach(([key, localSession]) => {
+      const remoteSession = remoteSessions[key];
+      const localUpdatedAt = String(localSession?.updatedAt || localSession?.createdAt || "");
+      const remoteUpdatedAt = String(remoteSession?.updatedAt || remoteSession?.createdAt || "");
+      const localMessageCount = Array.isArray(localSession?.messages) ? localSession.messages.length : 0;
+      const remoteMessageCount = Array.isArray(remoteSession?.messages) ? remoteSession.messages.length : 0;
+      const shouldUseLocal =
+        !remoteSession ||
+        localUpdatedAt > remoteUpdatedAt ||
+        localMessageCount > remoteMessageCount;
+      if (shouldUseLocal) {
+        remoteSessions[key] = localSession;
+        changed = true;
+      }
+    });
+    const localActive = String(localSnap.smartRabbitActiveSession || "");
+    if (localActive && remoteSessions[localActive] && next.smartRabbitActiveSession !== localActive) {
+      next.smartRabbitActiveSession = localActive;
+      changed = true;
+    }
+    return { next, changed };
+  }
+
   async function refreshFromServerIfNewer() {
     try {
       const remote = await fetchServerState();
@@ -561,13 +601,22 @@
   async function bootstrapState() {
     setSyncStatus("同期中…", "busy");
     try {
+      const local = loadLocalStorage();
       const remote = await fetchServerState();
       if (remote.updatedAt && remote.data) {
         serverUpdatedAt = remote.updatedAt;
-        setSyncStatus("サーバー同期", "connected");
-        return hydrateFromData(remote.data);
+        const hydrated = hydrateFromData(remote.data);
+        const { next: financialNext, changed: financialMerged } = mergeFinancialFromLocal(local, hydrated);
+        const { next, changed: smartRabbitMerged } = mergeSmartRabbitFromLocal(local, financialNext);
+        if (financialMerged || smartRabbitMerged) {
+          needsPostBootstrapSave = true;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          setSyncStatus("ローカル差分を統合して同期中…", "connected");
+        } else {
+          setSyncStatus("サーバー同期", "connected");
+        }
+        return next;
       }
-      const local = loadLocalStorage();
       const hasLocal =
         local.tasks.length > 0 ||
         Object.keys(local.plans).length > 0 ||
@@ -642,6 +691,7 @@
   let state = blankState();
   let serverUpdatedAt = null;
   let saveTimer = null;
+  let needsPostBootstrapSave = false;
 
   function fmtVal(n, unit) {
     if (n === null || n === undefined || n === "") return "未計測";
@@ -3035,7 +3085,16 @@
   // ユーザー発言は送信前にpush(=保存)する。AI応答が失敗しても発言は失われない(Phase 1-8)。
   async function sendSmartRabbitUserMessage(text) {
     const trimmed = String(text || "").trim();
-    if (!trimmed || smartRabbitBusy) return;
+    if (!trimmed) {
+      pushSmartRabbitMessage(activeSmartRabbitKey() || smartRabbitNewSessionKey(), "error", "メッセージを入力してください。", {
+        mode: smartRabbitActiveMode,
+        status: "error",
+      });
+      renderSmartRabbitPanel();
+      $("#smartrabbit-input")?.focus();
+      return;
+    }
+    if (smartRabbitBusy) return;
     let key = activeSmartRabbitKey();
     if (!key) {
       key = smartRabbitNewSessionKey();
@@ -3379,6 +3438,10 @@
   }
 
   applyHydrated(await bootstrapState());
+  if (needsPostBootstrapSave) {
+    needsPostBootstrapSave = false;
+    scheduleServerSave();
+  }
   fillCategoryPickers();
   scrubStoredTitles();
   ensureForcedMedia();

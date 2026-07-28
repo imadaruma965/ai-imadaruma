@@ -1,6 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const {
   extractQueryKeywords,
   cascadeSearch,
@@ -8,6 +10,7 @@ const {
   listModes,
   searchForMode,
   MODE_CONFIG,
+  DEFAULT_VAULT_ROOT,
   VAULT_LIB_PATH,
 } = require("./knowledge-search.cjs");
 
@@ -38,6 +41,10 @@ test("listModes exposes all seven MVP consultation modes", () => {
   assert.equal(modes.length, 7);
   assert.ok(modes.some((m) => m.id === "sales"));
   assert.ok(modes.some((m) => m.id === "instagram"));
+});
+
+test("DEFAULT_VAULT_ROOT points at the user's Documents vault", () => {
+  assert.equal(DEFAULT_VAULT_ROOT, path.join(os.homedir(), "Documents", "imada-knowledge"));
 });
 
 test("cascadeSearch dedupes hits across folders and caps 05_AI対話 contributions", () => {
