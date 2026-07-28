@@ -4,7 +4,7 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$DIR/../.." && pwd)"
-PORT="${GYOMU_TOCHI_PORT:-8765}"
+PORT="${PORT:-${GYOMU_TOCHI_PORT:-8765}}"
 URL="http://127.0.0.1:${PORT}/"
 
 cd "$DIR"

@@ -63,11 +63,26 @@ Mac・携帯どちらで変更しても、同じデータに同期されます�
 
 ### いま（家のWi-Fi内）
 
-1. Macで `./start.sh` を起動
-2. ターミナルに表示される **携帯（同じWi-Fi）** のURLを携帯で開く
-3. iPhone: **共有 → ホーム画面に追加**
+携帯（LAN上の他端末）からデータを見る・保存するには、事前に **アクセストークン** の設定が必要です。
+未設定のままだと、タスクデータへのアクセスは Mac本体（localhost）からしか行えません（セキュリティのため）。
+
+1. `apps/taskboard/.env.local` に長いトークンを設定する
+
+```bash
+# 例: ランダムな値を生成して貼り付ける
+openssl rand -hex 32
+```
+
+```bash
+TASKBOARD_TOKEN="ここに生成した値"
+```
+
+2. Macで `./start.sh` を起動
+3. ターミナルに表示される **携帯（同じWi-Fi）** のURLを携帯で開く
+4. iPhone: **共有 → ホーム画面に追加**
 
 フッターが **同期済み** なら、PCと携帯は同じデータです。
+（`TASKBOARD_TOKEN` はページ読み込み時にサーバーから携帯側へ自動で渡されるため、手入力は不要）
 
 ### 外出先からも使う（Tailscale）
 
@@ -161,6 +176,7 @@ Macで `./start.sh` が動いている間、外出先からも更新できます
 | AI尊徳が「APIキー未設定」 | `apps/taskboard/.env.local` を作成し、キングダムOSを再起動 |
 | AI尊徳が「接続エラー」 | 起動中のターミナルを確認。APIキーとCursor利用権限も確認 |
 | 携帯で開けない | Macと携帯が同じWi-Fiか確認。`./start.sh` 起動時のLAN URLを使う |
+| 携帯で開けるが「認証トークンが正しくありません」 | `apps/taskboard/.env.local` に `TASKBOARD_TOKEN` を設定してキングダムOSを再起動（LANアクセスには必須） |
 | 外出先で開けない | `./setup-tailscale.sh` で Tailscale を設定 |
 | 同期されない | フッターの同期状態を確認。Macで `./start.sh` が動いているか確認 |
 | `start.command` が開けない | 右クリック → 開く。またはターミナルで `chmod +x start.command start.sh` |

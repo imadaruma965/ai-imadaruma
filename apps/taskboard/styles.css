@@ -2031,3 +2031,37 @@ button.calendar-event { cursor: pointer; }
 .voice-capture-bar .msg {
   font-size: 0.8rem;
 }
+
+/* モバイル(LAN経由のiPhone想定・~390px)：フォーム入力でのiOS自動ズームを防ぎ、
+   Smart Rabbit・尊徳チャット、ナビ、音声ボタンのタップ領域を広げる。 */
+@media (max-width: 560px) {
+  .sontoku-form input,
+  .smartrabbit-form input,
+  .field input,
+  .field textarea,
+  .field select,
+  .filters select,
+  .kpi-grid input,
+  .metric-row input,
+  .mini-form input,
+  .mini-form select,
+  .incident-form input[type="text"],
+  .appt-grid input,
+  .sales-row-actions select,
+  .sales-row-actions input[type="date"],
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .sontoku-form input,
+  .smartrabbit-form input,
+  .sontoku-form button,
+  .smartrabbit-form button,
+  .voice-btn,
+  #btn-voice-capture,
+  .tab {
+    min-height: 2.75rem;
+  }
+}

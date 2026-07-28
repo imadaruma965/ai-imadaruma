@@ -21,8 +21,8 @@ const SESSION_FILE = path.join(DATA_DIR, ".sontoku-sessions.json");
 const SMART_RABBIT_SESSION_FILE = path.join(DATA_DIR, ".smartrabbit-sessions.json");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 const CHAT_LOG_DIR = path.join(REPO_ROOT, "daily_governance", "chat_logs");
-const PORT = Number(process.env.GYOMU_TOCHI_PORT || 8765);
-const HOST = process.env.GYOMU_TOCHI_HOST || "0.0.0.0";
+const PORT = Number(process.env.PORT || process.env.GYOMU_TOCHI_PORT || 8765);
+const HOST = process.env.HOST || process.env.GYOMU_TOCHI_HOST || "0.0.0.0";
 const MODEL = process.env.SONTOKU_MODEL || "auto";
 const MAX_BODY_BYTES = 1024 * 1024;
 const SONTOKU_RATE_LIMIT_PER_MINUTE = 10;
@@ -68,10 +68,19 @@ function validDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 }
 
+function isLoopbackAddress(address) {
+  return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+}
+
+// TASKBOARD_TOKEN未設定時は、LAN/Tailscale経由の第三者アクセスを防ぐため
+// localhost(同一Mac)からのリクエストのみを許可する。トークン設定時は従来通りヘッダ照合。
 function isAuthorized(req) {
   const token = process.env.TASKBOARD_TOKEN || "";
-  if (!token) return true;
-  return req.headers["x-taskboard-token"] === token;
+  if (token) {
+    return req.headers["x-taskboard-token"] === token;
+  }
+  const remoteAddress = (req.socket && req.socket.remoteAddress) || "";
+  return isLoopbackAddress(remoteAddress);
 }
 
 const sontokuCallLog = new Map();
@@ -1249,6 +1258,11 @@ if (require.main === module) {
       console.log("携帯（外出先）: Tailscale未設定 → apps/taskboard/setup-tailscale.sh を参照");
     }
     console.log(
+      process.env.TASKBOARD_TOKEN
+        ? "LANアクセス: TASKBOARD_TOKEN設定済み（他端末からもトークン付きでアクセス可）"
+        : "LANアクセス: TASKBOARD_TOKEN未設定 → Mac本体(localhost)以外からのAPIアクセスは拒否されます"
+    );
+    console.log(
       hasCursorApiKey()
         ? `AI尊徳 / スマートラビット: Cursor SDK接続準備済み（model: ${MODEL}）`
         : "AI尊徳 / スマートラビット: 未接続（apps/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
@@ -1268,6 +1282,7 @@ module.exports = {
   getTailscaleUrl,
   getAccessUrls,
   isAuthorized,
+  isLoopbackAddress,
   checkSontokuRateLimit,
   computeTrackRecord,
   normalizeSmartRabbitContext,

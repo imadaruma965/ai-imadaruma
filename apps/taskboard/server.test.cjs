@@ -7,6 +7,7 @@ const {
   validDate,
   sanitizeStateData,
   isAuthorized,
+  isLoopbackAddress,
   checkSontokuRateLimit,
   computeTrackRecord,
 } = require("./server.cjs");
@@ -147,11 +148,32 @@ test("computeTrackRecord counts recent completions and overdue forced tasks", ()
   assert.equal(track.forcedTotal, 3);
 });
 
-test("isAuthorized allows any request when TASKBOARD_TOKEN is unset", () => {
+test("isLoopbackAddress recognizes only localhost forms", () => {
+  assert.equal(isLoopbackAddress("127.0.0.1"), true);
+  assert.equal(isLoopbackAddress("::1"), true);
+  assert.equal(isLoopbackAddress("::ffff:127.0.0.1"), true);
+  assert.equal(isLoopbackAddress("192.168.1.20"), false);
+  assert.equal(isLoopbackAddress(""), false);
+});
+
+test("isAuthorized allows only localhost requests when TASKBOARD_TOKEN is unset", () => {
   const original = process.env.TASKBOARD_TOKEN;
   delete process.env.TASKBOARD_TOKEN;
   try {
-    assert.equal(isAuthorized({ headers: {} }), true);
+    assert.equal(isAuthorized({ headers: {}, socket: { remoteAddress: "127.0.0.1" } }), true);
+    assert.equal(isAuthorized({ headers: {}, socket: { remoteAddress: "::1" } }), true);
+  } finally {
+    if (original !== undefined) process.env.TASKBOARD_TOKEN = original;
+  }
+});
+
+test("isAuthorized rejects LAN requests when TASKBOARD_TOKEN is unset", () => {
+  const original = process.env.TASKBOARD_TOKEN;
+  delete process.env.TASKBOARD_TOKEN;
+  try {
+    assert.equal(isAuthorized({ headers: {}, socket: { remoteAddress: "192.168.1.42" } }), false);
+    assert.equal(isAuthorized({ headers: {}, socket: {} }), false);
+    assert.equal(isAuthorized({ headers: {} }), false);
   } finally {
     if (original !== undefined) process.env.TASKBOARD_TOKEN = original;
   }
@@ -168,6 +190,20 @@ test("isAuthorized requires a matching X-Taskboard-Token header when configured"
     if (original === undefined) delete process.env.TASKBOARD_TOKEN;
     else process.env.TASKBOARD_TOKEN = original;
   }
+});
+
+test("state endpoint stays reachable from localhost even when bound to 0.0.0.0 without a token", async (t) => {
+  const original = process.env.TASKBOARD_TOKEN;
+  delete process.env.TASKBOARD_TOKEN;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "0.0.0.0", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (original !== undefined) process.env.TASKBOARD_TOKEN = original;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/state`);
+  assert.equal(response.status, 200);
 });
 
 test("state and sontoku endpoints reject requests without a valid token", async (t) => {
