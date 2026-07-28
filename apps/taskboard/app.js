@@ -359,6 +359,27 @@
     };
   }
 
+  // Phase 2A-13: 将来の編集UIに備えた最小構造(instagram方針・services・researchProjects)。
+  // 今回はUIを作らないが、往復で消えないよう他フィールドと同様に保持する。
+  function emptyBusiness() {
+    return { instagram: { brandName: "", tagline: "", pillars: [], updatedAt: null }, services: [], researchProjects: [] };
+  }
+
+  function normalizeBusiness(raw) {
+    const business = raw && typeof raw === "object" ? raw : {};
+    const instagram = business.instagram && typeof business.instagram === "object" ? business.instagram : {};
+    return {
+      instagram: {
+        brandName: typeof instagram.brandName === "string" ? instagram.brandName : "",
+        tagline: typeof instagram.tagline === "string" ? instagram.tagline : "",
+        pillars: Array.isArray(instagram.pillars) ? instagram.pillars.filter((p) => typeof p === "string") : [],
+        updatedAt: typeof instagram.updatedAt === "string" ? instagram.updatedAt : null,
+      },
+      services: Array.isArray(business.services) ? business.services : [],
+      researchProjects: Array.isArray(business.researchProjects) ? business.researchProjects : [],
+    };
+  }
+
   function hydrateFromData(data) {
     const categories = initCategories(data.categories);
     return {
@@ -385,6 +406,7 @@
         ? data.salesPipeline.map((r) => window.TaskboardSales.normalizeSalesRecord(r, { uid }))
         : [],
       fiscalMeta: normalizeFiscalMeta(data.fiscalMeta),
+      business: normalizeBusiness(data.business),
     };
   }
 
@@ -441,6 +463,7 @@
       liabilities: [],
       salesPipeline: [],
       fiscalMeta: emptyFiscalMeta(),
+      business: emptyBusiness(),
     };
   }
 
@@ -462,6 +485,7 @@
       liabilities: state.liabilities || [],
       salesPipeline: state.salesPipeline || [],
       fiscalMeta: normalizeFiscalMeta(state.fiscalMeta),
+      business: normalizeBusiness(state.business),
     };
   }
 
@@ -482,6 +506,7 @@
     state.liabilities = next.liabilities || [];
     state.salesPipeline = next.salesPipeline || [];
     state.fiscalMeta = normalizeFiscalMeta(next.fiscalMeta);
+    state.business = normalizeBusiness(next.business);
   }
 
   function saveLocal() {
@@ -640,6 +665,7 @@
           appointments: local.appointments || [],
           liabilities: local.liabilities || [],
           fiscalMeta: normalizeFiscalMeta(local.fiscalMeta),
+          business: normalizeBusiness(local.business),
         };
         const uploaded = await pushServerState(payload, null);
         if (!uploaded.conflict) {
@@ -3034,6 +3060,7 @@
     smartRabbitPendingRetry = null;
     save();
     renderSmartRabbitPanel();
+    refreshSmartRabbitContextPreview(smartRabbitActiveMode);
   }
 
   function startNewSmartRabbitSession() {
@@ -3043,6 +3070,7 @@
     smartRabbitPendingRetry = null;
     save();
     renderSmartRabbitPanel();
+    refreshSmartRabbitContextPreview(smartRabbitActiveMode);
   }
 
   function setSmartRabbitMode(mode) {
@@ -3058,6 +3086,57 @@
       save();
     }
     renderSmartRabbitPanel();
+    refreshSmartRabbitContextPreview(mode);
+  }
+
+  // Phase 2A-14: 「今回参照する現在情報」。既定は閉じており、開いたとき／モードが
+  // 変わったときだけ /api/smart-rabbit/context を取得する(実AI呼び出しなし)。
+  let smartRabbitContextPreviewMode = null;
+
+  function currentSmartRabbitMode() {
+    const key = activeSmartRabbitKey();
+    return (key && state.smartRabbitChat[key]?.mode) || smartRabbitActiveMode;
+  }
+
+  async function refreshSmartRabbitContextPreview(forceMode) {
+    const details = $("#smartrabbit-context-preview");
+    const body = $("#smartrabbit-context-preview-body");
+    if (!details || !body) return;
+    const mode = forceMode || currentSmartRabbitMode();
+    if (!details.open) {
+      smartRabbitContextPreviewMode = null;
+      return;
+    }
+    if (smartRabbitContextPreviewMode === mode) return;
+    smartRabbitContextPreviewMode = mode;
+    body.innerHTML = '<p class="muted">読み込み中…</p>';
+    try {
+      const response = await fetch(`/api/smart-rabbit/context?mode=${encodeURIComponent(mode)}`, {
+        cache: "no-store",
+        headers: authHeaders(),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "取得に失敗しました");
+      if (!data.sections || !data.sections.length) {
+        body.innerHTML = '<p class="muted">参照できる業務情報がありません</p>';
+        return;
+      }
+      const rows = data.sections
+        .map((s) => {
+          const badge = s.freshness === "stale" ? " ⚠古い可能性" : "";
+          const preview = s.facts && s.facts[0] ? escapeHtml(s.facts[0].slice(0, 34)) : "";
+          return `<div class="smartrabbit-context-section"><strong>${escapeHtml(s.title)}</strong>${badge}<span class="muted"> · ${s.facts.length}件 ${preview}</span></div>`;
+        })
+        .join("");
+      const warnings =
+        data.warnings && data.warnings.length
+          ? `<p class="warn">${escapeHtml(data.warnings.join(" / "))}</p>`
+          : "";
+      body.innerHTML = rows + warnings;
+    } catch (error) {
+      body.innerHTML = `<p class="warn">取得エラー: ${escapeHtml(error.message)}</p>`;
+      smartRabbitContextPreviewMode = null;
+    }
   }
 
   async function sendSmartRabbitTurn({ sessionKey, mode, text, messageId }) {
@@ -3536,6 +3615,7 @@
   $("#smartrabbit-new-session")?.addEventListener("click", () => startNewSmartRabbitSession());
   $("#smartrabbit-session-select")?.addEventListener("change", (e) => setActiveSmartRabbitSession(e.target.value));
   $("#smartrabbit-retry")?.addEventListener("click", () => retrySmartRabbit());
+  $("#smartrabbit-context-preview")?.addEventListener("toggle", () => refreshSmartRabbitContextPreview());
 
   $("#form-list-new")?.addEventListener("submit", (e) => {
     e.preventDefault();

@@ -9,7 +9,34 @@ const {
   cacheSmartRabbitResult,
   getCachedSmartRabbitResult,
   contentHashOf,
+  sanitizeBusiness,
+  sanitizeStateData,
 } = require("./server.cjs");
+
+test("sanitizeBusiness defaults missing/malformed business data to editable-empty structures", () => {
+  assert.deepEqual(sanitizeBusiness(undefined), {
+    instagram: { brandName: "", tagline: "", pillars: [], updatedAt: null },
+    services: [],
+    researchProjects: [],
+  });
+  const custom = sanitizeBusiness({
+    instagram: { brandName: "賢いウサギ", pillars: ["A", "B"] },
+    services: [{ name: "X" }],
+    researchProjects: [{ theme: "Y" }],
+  });
+  assert.equal(custom.instagram.brandName, "賢いウサギ");
+  assert.deepEqual(custom.instagram.pillars, ["A", "B"]);
+  assert.equal(custom.services.length, 1);
+  assert.equal(custom.researchProjects.length, 1);
+});
+
+test("sanitizeStateData migrates old state.json (no business key) with defaults, no crash", () => {
+  const legacy = { tasks: [{ id: "1", title: "旧タスク" }] };
+  const data = sanitizeStateData(legacy);
+  assert.deepEqual(data.business.services, []);
+  assert.deepEqual(data.business.researchProjects, []);
+  assert.equal(data.business.instagram.brandName, "");
+});
 
 test("normalizeSmartRabbitContext clips and sanitizes browser data", () => {
   const context = normalizeSmartRabbitContext({
@@ -176,4 +203,40 @@ test("smart-rabbit POST validates date, message, and sessionId before calling th
   const missingSession = await post({ date: "2026-07-28", message: "hi" });
   assert.equal(missingSession.status, 400);
   assert.equal((await missingSession.json()).error, "missing_session");
+});
+
+test("smart-rabbit context preview: invalid mode returns 400 without touching the agent", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/smart-rabbit/context?mode=not_a_real_mode`);
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_mode");
+});
+
+test("smart-rabbit context preview: works for all modes without CURSOR_API_KEY (no real AI call)", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const modes = ["general", "today", "sales", "instagram", "research", "product", "finance"];
+  for (const mode of modes) {
+    const response = await fetch(`http://127.0.0.1:${address.port}/api/smart-rabbit/context?mode=${mode}`);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.mode, mode);
+    assert.ok(Array.isArray(body.sections));
+    assert.equal(JSON.stringify(body).includes("cursor_"), false);
+  }
 });

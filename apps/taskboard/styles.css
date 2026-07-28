@@ -594,6 +594,34 @@ body {
   background: var(--surface);
   color: var(--ink);
 }
+.smartrabbit-context-preview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg);
+}
+.smartrabbit-context-preview summary {
+  cursor: pointer;
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: var(--weight-medium);
+}
+.smartrabbit-context-preview-body {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.smartrabbit-context-section {
+  font-size: 0.74rem;
+  color: var(--ink);
+  word-break: break-word;
+}
+.smartrabbit-context-section .muted {
+  color: var(--muted);
+}
+
 .smartrabbit-messages {
   display: flex;
   flex-direction: column;

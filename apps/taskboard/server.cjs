@@ -8,6 +8,7 @@ const crypto = require("node:crypto");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
 const gcal = require("./gcal.cjs");
 const knowledgeSearch = require("./lib/knowledge-search.cjs");
+const smartRabbitContext = require("./lib/smart-rabbit-context.cjs");
 
 const APP_DIR = __dirname;
 const REPO_ROOT = path.resolve(APP_DIR, "../..");
@@ -194,6 +195,24 @@ function sanitizeStateData(raw) {
     liabilities: Array.isArray(data.liabilities) ? data.liabilities : [],
     salesPipeline: Array.isArray(data.salesPipeline) ? data.salesPipeline : [],
     fiscalMeta: sanitizeFiscalMeta(data.fiscalMeta),
+    business: sanitizeBusiness(data.business),
+  };
+}
+
+// Phase 2A-13: 将来の編集UIに備えた最小構造。今回はUIを作らないが、
+// 値が入れば buildSmartRabbitContext がstrategy/*.mdより優先して使う。
+function sanitizeBusiness(raw) {
+  const business = raw && typeof raw === "object" ? raw : {};
+  const instagram = business.instagram && typeof business.instagram === "object" ? business.instagram : {};
+  return {
+    instagram: {
+      brandName: typeof instagram.brandName === "string" ? instagram.brandName : "",
+      tagline: typeof instagram.tagline === "string" ? instagram.tagline : "",
+      pillars: Array.isArray(instagram.pillars) ? instagram.pillars.filter((p) => typeof p === "string") : [],
+      updatedAt: typeof instagram.updatedAt === "string" ? instagram.updatedAt : null,
+    },
+    services: Array.isArray(business.services) ? business.services : [],
+    researchProjects: Array.isArray(business.researchProjects) ? business.researchProjects : [],
   };
 }
 
@@ -492,6 +511,9 @@ ${cfg.focus.length ? cfg.focus.join(" / ") : "特になし(総合相談)"}
 結論 / 現状認識 / 推奨判断 / 今日の第一任務 / 次の具体行動 / 参照したKnowledge / 未確定事項
 参照したKnowledgeが無い場合は「参照Knowledgeなし」と明記する。存在しないKnowledgeを参照したふりをしない。
 
+【業務コンテキストとKnowledgeの扱い】
+プロンプト内の「業務コンテキスト」節はstate.json由来の事実(タスク・営業・財政・KPIなど)、「Knowledge検索結果」節はVault検索由来の知識である。両者を混同せず、回答の「参照したKnowledge」にはKnowledge節のパスのみを書く。業務コンテキストにない事実を作らない。「未登録」は0や「なし」と解釈しない。更新日時が古い可能性がある節は断定的に扱わない。情報が不足していても、質問を返すだけで終わらず、現時点で可能な判断は示す。
+
 応答の冒頭は必ず「**スマートラビット**:」とする。
 
 【人格正本 cabinet/smart_rabbit.md】
@@ -507,11 +529,13 @@ ${recentLog || "(まだ記録なし)"}
 ${today || "(未記入)"}`;
 }
 
-function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, firstTurn }) {
+function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, businessContextText, firstTurn }) {
   const cfg = knowledgeSearch.MODE_CONFIG[knowledgeSearch.resolveMode(mode)];
-  return `${firstTurn ? "ここからキングダムOSでのスマートラビット相談セッションを開始する。\n\n" : ""}【現在時刻・キングダムOSの最新情報】
-日付: ${date} / モード: ${cfg.label}
-${JSON.stringify(context, null, 2)}
+  const localTime = context && context.localTime ? context.localTime : date;
+  return `${firstTurn ? "ここからキングダムOSでのスマートラビット相談セッションを開始する。\n\n" : ""}【現在時刻】
+${localTime} / 日付: ${date} / モード: ${cfg.label}
+
+${businessContextText || "【業務コンテキスト】\n(利用不可)"}
 
 ${knowledgeBlock(knowledge)}
 
@@ -586,6 +610,15 @@ async function runSmartRabbitTurn(payload) {
   const message = String(payload.message || "").trim();
   const context = normalizeSmartRabbitContext(payload.context);
   const knowledge = await knowledgeSearch.searchForMode(mode, message);
+  const stateRecord = await readStateRecord();
+  const businessContext = smartRabbitContext.buildSmartRabbitContext({
+    mode,
+    state: stateRecord.data || {},
+    userMessage: message,
+    knowledgeResults: knowledge,
+    now: new Date(),
+  });
+  const businessContextText = smartRabbitContext.contextToPromptText(businessContext);
   const sessions = await readSmartRabbitSessions();
   const { agent, firstTurn } = await openSmartRabbitAgent(sessionId, sessions[sessionId]?.agentId);
   try {
@@ -595,6 +628,7 @@ async function runSmartRabbitTurn(payload) {
       message,
       context,
       knowledge,
+      businessContextText,
       firstTurn,
     })}`;
     const run = await withTimeout(agent.send(prompt, { mode: "plan" }), SMART_RABBIT_AGENT_TIMEOUT_MS);
@@ -629,6 +663,10 @@ async function runSmartRabbitTurn(payload) {
         query: knowledge.query,
         error: knowledge.error,
         results: knowledge.results.map((r) => ({ path: r.path, heading: r.heading || null })),
+      },
+      businessContext: {
+        sections: businessContext.sections.map((s) => ({ key: s.key, title: s.title, freshness: s.freshness })),
+        warnings: businessContext.warnings,
       },
     };
   } finally {
@@ -918,6 +956,40 @@ function createServer() {
       return;
     }
 
+    // Phase 2A-15: 実AIを呼ばずにモード別の業務コンテキストだけを確認するプレビュー。
+    if (req.method === "GET" && url.pathname === "/api/smart-rabbit/context") {
+      try {
+        const mode = url.searchParams.get("mode") || "";
+        if (!knowledgeSearch.MODE_CONFIG[mode]) {
+          json(res, 400, {
+            error: "invalid_mode",
+            message: `不正なmodeです。利用可能: ${Object.keys(knowledgeSearch.MODE_CONFIG).join(", ")}`,
+          });
+          return;
+        }
+        const stateRecord = await readStateRecord();
+        const context = smartRabbitContext.buildSmartRabbitContext({
+          mode,
+          state: stateRecord.data || {},
+          userMessage: "",
+          knowledgeResults: null,
+          now: new Date(),
+        });
+        json(res, 200, {
+          mode,
+          generatedAt: context.generatedAt,
+          charLimit: context.charLimit,
+          sections: context.sections,
+          warnings: context.warnings,
+          sourceSummary: context.sourceSummary,
+        });
+      } catch (error) {
+        console.error("[smart-rabbit context preview]", error);
+        json(res, 500, { error: "context_preview_failed", message: "コンテキストの取得に失敗しました。" });
+      }
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/smart-rabbit") {
       if (!process.env.CURSOR_API_KEY) {
         json(res, 503, {
@@ -1199,4 +1271,5 @@ module.exports = {
   cacheSmartRabbitResult,
   getCachedSmartRabbitResult,
   contentHashOf,
+  sanitizeBusiness,
 };
