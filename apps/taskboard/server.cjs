@@ -4,13 +4,16 @@ const fsp = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
+const crypto = require("node:crypto");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
 const gcal = require("./gcal.cjs");
+const knowledgeSearch = require("./lib/knowledge-search.cjs");
 
 const APP_DIR = __dirname;
 const REPO_ROOT = path.resolve(APP_DIR, "../..");
 const DATA_DIR = path.join(APP_DIR, "data");
 const SESSION_FILE = path.join(DATA_DIR, ".sontoku-sessions.json");
+const SMART_RABBIT_SESSION_FILE = path.join(DATA_DIR, ".smartrabbit-sessions.json");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 const CHAT_LOG_DIR = path.join(REPO_ROOT, "daily_governance", "chat_logs");
 const PORT = Number(process.env.GYOMU_TOCHI_PORT || 8765);
@@ -19,6 +22,10 @@ const MODEL = process.env.SONTOKU_MODEL || "auto";
 const MAX_BODY_BYTES = 1024 * 1024;
 const SONTOKU_RATE_LIMIT_PER_MINUTE = 10;
 const SONTOKU_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const SMART_RABBIT_RATE_LIMIT_PER_MINUTE = 10;
+const SMART_RABBIT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const SMART_RABBIT_AGENT_TIMEOUT_MS = 55 * 1000;
+const SMART_RABBIT_REQUEST_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -76,6 +83,44 @@ function checkSontokuRateLimit(date, now = Date.now()) {
   return true;
 }
 
+const smartRabbitCallLog = new Map();
+
+function checkSmartRabbitRateLimit(sessionKey, now = Date.now()) {
+  const windowStart = now - SMART_RABBIT_RATE_LIMIT_WINDOW_MS;
+  const recent = (smartRabbitCallLog.get(sessionKey) || []).filter((t) => t > windowStart);
+  if (recent.length >= SMART_RABBIT_RATE_LIMIT_PER_MINUTE) {
+    smartRabbitCallLog.set(sessionKey, recent);
+    return false;
+  }
+  recent.push(now);
+  smartRabbitCallLog.set(sessionKey, recent);
+  return true;
+}
+
+// messageId単位の直近応答キャッシュ。二重送信(通信リトライ・多重クリック)で
+// Cursor Agentを二重に呼ばず、会話ログも二重保存しないための最終防御。
+const smartRabbitRequestCache = new Map();
+
+function cacheSmartRabbitResult(messageId, result, now = Date.now()) {
+  if (!messageId) return;
+  smartRabbitRequestCache.set(messageId, { result, expiresAt: now + SMART_RABBIT_REQUEST_CACHE_TTL_MS });
+}
+
+function getCachedSmartRabbitResult(messageId, now = Date.now()) {
+  if (!messageId) return null;
+  const entry = smartRabbitRequestCache.get(messageId);
+  if (!entry) return null;
+  if (entry.expiresAt < now) {
+    smartRabbitRequestCache.delete(messageId);
+    return null;
+  }
+  return entry.result;
+}
+
+function contentHashOf(text) {
+  return crypto.createHash("sha256").update(String(text || ""), "utf8").digest("hex");
+}
+
 function clip(value, max = 12000) {
   const text = String(value || "");
   return text.length > max ? text.slice(-max) : text;
@@ -107,6 +152,25 @@ async function writeSessions(sessions) {
   await fsp.rename(temporary, SESSION_FILE);
 }
 
+// スマートラビットのセッションストアは sessionId -> Cursor agentId の対応表のみを持つ。
+// 会話本文はクライアント側 state.smartRabbitChat が正本(既存state.json同期の仕組みに乗せる)。
+async function readSmartRabbitSessions() {
+  try {
+    const parsed = JSON.parse(await fsp.readFile(SMART_RABBIT_SESSION_FILE, "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    if (error.code === "ENOENT" || error instanceof SyntaxError) return {};
+    throw error;
+  }
+}
+
+async function writeSmartRabbitSessions(sessions) {
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  const temporary = `${SMART_RABBIT_SESSION_FILE}.tmp`;
+  await fsp.writeFile(temporary, `${JSON.stringify(sessions, null, 2)}\n`, "utf8");
+  await fsp.rename(temporary, SMART_RABBIT_SESSION_FILE);
+}
+
 function sanitizeStateData(raw) {
   const data = raw && typeof raw === "object" ? raw : {};
   return {
@@ -117,6 +181,9 @@ function sanitizeStateData(raw) {
     board: data.board && typeof data.board === "object" ? data.board : {},
     categories: Array.isArray(data.categories) ? data.categories : [],
     sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+    smartRabbitChat: data.smartRabbitChat && typeof data.smartRabbitChat === "object" ? data.smartRabbitChat : {},
+    smartRabbitActiveSession:
+      typeof data.smartRabbitActiveSession === "string" ? data.smartRabbitActiveSession : "",
     incidents: Array.isArray(data.incidents) ? data.incidents : [],
     invoices: Array.isArray(data.invoices) ? data.invoices : [],
     personalFinance:
@@ -356,6 +423,219 @@ ${request}
 AI尊徳として、今さんに直接返答すること。`;
 }
 
+function normalizeSmartRabbitContext(raw) {
+  const context = raw && typeof raw === "object" ? raw : {};
+  const tasks = Array.isArray(context.tasks)
+    ? context.tasks.slice(0, 15).map((task) => ({
+        title: clip(task.title, 160),
+        category: clip(task.category, 60),
+        status: clip(task.status, 30),
+        dueDate: clip(task.dueDate, 20),
+      }))
+    : [];
+  return {
+    localTime: clip(context.localTime, 60),
+    goal: clip(context.goal, 500),
+    tasks,
+    activeAlerts: Array.isArray(context.activeAlerts)
+      ? context.activeAlerts.slice(0, 5).map((a) => ({
+          type: clip(a.type, 60),
+          severity: clip(a.severity, 20),
+          title: clip(a.title, 100),
+          message: clip(a.message, 300),
+        }))
+      : [],
+    salesSummary:
+      context.salesSummary && typeof context.salesSummary === "object" ? context.salesSummary : null,
+  };
+}
+
+function knowledgeBlock(knowledge) {
+  if (!knowledge.available) {
+    return `【Knowledge検索】\n利用不可(検索基盤に接続できませんでした: ${knowledge.error || "unknown"})。ローカル情報のみで回答すること。存在しないKnowledgeを参照したふりをしない。`;
+  }
+  if (!knowledge.query) {
+    return "【Knowledge検索】\n検索語を抽出できなかったため未実施。";
+  }
+  if (!knowledge.results.length) {
+    return `【Knowledge検索結果(クエリ: ${knowledge.query})】\n該当するKnowledgeなし。断定せず、不足している場合はその旨を伝える。`;
+  }
+  const lines = knowledge.results
+    .map((r, i) => `${i + 1}. ${r.path}${r.heading ? ` — ${r.heading}` : ""}\n   ${clip(r.excerpt || "", 300)}`)
+    .join("\n");
+  return `【Knowledge検索結果(クエリ: ${knowledge.query})】\n${lines}\n\n回答では参照した項目のパスを「参照したKnowledge」として示すこと。ここにない情報を断定しないこと。`;
+}
+
+async function smartRabbitBasePrompt(date, mode) {
+  const cfg = knowledgeSearch.MODE_CONFIG[knowledgeSearch.resolveMode(mode)];
+  const [persona, skill, recentLog, today] = await Promise.all([
+    readOptional(path.join(REPO_ROOT, "cabinet", "smart_rabbit.md"), 20000),
+    readOptional(path.join(REPO_ROOT, ".claude", "skills", "smart_rabbit", "SKILL.md"), 12000),
+    readOptional(path.join(REPO_ROOT, "daily_governance", "smart_rabbit_session_log.md"), 8000),
+    readOptional(path.join(REPO_ROOT, "daily_governance", "today.md"), 8000),
+  ]);
+
+  return `あなたはキングダムOSのAIスマートラビット(内閣総理)である。以下の人格正本を採用し、今さんの戦略相談・発想・問題解決の相手として対話する。
+
+重要な境界:
+- これは日次実行チャット(AI尊徳)とは別の相談チャットである。進捗確認・日次タスク管理はAI尊徳の領分なので深入りしない。
+- この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
+- 単なる肯定・雑談はしない。目的の理解、情報整理、優先順位付け、実行可能な案への変換、必要な反論、過剰な開発・寄り道の制止を行う。
+- 売上・実行・健康・時間の観点を常に持つ。最終判断は今さんに委ねる。
+- 本日は ${date}。今回の相談モードは「${cfg.label}」。
+
+【今回のモードで優先する観点】
+${cfg.focus.length ? cfg.focus.join(" / ") : "特になし(総合相談)"}
+
+【回答の型】
+短い質問には短く答える。込み入った相談のときのみ、必要な項目だけ次の見出しを使ってよい(毎回すべて出す必要はない):
+結論 / 現状認識 / 推奨判断 / 今日の第一任務 / 次の具体行動 / 参照したKnowledge / 未確定事項
+参照したKnowledgeが無い場合は「参照Knowledgeなし」と明記する。存在しないKnowledgeを参照したふりをしない。
+
+応答の冒頭は必ず「**スマートラビット**:」とする。
+
+【人格正本 cabinet/smart_rabbit.md】
+${persona}
+
+【運用規則(検索方針など) .claude/skills/smart_rabbit/SKILL.md より抜粋採用】
+${skill}
+
+【直近のスマートラビット・セッション記録】
+${recentLog || "(まだ記録なし)"}
+
+【日次統治の現況 daily_governance/today.md】
+${today || "(未記入)"}`;
+}
+
+function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, firstTurn }) {
+  const cfg = knowledgeSearch.MODE_CONFIG[knowledgeSearch.resolveMode(mode)];
+  return `${firstTurn ? "ここからキングダムOSでのスマートラビット相談セッションを開始する。\n\n" : ""}【現在時刻・キングダムOSの最新情報】
+日付: ${date} / モード: ${cfg.label}
+${JSON.stringify(context, null, 2)}
+
+${knowledgeBlock(knowledge)}
+
+【今さんの相談】
+${clip(message, 4000)}
+
+スマートラビットとして、今さんに直接返答すること。`;
+}
+
+async function openSmartRabbitAgent(sessionId, existingId) {
+  const options = {
+    apiKey: process.env.CURSOR_API_KEY,
+    model: { id: MODEL },
+    name: `スマートラビット・キングダムOS ${sessionId}`,
+    mode: "plan",
+    local: {
+      cwd: REPO_ROOT,
+      settingSources: ["project"],
+      sandboxOptions: { enabled: true },
+    },
+  };
+
+  if (existingId) {
+    try {
+      return { agent: await Agent.resume(existingId, options), firstTurn: false };
+    } catch (error) {
+      if (error?.code !== "agent_not_found") throw error;
+    }
+  }
+  return { agent: await Agent.create(options), firstTurn: true };
+}
+
+async function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(Object.assign(new Error("smart_rabbit_timeout"), { code: "timeout" }));
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function appendSmartRabbitChatLog({ date, sessionId, mode, message, response, agentId, runId }) {
+  await fsp.mkdir(CHAT_LOG_DIR, { recursive: true });
+  const file = path.join(CHAT_LOG_DIR, `smart-rabbit-${date}.md`);
+  let exists = true;
+  try {
+    await fsp.access(file);
+  } catch {
+    exists = false;
+  }
+  const time = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
+  const header = exists
+    ? ""
+    : `# AIスマートラビット・キングダムOS 相談ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。原本会話であり正式Knowledgeではない(承認後に別途Knowledge化を検討)。\n\n`;
+  const entry = `## ${time} [${mode}] (session: ${sessionId})\n\n**今さん**\n\n${markdownQuote(message)}\n\n**スマートラビット**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
+  await fsp.appendFile(file, `${header}${entry}`, "utf8");
+}
+
+async function runSmartRabbitTurn(payload) {
+  const { date, sessionId } = payload;
+  const mode = knowledgeSearch.resolveMode(payload.mode);
+  const message = String(payload.message || "").trim();
+  const context = normalizeSmartRabbitContext(payload.context);
+  const knowledge = await knowledgeSearch.searchForMode(mode, message);
+  const sessions = await readSmartRabbitSessions();
+  const { agent, firstTurn } = await openSmartRabbitAgent(sessionId, sessions[sessionId]?.agentId);
+  try {
+    const prompt = `${firstTurn ? `${await smartRabbitBasePrompt(date, mode)}\n\n` : ""}${smartRabbitTurnPrompt({
+      date,
+      mode,
+      message,
+      context,
+      knowledge,
+      firstTurn,
+    })}`;
+    const run = await withTimeout(agent.send(prompt, { mode: "plan" }), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    const result = await withTimeout(run.wait(), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    if (result.status !== "finished" || !result.result) {
+      throw new Error(result.error?.message || `Cursor run ended with ${result.status}`);
+    }
+    sessions[sessionId] = {
+      agentId: agent.agentId,
+      lastRunId: result.id,
+      mode,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeSmartRabbitSessions(sessions);
+    await appendSmartRabbitChatLog({
+      date,
+      sessionId,
+      mode,
+      message,
+      response: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+    });
+    return {
+      reply: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+      model: result.model?.id || MODEL,
+      mode,
+      knowledge: {
+        available: knowledge.available,
+        query: knowledge.query,
+        error: knowledge.error,
+        results: knowledge.results.map((r) => ({ path: r.path, heading: r.heading || null })),
+      },
+    };
+  } finally {
+    await disposeAgent(agent);
+  }
+}
+
 async function openAgent(date, existingId) {
   const options = {
     apiKey: process.env.CURSOR_API_KEY,
@@ -525,6 +805,7 @@ function createServer() {
     if (
       (url.pathname.startsWith("/api/state") ||
         url.pathname.startsWith("/api/sontoku") ||
+        url.pathname.startsWith("/api/smart-rabbit") ||
         url.pathname.startsWith("/api/appointments")) &&
       !isAuthorized(req)
     ) {
@@ -622,6 +903,76 @@ function createServer() {
           message: authError
             ? "Cursor APIキーを確認してください。"
             : "AI尊徳との接続に失敗しました。ターミナルのエラーを確認してください。",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/smart-rabbit/status") {
+      json(res, 200, {
+        connected: Boolean(process.env.CURSOR_API_KEY),
+        provider: "Cursor SDK",
+        model: MODEL,
+        modes: knowledgeSearch.listModes(),
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/smart-rabbit") {
+      if (!process.env.CURSOR_API_KEY) {
+        json(res, 503, {
+          error: "cursor_api_key_missing",
+          message: "CURSOR_API_KEYが未設定です。.env.localを設定してキングダムOSを再起動してください。",
+        });
+        return;
+      }
+      try {
+        const body = await readJsonBody(req);
+        if (!validDate(body.date)) {
+          json(res, 400, { error: "invalid_date", message: "日付が正しくありません。" });
+          return;
+        }
+        const trimmedMessage = String(body.message || "").trim();
+        if (!trimmedMessage) {
+          json(res, 400, { error: "empty_message", message: "メッセージを入力してください。" });
+          return;
+        }
+        const sessionId = String(body.sessionId || "").trim();
+        if (!sessionId) {
+          json(res, 400, { error: "missing_session", message: "sessionIdが必要です。" });
+          return;
+        }
+        const messageId = String(body.messageId || "").trim() || null;
+        const cached = getCachedSmartRabbitResult(messageId);
+        if (cached) {
+          json(res, 200, cached);
+          return;
+        }
+        if (!checkSmartRabbitRateLimit(sessionId)) {
+          json(res, 429, {
+            error: "rate_limited",
+            message: "短時間に呼び出しが多すぎます。1分待って再試行してください。",
+          });
+          return;
+        }
+        const result = await enqueueByDate(`smartrabbit:${sessionId}`, () =>
+          runSmartRabbitTurn({ ...body, message: trimmedMessage, sessionId })
+        );
+        cacheSmartRabbitResult(messageId, result);
+        json(res, 200, result);
+      } catch (error) {
+        console.error("[スマートラビット]", error);
+        const authError =
+          error instanceof AuthenticationError ||
+          (error instanceof CursorAgentError && /auth|api.?key|unauthorized/i.test(error.message));
+        const timeoutError = error?.code === "timeout";
+        json(res, authError ? 401 : timeoutError ? 504 : 500, {
+          error: authError ? "cursor_auth_failed" : timeoutError ? "smart_rabbit_timeout" : "smart_rabbit_run_failed",
+          message: authError
+            ? "Cursor APIキーを確認してください。"
+            : timeoutError
+              ? "応答がタイムアウトしました。もう一度お試しください。"
+              : "スマートラビットとの接続に失敗しました。ターミナルのエラーを確認してください。",
         });
       }
       return;
@@ -841,4 +1192,11 @@ module.exports = {
   isAuthorized,
   checkSontokuRateLimit,
   computeTrackRecord,
+  normalizeSmartRabbitContext,
+  smartRabbitTurnPrompt,
+  knowledgeBlock,
+  checkSmartRabbitRateLimit,
+  cacheSmartRabbitResult,
+  getCachedSmartRabbitResult,
+  contentHashOf,
 };

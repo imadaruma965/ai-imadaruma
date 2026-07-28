@@ -39,6 +39,7 @@
   <nav class="tabs" role="tablist">
     <button type="button" class="tab active" data-view="home">全体</button>
     <button type="button" class="tab" data-view="day">今日</button>
+    <button type="button" class="tab" data-view="smartrabbit">総理</button>
     <button type="button" class="tab" data-view="reflect">内省</button>
     <button type="button" class="tab" data-view="week">週</button>
     <button type="button" class="tab" data-view="month">月</button>
@@ -219,6 +220,52 @@
             </form>
             <ul class="rows compact" id="list-appointments"></ul>
           </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 総理(スマートラビット)への相談 -->
+    <section id="view-smartrabbit" class="view">
+      <h2 class="section-title">総理への相談</h2>
+      <p class="day-flow-hint">戦略相談・発想・営業/Instagram/リサーチ/商品設計/財政判断など。日々の進捗・タスク管理はAI尊徳(今日タブ)へ。</p>
+
+      <div class="smartrabbit-chat" id="smartrabbit-chat">
+        <div class="smartrabbit-chat-head">
+          <span class="panel-icon smartrabbit-avatar" aria-hidden="true">🐇</span>
+          <div>
+            <strong class="panel-title">AIスマートラビット(総理)</strong>
+            <p class="smartrabbit-sub">
+              戦略相談・発想・問題解決
+              <span id="smartrabbit-status" class="smartrabbit-status">接続確認中</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="smartrabbit-modes" id="smartrabbit-modes" role="tablist">
+          <button type="button" class="smartrabbit-mode active" data-mode="general">総合相談</button>
+          <button type="button" class="smartrabbit-mode" data-mode="today">今日の統治</button>
+          <button type="button" class="smartrabbit-mode" data-mode="sales">営業</button>
+          <button type="button" class="smartrabbit-mode" data-mode="instagram">Instagram</button>
+          <button type="button" class="smartrabbit-mode" data-mode="research">リサーチ</button>
+          <button type="button" class="smartrabbit-mode" data-mode="product">商品・サービス設計</button>
+          <button type="button" class="smartrabbit-mode" data-mode="finance">財政・優先順位</button>
+        </div>
+
+        <div class="smartrabbit-session-row">
+          <select id="smartrabbit-session-select" aria-label="相談セッションを選ぶ"></select>
+          <button type="button" class="btn ghost compact" id="smartrabbit-new-session">新しい相談</button>
+        </div>
+
+        <div class="smartrabbit-messages" id="smartrabbit-messages" aria-live="polite"></div>
+        <p class="smartrabbit-knowledge-note hidden" id="smartrabbit-knowledge-note"></p>
+
+        <form id="smartrabbit-form" class="smartrabbit-form">
+          <input type="text" id="smartrabbit-input" placeholder="相談したいことを書く…" autocomplete="off" />
+          <button type="submit" id="smartrabbit-send" class="btn primary compact">送る</button>
+        </form>
+        <div class="smartrabbit-retry-row hidden" id="smartrabbit-retry-row">
+          <span class="warn">応答に失敗しました。発言は保存済みです。</span>
+          <button type="button" class="btn ghost compact" id="smartrabbit-retry">再送する</button>
         </div>
       </div>
     </section>

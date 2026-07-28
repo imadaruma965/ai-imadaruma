@@ -369,6 +369,10 @@
       board: mergeBoard(data.board),
       categories,
       sontokuChat: data.sontokuChat && typeof data.sontokuChat === "object" ? data.sontokuChat : {},
+      smartRabbitChat:
+        data.smartRabbitChat && typeof data.smartRabbitChat === "object" ? data.smartRabbitChat : {},
+      smartRabbitActiveSession:
+        typeof data.smartRabbitActiveSession === "string" ? data.smartRabbitActiveSession : "",
       incidents: Array.isArray(data.incidents) ? data.incidents : [],
       invoices: Array.isArray(data.invoices) ? data.invoices : [],
       personalFinance:
@@ -428,6 +432,8 @@
       board: defaultBoard(),
       categories: initCategories(),
       sontokuChat: {},
+      smartRabbitChat: {},
+      smartRabbitActiveSession: "",
       incidents: [],
       invoices: [],
       personalFinance: { entries: [] },
@@ -447,6 +453,8 @@
       board: state.board,
       categories: state.categories,
       sontokuChat: state.sontokuChat,
+      smartRabbitChat: state.smartRabbitChat,
+      smartRabbitActiveSession: state.smartRabbitActiveSession || "",
       incidents: state.incidents,
       invoices: state.invoices || [],
       personalFinance: state.personalFinance || { entries: [] },
@@ -465,6 +473,8 @@
     state.board = next.board;
     state.categories = next.categories;
     state.sontokuChat = next.sontokuChat;
+    state.smartRabbitChat = next.smartRabbitChat || {};
+    state.smartRabbitActiveSession = next.smartRabbitActiveSession || "";
     state.incidents = next.incidents;
     state.invoices = next.invoices || [];
     state.personalFinance = next.personalFinance || { entries: [] };
@@ -562,7 +572,8 @@
         local.tasks.length > 0 ||
         Object.keys(local.plans).length > 0 ||
         Object.keys(local.kpis).length > 0 ||
-        Object.keys(local.sontokuChat).length > 0;
+        Object.keys(local.sontokuChat).length > 0 ||
+        Object.keys(local.smartRabbitChat).length > 0;
       if (hasLocal) {
         const payload = {
           tasks: local.tasks,
@@ -572,6 +583,8 @@
           board: local.board,
           categories: local.categories,
           sontokuChat: local.sontokuChat,
+          smartRabbitChat: local.smartRabbitChat,
+          smartRabbitActiveSession: local.smartRabbitActiveSession || "",
           incidents: local.incidents || [],
           invoices: local.invoices || [],
           personalFinance: local.personalFinance || { entries: [] },
@@ -2731,6 +2744,318 @@
     }
   }
 
+  /* —— AIスマートラビット(総理)相談チャット —— */
+  let smartRabbitBusy = false;
+  let smartRabbitActiveMode = "general";
+  let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
+
+  const SMART_RABBIT_MODE_LABELS = {
+    general: "総合相談",
+    today: "今日の統治",
+    sales: "営業",
+    instagram: "Instagram",
+    research: "リサーチ",
+    product: "商品・サービス設計",
+    finance: "財政・優先順位",
+  };
+
+  function smartRabbitNewSessionKey() {
+    return `sr-${todayISO()}-${uid()}`;
+  }
+
+  function ensureSmartRabbitSession(key, mode) {
+    if (!state.smartRabbitChat[key]) {
+      state.smartRabbitChat[key] = {
+        mode: mode || smartRabbitActiveMode,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: [],
+      };
+    }
+    return state.smartRabbitChat[key];
+  }
+
+  function smartRabbitSessionKeys() {
+    return Object.keys(state.smartRabbitChat).sort((a, b) => {
+      const ua = state.smartRabbitChat[a]?.updatedAt || state.smartRabbitChat[a]?.createdAt || "";
+      const ub = state.smartRabbitChat[b]?.updatedAt || state.smartRabbitChat[b]?.createdAt || "";
+      return ub.localeCompare(ua);
+    });
+  }
+
+  function activeSmartRabbitKey() {
+    if (state.smartRabbitActiveSession && state.smartRabbitChat[state.smartRabbitActiveSession]) {
+      return state.smartRabbitActiveSession;
+    }
+    const keys = smartRabbitSessionKeys();
+    return keys.length ? keys[0] : null;
+  }
+
+  function getSmartRabbitMessages(key) {
+    return ensureSmartRabbitSession(key).messages;
+  }
+
+  // messageIdの重複を弾くことで、再送・多重送信で同じ発言が二重保存されないようにする。
+  function pushSmartRabbitMessage(key, role, text, metadata = {}) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return null;
+    const session = ensureSmartRabbitSession(key, metadata.mode);
+    const id = metadata.id || uid();
+    if (session.messages.some((m) => m.id === id)) return null;
+    const msg = {
+      id,
+      role,
+      text: trimmed,
+      at: new Date().toISOString(),
+      mode: metadata.mode || session.mode || smartRabbitActiveMode,
+      status: metadata.status || "ok",
+      knowledgeRefs: metadata.knowledgeRefs || null,
+      error: metadata.error || null,
+    };
+    session.messages.push(msg);
+    session.updatedAt = msg.at;
+    save();
+    return msg;
+  }
+
+  function setSmartRabbitStatus(text, stateName = "") {
+    const status = $("#smartrabbit-status");
+    if (!status) return;
+    status.textContent = text;
+    status.dataset.state = stateName;
+  }
+
+  function setSmartRabbitBusy(busy) {
+    smartRabbitBusy = busy;
+    const input = $("#smartrabbit-input");
+    const send = $("#smartrabbit-send");
+    if (input) input.disabled = busy;
+    if (send) {
+      send.disabled = busy;
+      send.textContent = busy ? "思考中…" : "送る";
+    }
+    $$(".smartrabbit-mode").forEach((button) => {
+      button.disabled = busy;
+    });
+    if (busy) setSmartRabbitStatus("Cursorで思考中", "busy");
+  }
+
+  // Phase 1-5: Vault全件・リポジトリ全件・過去会話全件は送らない。今日の目標と、
+  // モードに応じた最小限の事実情報だけをサーバーへ渡す。
+  function smartRabbitContext(mode) {
+    const dayKey = `day:${todayISO()}`;
+    const dayPlan = state.plans[dayKey] || {};
+    const base = {
+      localTime: new Date().toLocaleString("ja-JP"),
+      goal: (dayPlan.goal || "").trim(),
+      tasks: [],
+      activeAlerts: [],
+      salesSummary: null,
+    };
+    if (mode === "today") {
+      const dayTasks = activeTasks().filter(inDay);
+      base.tasks = dayTasks.slice(0, 15).map((task) => ({
+        title: stripCategoryPrefix(task.title, task.category || "other", state.categories),
+        category: catLabel(task.category || "other"),
+        status: task.status,
+        dueDate: task.dueDate || "",
+      }));
+      base.activeAlerts = window.TaskboardGovernance
+        ? window.TaskboardGovernance.getGovernanceAlerts(state)
+            .slice(0, 5)
+            .map((a) => ({ type: a.type, severity: a.severity, title: a.title, message: a.message }))
+        : [];
+    }
+    if (mode === "sales" && Array.isArray(state.salesPipeline) && state.salesPipeline.length) {
+      const counts = {};
+      state.salesPipeline.forEach((r) => {
+        counts[r.status] = (counts[r.status] || 0) + 1;
+      });
+      base.salesSummary = counts;
+    }
+    return base;
+  }
+
+  async function requestSmartRabbit(payload) {
+    const response = await fetch("/api/smart-rabbit", {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        date: todayISO(),
+        context: smartRabbitContext(payload.mode),
+        ...payload,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.message || "スマートラビットとの接続に失敗しました。");
+    }
+    return data;
+  }
+
+  async function refreshSmartRabbitStatus() {
+    try {
+      const response = await fetch("/api/smart-rabbit/status", { cache: "no-store", headers: authHeaders() });
+      const data = await response.json();
+      setSmartRabbitStatus(
+        data.connected ? `Cursor接続済み · ${data.model}` : "Cursor APIキー未設定",
+        data.connected ? "connected" : "error"
+      );
+    } catch {
+      setSmartRabbitStatus("スマートラビット未接続", "error");
+    }
+  }
+
+  function renderSmartRabbitKnowledgeNote(knowledge) {
+    const el = $("#smartrabbit-knowledge-note");
+    if (!el) return;
+    if (!knowledge) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+    el.classList.remove("hidden");
+    if (!knowledge.available) {
+      el.textContent = `Knowledge検索: 利用不可(${knowledge.error || "エラー"})`;
+      return;
+    }
+    if (!knowledge.results || !knowledge.results.length) {
+      el.textContent = "Knowledge検索: 該当するKnowledgeなし";
+      return;
+    }
+    el.textContent = `参照Knowledge: ${knowledge.results.map((r) => r.path).join(" / ")}`;
+  }
+
+  function renderSmartRabbitChat() {
+    const host = $("#smartrabbit-messages");
+    if (!host) return;
+    const key = activeSmartRabbitKey();
+    const msgs = key ? getSmartRabbitMessages(key) : [];
+    host.innerHTML = msgs
+      .map((m) => {
+        const cls = m.role === "user" ? "user" : m.role === "error" ? "error" : "assistant";
+        const meta = m.status === "partial" ? '<span class="msg-meta">応答待ち・発言は保存済み</span>' : "";
+        return `<div class="smartrabbit-msg ${cls}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${meta}</div>`;
+      })
+      .join("");
+    host.scrollTop = host.scrollHeight;
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    renderSmartRabbitKnowledgeNote(lastAssistant ? lastAssistant.knowledgeRefs : null);
+  }
+
+  function renderSmartRabbitSessions() {
+    const select = $("#smartrabbit-session-select");
+    if (!select) return;
+    const keys = smartRabbitSessionKeys();
+    const activeKey = activeSmartRabbitKey();
+    select.innerHTML = keys
+      .map((key) => {
+        const session = state.smartRabbitChat[key];
+        const firstUser = (session.messages || []).find((m) => m.role === "user");
+        const stamp = (session.updatedAt || session.createdAt || "").slice(0, 16).replace("T", " ");
+        const label = `${stamp} · ${SMART_RABBIT_MODE_LABELS[session.mode] || session.mode}${
+          firstUser ? " · " + firstUser.text.slice(0, 16) : ""
+        }`;
+        return `<option value="${escapeHtml(key)}" ${key === activeKey ? "selected" : ""}>${escapeHtml(label)}</option>`;
+      })
+      .join("");
+  }
+
+  function renderSmartRabbitModes() {
+    const key = activeSmartRabbitKey();
+    const mode = (key && state.smartRabbitChat[key]?.mode) || smartRabbitActiveMode;
+    $$(".smartrabbit-mode").forEach((button) => {
+      button.classList.toggle("active", button.dataset.mode === mode);
+    });
+  }
+
+  function renderSmartRabbitPanel() {
+    renderSmartRabbitSessions();
+    renderSmartRabbitChat();
+    renderSmartRabbitModes();
+    const row = $("#smartrabbit-retry-row");
+    if (row) row.classList.toggle("hidden", !smartRabbitPendingRetry);
+  }
+
+  function setActiveSmartRabbitSession(key) {
+    if (!state.smartRabbitChat[key]) return;
+    state.smartRabbitActiveSession = key;
+    smartRabbitActiveMode = state.smartRabbitChat[key].mode || "general";
+    smartRabbitPendingRetry = null;
+    save();
+    renderSmartRabbitPanel();
+  }
+
+  function startNewSmartRabbitSession() {
+    const key = smartRabbitNewSessionKey();
+    ensureSmartRabbitSession(key, smartRabbitActiveMode);
+    state.smartRabbitActiveSession = key;
+    smartRabbitPendingRetry = null;
+    save();
+    renderSmartRabbitPanel();
+  }
+
+  function setSmartRabbitMode(mode) {
+    smartRabbitActiveMode = mode;
+    const key = activeSmartRabbitKey();
+    if (key && getSmartRabbitMessages(key).length === 0) {
+      state.smartRabbitChat[key].mode = mode;
+      save();
+    } else {
+      const newKey = smartRabbitNewSessionKey();
+      ensureSmartRabbitSession(newKey, mode);
+      state.smartRabbitActiveSession = newKey;
+      save();
+    }
+    renderSmartRabbitPanel();
+  }
+
+  async function sendSmartRabbitTurn({ sessionKey, mode, text, messageId }) {
+    setSmartRabbitBusy(true);
+    try {
+      const data = await requestSmartRabbit({ sessionId: sessionKey, mode, message: text, messageId });
+      pushSmartRabbitMessage(sessionKey, "assistant", data.reply, {
+        mode: data.mode || mode,
+        status: "ok",
+        knowledgeRefs: data.knowledge || null,
+      });
+      setSmartRabbitStatus(`Cursor接続済み · ${data.model}`, "connected");
+      smartRabbitPendingRetry = null;
+    } catch (error) {
+      pushSmartRabbitMessage(sessionKey, "error", error.message, { mode, status: "error", id: uid() });
+      setSmartRabbitStatus("接続エラー", "error");
+      smartRabbitPendingRetry = { sessionKey, mode, text, messageId };
+    } finally {
+      setSmartRabbitBusy(false);
+      renderSmartRabbitPanel();
+      $("#smartrabbit-input")?.focus();
+    }
+  }
+
+  // ユーザー発言は送信前にpush(=保存)する。AI応答が失敗しても発言は失われない(Phase 1-8)。
+  async function sendSmartRabbitUserMessage(text) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed || smartRabbitBusy) return;
+    let key = activeSmartRabbitKey();
+    if (!key) {
+      key = smartRabbitNewSessionKey();
+      ensureSmartRabbitSession(key, smartRabbitActiveMode);
+      state.smartRabbitActiveSession = key;
+    }
+    const mode = state.smartRabbitChat[key].mode || smartRabbitActiveMode;
+    const messageId = uid();
+    pushSmartRabbitMessage(key, "user", trimmed, { id: messageId, mode, status: "ok" });
+    renderSmartRabbitPanel();
+    await sendSmartRabbitTurn({ sessionKey: key, mode, text: trimmed, messageId });
+  }
+
+  // 再送時は既存のuser messageId・本文を使い回し、同じ発言を重複保存しない(Phase 1-8)。
+  async function retrySmartRabbit() {
+    if (!smartRabbitPendingRetry || smartRabbitBusy) return;
+    const { sessionKey, mode, text, messageId } = smartRabbitPendingRetry;
+    await sendSmartRabbitTurn({ sessionKey, mode, text, messageId });
+  }
+
   function render() {
     renderCurrentDate();
     renderHome();
@@ -2742,6 +3067,7 @@
     renderCalendar();
     updatePomodoroDisplay();
     renderSontokuChat();
+    renderSmartRabbitPanel();
     renderIncidents();
     renderInvoices();
     renderPersonalFinance();
@@ -3133,6 +3459,20 @@
   $$(".sontoku-chip").forEach((btn) => {
     btn.addEventListener("click", () => sendSontokuUserMessage(btn.dataset.chip || btn.textContent));
   });
+
+  $("#smartrabbit-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#smartrabbit-input");
+    const text = input?.value || "";
+    if (input) input.value = "";
+    sendSmartRabbitUserMessage(text);
+  });
+  $$(".smartrabbit-mode").forEach((btn) => {
+    btn.addEventListener("click", () => setSmartRabbitMode(btn.dataset.mode));
+  });
+  $("#smartrabbit-new-session")?.addEventListener("click", () => startNewSmartRabbitSession());
+  $("#smartrabbit-session-select")?.addEventListener("change", (e) => setActiveSmartRabbitSession(e.target.value));
+  $("#smartrabbit-retry")?.addEventListener("click", () => retrySmartRabbit());
 
   $("#form-list-new")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -3814,6 +4154,7 @@
   loadPlanFields();
   render();
   refreshSontokuStatus();
+  refreshSmartRabbitStatus();
 
   // GovernanceMonitor（Phase 3-A）: 60秒ごとに未統治警報を再チェックし、新規のものだけ通知する。
   const governanceMonitor =
