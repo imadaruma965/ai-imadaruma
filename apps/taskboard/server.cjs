@@ -126,15 +126,22 @@ function sanitizeStateData(raw) {
     appointments: Array.isArray(data.appointments) ? data.appointments : [],
     liabilities: Array.isArray(data.liabilities) ? data.liabilities : [],
     salesPipeline: Array.isArray(data.salesPipeline) ? data.salesPipeline : [],
-    fiscalMeta:
-      data.fiscalMeta && typeof data.fiscalMeta === "object"
-        ? {
-            defenseLine: data.fiscalMeta.defenseLine == null || data.fiscalMeta.defenseLine === ""
-              ? null
-              : Number(data.fiscalMeta.defenseLine),
-            note: String(data.fiscalMeta.note || ""),
-          }
-        : { defenseLine: null, note: "" },
+    fiscalMeta: sanitizeFiscalMeta(data.fiscalMeta),
+  };
+}
+
+function sanitizeFiscalMeta(raw) {
+  const fm = raw && typeof raw === "object" ? raw : {};
+  const num = (v) => (v == null || v === "" ? null : Number(v));
+  return {
+    defenseLine: num(fm.defenseLine),
+    note: String(fm.note || ""),
+    currentBalance: num(fm.currentBalance),
+    confirmedInflow: num(fm.confirmedInflow),
+    expectedInflow: num(fm.expectedInflow),
+    fixedCosts: num(fm.fixedCosts),
+    variableCosts: num(fm.variableCosts),
+    scheduledPayments: num(fm.scheduledPayments),
   };
 }
 

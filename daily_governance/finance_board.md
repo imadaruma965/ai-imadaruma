@@ -91,11 +91,12 @@
 
 | 本ボード | OS |
 |----------|-----|
-| 防衛ライン | 月次「防衛ライン」`fiscalMeta.defenseLine` |
+| 防衛ライン | 月次「財政スナップショット」／「防衛ライン」`fiscalMeta.defenseLine` |
+| 現在残高〜支払予定 | 同スナップショット `fiscalMeta.currentBalance` 等 |
 | 未払・負債 | `liabilities[]` |
 | 請求inbox | `invoices[]` |
 | 現金の出入りメモ | `personalFinance.entries[]` |
-| 見込み・確度 | 営業タブ `salesPipeline` |
+| 見込み・確度 | 営業タブ `salesPipeline`（`estimatedAmount` / `winProbability`） |
 
 毎週金曜: OSを開き → 本ボードへ主要数字を転記 → `governance_board.md` §B も更新可。
 
@@ -106,3 +107,4 @@
 | 日付 | 内容 |
 |------|------|
 | 2026-07-28 | 初版（4時間完成 Phase 6） |
+| 2026-07-28 | OS月次に財政スナップショット計算を接続 |
