@@ -1,0 +1,33 @@
+---
+description: DEPRECATED — ChatGPT原本はimada-knowledgeへ。sources/chatgpt/inboxは新規運用しない
+globs: sources/chatgpt/**/*
+alwaysApply: false
+---
+
+# ChatGPT inbox 処理ルール（DEPRECATED）
+
+> **2026-07-28 deprecated（KG-2）**。即削除しない。  
+> **新規の原本保存先は `imada-knowledge/05_AI対話/`**（`aistock` / `aipull` / SessionEnd）。  
+> このルールは、移行期間中に旧 `sources/chatgpt/inbox/` に残件があった場合の互換処理のみ。
+
+ユーザーが「inboxを処理」「ChatGPTを取り込んで」等と言ったとき、または `sources/chatgpt/inbox/` に未処理ファイルがあるとき:
+
+## 推奨（新規）
+
+1. 内容を Vault へ移すよう案内する（`aistock chatgpt "題名"` または AIインポート）  
+2. このリポに原本を残さない  
+3. 必要な申し送りだけ `strategy/*_session_log.md` / `daily_governance` へ短く書く
+
+## 旧互換手順（inboxに残件がある場合のみ）
+
+1. `git status` を確認  
+2. `sources/chatgpt/inbox/` の `.md` を列挙（`.gitkeep` 除く）  
+3. 可能なら原本相当を Vault へ保存したうえで、学びだけ extracts／session_log へ  
+4. 原文を `processed/` へ移す（このリポを正本にしない）  
+5. **commit / push は君主の明示指示があるまでしない**
+
+## 原則
+
+- 知識の正本は常に `imada-knowledge`  
+- ChatGPTの案とリポの正式構造が矛盾したらリポ（憲法・主管）を優先  
+- 顧客の個人情報・秘密はマスクする  

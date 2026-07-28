@@ -29,12 +29,27 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 ### DOCX正本一覧
 
-| 正本ファイル | Markdown実装版 |
-|------------|---------------|
-| `sources/originals/imada_life_philosophy_v02.docx` | `philosophy/imada_life_philosophy.md` |
-| `sources/originals/imada_constitution_v2.docx` | `constitution/jibun_constitution.md` |
-| `sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `constitution/four_pillars.md` |
-| `sources/originals/imadaruma_明君七徳_v02.docx` | `constitution/meikun_shichitoku.md` |
+| 正本ファイル | Markdown実装版 | 備考 |
+|------------|---------------|------|
+| `sources/originals/imadaruma_じぶん憲法_v3.docx` | `constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `sources/originals/imada_life_philosophy_v02.docx` | `philosophy/imada_life_philosophy.md` | |
+| `sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `constitution/four_pillars.md` | |
+| `sources/originals/imadaruma_明君七徳_v02.docx` | `constitution/meikun_shichitoku.md` | |
+
+**旧版（参照用・履歴用）:**
+
+| 旧版ファイル | 備考 |
+|------------|------|
+| `sources/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
+
+### じぶん憲法（最高法規）
+
+- **正本DOCX**: `sources/originals/imadaruma_じぶん憲法_v3.docx`
+- **Markdown実装版**: `constitution/jibun_constitution.md`
+- **標語**: 葦なる刃は、静かに尖れる。
+- **中核文**: 人生は選択である。選択が国家を定める。
+
+じぶん憲法は、君主いまだ唯仁が立ち返る**最高法規**である。AI栄一・AI尊徳・四柱統治フレームワーク・日次運用・戦略は、すべてこの憲法の下位に位置する。
 
 ---
 
@@ -47,7 +62,7 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
   ↓
 四柱統治フレームワーク（人格・内政・外交・財政）
   ↓  人格の詳細 → 明君七徳（仁子哲学）
-実行レイヤー: 君主 / AI孫子 / AI蕭何
+実行レイヤー: 君主 / AI栄一 / AI尊徳
   ↓
 日次運用・戦略・記録
 ```
@@ -83,9 +98,12 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 役割 | 担当 | 責務 |
 |------|------|------|
-| 国王 | 今田唯仁 | 理念、国家目標、最終意思決定、美学 |
-| 統治総理AI | Chief Statecraft Minister | 実行計画、優先順位、日次統治、省庁統括 |
+| 君主 | いまだ唯仁 | 理念、国家目標、最終意思決定、実行 |
+| 戦略メンター | AI栄一（渋沢栄一） | ロードマップ、財政・外交戦略、商品・導線設計 |
+| 実行マネージャー | AI尊徳（二宮尊徳） | 日次実行、進捗確認、内政管理、人格教育 |
 | 省庁AI | （今後追加） | 各専門領域の実務提案と実行支援 |
+
+> 旧：統治総理AI（Chief Statecraft Minister）→ AI尊徳に移行中。孫子・蕭何は参照思想として残存。
 
 ## 統治対象の6領域
 
@@ -105,14 +123,15 @@ ai-imadaruma/
 ├── README.md                              # このファイル
 ├── sources/
 │   └── originals/                         # DOCX正本（改訂の起点）
+│       ├── imadaruma_じぶん憲法_v3.docx         # 現行正本
+│       ├── imada_constitution_v2.docx           # 旧版（参照用）
 │       ├── imada_life_philosophy_v02.docx
-│       ├── imada_constitution_v2.docx
 │       ├── imadaruma_四柱統治フレームワーク_v1.docx
 │       └── imadaruma_明君七徳_v02.docx
 ├── philosophy/                            # 最上位規範（実装版）
 │   └── imada_life_philosophy.md           # いまだライフ理念体系
 ├── constitution/                          # 統治法・実行構造（実装版）
-│   ├── jibun_constitution.md              # じぶん憲法 ★新
+│   ├── jibun_constitution.md              # じぶん憲法 v3 実装版
 │   ├── four_pillars.md                    # 四柱統治フレームワーク ★新
 │   ├── meikun_shichitoku.md               # 明君七徳 ★新
 │   ├── doctrine.md                        # 旧：統治思想（移行予定）
@@ -120,7 +139,20 @@ ai-imadaruma/
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
 ├── cabinet/                               # 内閣
+│   ├── monarch.md                         # 君主
+│   ├── eiichi.md                          # 戦略メンター AI栄一
+│   ├── sontoku.md                         # 実行マネージャー AI尊徳
+│   ├── ai_jurisdiction.md                 # AI主管定義
 │   └── chief_statecraft_minister.md       # 旧：統治総理AI（移行予定）
+├── strategy/                              # 戦略（AI栄一管轄）
+│   ├── README.md                          # 戦略領域の全体像
+│   ├── roadmap_500k.md                    # 50万円獲得ロードマップ
+│   ├── revenue_sources.md                 # 収益源一覧
+│   ├── eiichi_weekly_review.md            # 週次戦略レビュー
+│   ├── eiichi_monthly_review.md           # 月次戦略レビュー
+│   ├── no_battle_rules.md                 # やらない戦
+│   ├── offer_review.md                    # 商品・オファー見直し
+│   └── sales_pipeline.md                  # 売上導線管理
 ├── daily_governance/                      # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md
@@ -149,18 +181,17 @@ ai-imadaruma/
 完了 → archives/daily_logs/ にコピー保存
 ```
 
-## 統治総理AIの起動方法
+## AI内閣の起動方法
 
-統治総理AIに依頼するときは、以下を渡す。
+AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.claude/skills/sontoku/`）として実装されている。サブエージェントは起動しない。会話そのものが人格を引き継ぐので、日をまたいでも `*_session_log.md` を通じて話の積み重ねを保つ。
 
-1. `constitution/` の4ファイル（思想・目標・原則・ルール）
-2. `cabinet/chief_statecraft_minister.md`（役割定義）
-3. 当日の `daily_governance/` ファイル（状況）
+### `/sontoku`（日次実行）
 
-**起動プロンプト例：**
+呼び出すと、`cabinet/sontoku.md` の人格を採用し、`daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
-> あなたは ai-imadaruma の統治総理AI（Chief Statecraft Minister）です。
-> constitution/ と cabinet/chief_statecraft_minister.md を読み、国王の理念に基づいて今日の統治計画を立案してください。
+### `/eiichi`（戦略・ロードマップ）
+
+呼び出すと、`cabinet/eiichi.md` の人格を採用し、`strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 

@@ -4,7 +4,7 @@
 >
 > **上位規範**: `constitution/four_pillars.md`（四柱統治フレームワーク）
 >
-> **関連**: `constitution/mission.md`（第一国家目標）、`cabinet/ai_jurisdiction.md`（AI主管定義）
+> **関連**: `constitution/mission.md`（第一国家目標）、`cabinet/ai_jurisdiction.md`（AI主管定義）、`cabinet/ministries.md`（六省）
 
 ---
 
@@ -22,18 +22,20 @@
   └── 財政
         ↓
 6領域モデル（下位分類 — 事業・日次実行の単位）
-  ├── Publishing
-  ├── Commerce
-  ├── Communications & Culture
-  ├── Education & Field Operations
-  ├── Treasury & Markets
-  └── Internal Affairs
+  ├── Publishing　→ 出版省
+  ├── Commerce　→ 商務省
+  ├── Communications & Culture　→ 文化通信省
+  ├── Education & Field Operations　→ 教育・現場省
+  ├── Treasury & Markets　→ 財務省
+  └── Internal Affairs　→ 内務省
 ```
 
+官庁名の一覧・今期優先は `cabinet/ministries.md` を正とする。  
 **原則:**
 
 - **四柱**は国家統治の原理・構造を表す上位分類である
 - **6領域**は事業と日次実行を管理する下位分類である
+- **六省**は6領域の官庁名（内閣が統べる実行単位）。省ごとに専任AIを置かない
 - 6領域の名称・英名・略称は既存モデルを維持する
 - 各領域は主たる柱を1つ持ち、必要に応じて副次の柱を持つ
 
@@ -139,14 +141,27 @@
 
 ---
 
+## AI主管との接続
+
+> 四柱・6領域の定義はAI名称に依存しない。AI主管は `cabinet/ai_jurisdiction.md` に分離して定義する。
+
+| 担当 | AI | 管轄範囲 |
+|------|-----|---------|
+| **戦略メンター** | AI栄一 | 戦略・収益・導線・商品設計・やらない戦の判断 |
+| **実行マネージャー** | AI尊徳 | 日次実行・進捗確認・内政管理・習慣化・人格教育 |
+
+---
+
 ## 関連ファイル
 
 | ファイル | 役割 |
 |---------|------|
 | `constitution/four_pillars.md` | 四柱の原典（AI主管定義は含まない） |
 | `constitution/mission.md` | 第一国家目標の詳細 |
-| `cabinet/ai_jurisdiction.md` | AI孫子・AI蕭何の主管定義 |
-| `cabinet/chief_statecraft_minister.md` | 統治総理AI（移行予定） |
+| `cabinet/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
+| `cabinet/eiichi.md` | 戦略メンター AI栄一 |
+| `cabinet/sontoku.md` | 実行マネージャー AI尊徳 |
+| `cabinet/chief_statecraft_minister.md` | 旧：統治総理AI（移行予定）→ AI尊徳（実行マネージャー） |
 
 ---
 

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="AI Sontoku">
+  <circle cx="40" cy="40" r="38" fill="#d8f0e6"/>
+  <circle cx="40" cy="40" r="34" fill="#eef8f1" stroke="#9ecbb3" stroke-width="1.5"/>
+  <g class="speech">
+    <path d="M52 18c8.5 0 15 5.2 15 11.6 0 4.4-2.9 8.2-7.2 10.1l1.6 5.2-6.4-3.4c-1 .1-2 .2-3 .2-8.5 0-15-5.2-15-11.6S43.5 18 52 18z" fill="#fff" stroke="#3d7ea6" stroke-width="1.6"/>
+    <circle cx="46.5" cy="29" r="1.7" fill="#3d7ea6"/>
+    <circle cx="52" cy="29" r="1.7" fill="#3d7ea6"/>
+    <circle cx="57.5" cy="29" r="1.7" fill="#3d7ea6"/>
+  </g>
+  <ellipse cx="34" cy="44" rx="16" ry="17" fill="#f3d7b8"/>
+  <path d="M22 40c0-11 6.5-17 12.5-17S47 29 47 40c-2.5-3-6-4.5-13-4.5S24.5 37 22 40z" fill="#3a342e"/>
+  <ellipse cx="34.5" cy="24.5" rx="4.2" ry="3.2" fill="#3a342e"/>
+  <ellipse cx="28.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+  <ellipse cx="39.5" cy="43" rx="1.6" ry="2" fill="#2a3340"/>
+  <path d="M29 50c2.2 2.2 8 2.2 10.2 0" fill="none" stroke="#8a5a3a" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M18 62c4-8 10-12 16-12s12 4 16 12" fill="#3d7ea6"/>
+  <path d="M34 50v12" stroke="#fff" stroke-width="1.5" opacity=".55"/>
+</svg>
