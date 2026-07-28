@@ -232,12 +232,18 @@
       <div class="smartrabbit-chat" id="smartrabbit-chat">
         <div class="smartrabbit-chat-head">
           <span class="panel-icon smartrabbit-avatar" aria-hidden="true">🐇</span>
-          <div>
+          <div class="smartrabbit-head-main">
             <strong class="panel-title">AIスマートラビット(総理)</strong>
             <p class="smartrabbit-sub">
               戦略相談・発想・問題解決
               <span id="smartrabbit-status" class="smartrabbit-status">接続確認中</span>
             </p>
+          </div>
+          <div class="smartrabbit-speech-controls">
+            <button type="button" class="btn ghost compact" id="smartrabbit-speech-toggle" aria-pressed="false">
+              音声：OFF
+            </button>
+            <p class="smartrabbit-speech-hint hidden" id="smartrabbit-speech-hint"></p>
           </div>
         </div>
 
@@ -1025,6 +1031,7 @@
   <script src="finance-board.js"></script>
   <script src="notification-service.js"></script>
   <script src="voice-service.js"></script>
+  <script src="lib/smart-rabbit-speech.js"></script>
   <script src="governance-monitor.js"></script>
   <script>
     (function () {

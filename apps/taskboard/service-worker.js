@@ -1,5 +1,14 @@
-const CACHE = "smart-rabbit-techo-shell-v6";
-const SHELL = ["/", "/index.html", "/styles.css", "/app.js", "/manifest.webmanifest", "/icon.svg", "/seed-data.js"];
+const CACHE = "smart-rabbit-techo-shell-v7";
+const SHELL = [
+  "/",
+  "/index.html",
+  "/styles.css",
+  "/app.js",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/seed-data.js",
+  "/lib/smart-rabbit-speech.js",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

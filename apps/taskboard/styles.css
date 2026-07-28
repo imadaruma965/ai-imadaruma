@@ -512,11 +512,49 @@ body {
 }
 .smartrabbit-chat-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
   margin-bottom: 0.65rem;
   padding-bottom: 0.55rem;
   border-bottom: 1px dashed var(--line);
+  flex-wrap: wrap;
+}
+.smartrabbit-head-main {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.smartrabbit-speech-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+.smartrabbit-speech-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+  max-width: 11rem;
+  text-align: right;
+  line-height: 1.35;
+}
+.smartrabbit-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+.smartrabbit-speak-btn {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  line-height: 1.35;
+}
+.smartrabbit-msg.speaking {
+  outline: 1px solid rgba(61, 126, 166, 0.4);
+}
+.smartrabbit-speaking-label {
+  font-size: 0.7rem;
+  color: var(--muted);
 }
 .smartrabbit-avatar {
   display: grid;

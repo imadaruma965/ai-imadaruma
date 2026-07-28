@@ -2824,6 +2824,87 @@
   let smartRabbitBusy = false;
   let smartRabbitActiveMode = "general";
   let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
+  let smartRabbitSpeech = null;
+  let currentViewName = "home";
+
+  function ensureSmartRabbitSpeech() {
+    if (smartRabbitSpeech) return smartRabbitSpeech;
+    const api = window.SmartRabbitSpeech;
+    if (!api || typeof api.createSmartRabbitSpeechController !== "function") {
+      smartRabbitSpeech = {
+        isSupported: () => false,
+        isEnabled: () => false,
+        getSpeakingMessageId: () => null,
+        setEnabled() {
+          return false;
+        },
+        stop() {},
+        speakMessage() {
+          return { ok: false, reason: "missing_module" };
+        },
+        maybeAutoSpeak() {
+          return { ok: false, reason: "missing_module" };
+        },
+      };
+      return smartRabbitSpeech;
+    }
+    smartRabbitSpeech = api.createSmartRabbitSpeechController({
+      onStateChange() {
+        updateSmartRabbitSpeechToggleUi();
+        // 読み上げ中ラベルだけ軽く更新（全再描画はしない）
+        const speakingId = smartRabbitSpeech.getSpeakingMessageId();
+        $$(".smartrabbit-msg").forEach((el) => {
+          const id = el.dataset.messageId || "";
+          const speaking = Boolean(speakingId && id === speakingId);
+          el.classList.toggle("speaking", speaking);
+          const label = el.querySelector(".smartrabbit-speaking-label");
+          if (label) label.classList.toggle("hidden", !speaking);
+          const btn = el.querySelector(".smartrabbit-speak-btn");
+          if (btn) {
+            btn.textContent = speaking ? "⏹ 停止" : "🔊 読む";
+            btn.setAttribute("aria-pressed", speaking ? "true" : "false");
+          }
+        });
+      },
+    });
+    return smartRabbitSpeech;
+  }
+
+  function updateSmartRabbitSpeechToggleUi() {
+    const btn = $("#smartrabbit-speech-toggle");
+    const hint = $("#smartrabbit-speech-hint");
+    const speech = ensureSmartRabbitSpeech();
+    const supported = speech.isSupported();
+    if (btn) {
+      if (!supported) {
+        btn.disabled = true;
+        btn.textContent = "音声：不可";
+        btn.setAttribute("aria-pressed", "false");
+      } else {
+        btn.disabled = false;
+        const on = speech.isEnabled();
+        btn.textContent = on ? "音声：ON" : "音声：OFF";
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      }
+    }
+    if (hint) {
+      if (!supported) {
+        hint.textContent = "このブラウザは音声読み上げに対応していません。";
+        hint.classList.remove("hidden");
+      } else {
+        hint.textContent = "";
+        hint.classList.add("hidden");
+      }
+    }
+  }
+
+  function stopSmartRabbitSpeech(reason) {
+    try {
+      ensureSmartRabbitSpeech().stop();
+    } catch {
+      /* ignore */
+    }
+  }
 
   const SMART_RABBIT_MODE_LABELS = {
     general: "総合相談",
@@ -3007,11 +3088,29 @@
     if (!host) return;
     const key = activeSmartRabbitKey();
     const msgs = key ? getSmartRabbitMessages(key) : [];
+    const speech = ensureSmartRabbitSpeech();
+    const speakingId = speech.getSpeakingMessageId();
+    const canSpeak = speech.isSupported();
     host.innerHTML = msgs
       .map((m) => {
         const cls = m.role === "user" ? "user" : m.role === "error" ? "error" : "assistant";
         const meta = m.status === "partial" ? '<span class="msg-meta">応答待ち・発言は保存済み</span>' : "";
-        return `<div class="smartrabbit-msg ${cls}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${meta}</div>`;
+        const isAssistantOk = m.role === "assistant" && m.status !== "error" && m.status !== "partial";
+        const speaking = Boolean(speakingId && m.id === speakingId);
+        const actions =
+          isAssistantOk && canSpeak
+            ? `<div class="smartrabbit-msg-actions">
+                <button type="button" class="btn ghost compact smartrabbit-speak-btn" data-speak-id="${escapeHtml(
+                  m.id
+                )}" aria-pressed="${speaking ? "true" : "false"}">${
+                  speaking ? "⏹ 停止" : "🔊 読む"
+                }</button>
+                <span class="smartrabbit-speaking-label${speaking ? "" : " hidden"}">読み上げ中</span>
+              </div>`
+            : "";
+        return `<div class="smartrabbit-msg ${cls}${speaking ? " speaking" : ""}" data-message-id="${escapeHtml(
+          m.id || ""
+        )}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${meta}${actions}</div>`;
       })
       .join("");
     host.scrollTop = host.scrollHeight;
@@ -3049,12 +3148,14 @@
     renderSmartRabbitSessions();
     renderSmartRabbitChat();
     renderSmartRabbitModes();
+    updateSmartRabbitSpeechToggleUi();
     const row = $("#smartrabbit-retry-row");
     if (row) row.classList.toggle("hidden", !smartRabbitPendingRetry);
   }
 
   function setActiveSmartRabbitSession(key) {
     if (!state.smartRabbitChat[key]) return;
+    stopSmartRabbitSpeech("session-switch");
     state.smartRabbitActiveSession = key;
     smartRabbitActiveMode = state.smartRabbitChat[key].mode || "general";
     smartRabbitPendingRetry = null;
@@ -3064,6 +3165,7 @@
   }
 
   function startNewSmartRabbitSession() {
+    stopSmartRabbitSpeech("new-session");
     const key = smartRabbitNewSessionKey();
     ensureSmartRabbitSession(key, smartRabbitActiveMode);
     state.smartRabbitActiveSession = key;
@@ -3080,6 +3182,7 @@
       state.smartRabbitChat[key].mode = mode;
       save();
     } else {
+      stopSmartRabbitSpeech("mode-new-session");
       const newKey = smartRabbitNewSessionKey();
       ensureSmartRabbitSession(newKey, mode);
       state.smartRabbitActiveSession = newKey;
@@ -3143,20 +3246,23 @@
     setSmartRabbitBusy(true);
     try {
       const data = await requestSmartRabbit({ sessionId: sessionKey, mode, message: text, messageId });
-      pushSmartRabbitMessage(sessionKey, "assistant", data.reply, {
+      const assistantMsg = pushSmartRabbitMessage(sessionKey, "assistant", data.reply, {
         mode: data.mode || mode,
         status: "ok",
         knowledgeRefs: data.knowledge || null,
       });
       setSmartRabbitStatus(`Cursor接続済み · ${data.model}`, "connected");
       smartRabbitPendingRetry = null;
+      renderSmartRabbitPanel();
+      // 新規回答のみ自動読み上げ（復元・再描画では呼ばない）
+      if (assistantMsg) ensureSmartRabbitSpeech().maybeAutoSpeak(assistantMsg);
     } catch (error) {
       pushSmartRabbitMessage(sessionKey, "error", error.message, { mode, status: "error", id: uid() });
       setSmartRabbitStatus("接続エラー", "error");
       smartRabbitPendingRetry = { sessionKey, mode, text, messageId };
+      renderSmartRabbitPanel();
     } finally {
       setSmartRabbitBusy(false);
-      renderSmartRabbitPanel();
       $("#smartrabbit-input")?.focus();
     }
   }
@@ -3221,6 +3327,11 @@
   }
 
   function setView(name) {
+    const prev = currentViewName;
+    currentViewName = name;
+    if (prev === "smartrabbit" && name !== "smartrabbit") {
+      stopSmartRabbitSpeech("leave-tab");
+    }
     $$(".tab").forEach((t) => {
       if (name === "cat" || name === "quad" || name === "domain") t.classList.remove("active");
       else t.classList.toggle("active", t.dataset.view === name);
@@ -3231,6 +3342,10 @@
       ensureSontokuOpening();
       refreshGcalToday();
       runMorningFlow();
+    }
+    if (name === "smartrabbit") {
+      updateSmartRabbitSpeechToggleUi();
+      refreshSmartRabbitStatus();
     }
     render();
   }
@@ -3616,6 +3731,29 @@
   $("#smartrabbit-session-select")?.addEventListener("change", (e) => setActiveSmartRabbitSession(e.target.value));
   $("#smartrabbit-retry")?.addEventListener("click", () => retrySmartRabbit());
   $("#smartrabbit-context-preview")?.addEventListener("toggle", () => refreshSmartRabbitContextPreview());
+  $("#smartrabbit-speech-toggle")?.addEventListener("click", () => {
+    const speech = ensureSmartRabbitSpeech();
+    if (!speech.isSupported()) {
+      updateSmartRabbitSpeechToggleUi();
+      return;
+    }
+    speech.setEnabled(!speech.isEnabled());
+    updateSmartRabbitSpeechToggleUi();
+  });
+  $("#smartrabbit-messages")?.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".smartrabbit-speak-btn");
+    if (!btn) return;
+    const id = btn.dataset.speakId;
+    const speech = ensureSmartRabbitSpeech();
+    if (!speech.isSupported()) return;
+    if (speech.getSpeakingMessageId() === id) {
+      speech.stop();
+      return;
+    }
+    const key = activeSmartRabbitKey();
+    const msg = (key ? getSmartRabbitMessages(key) : []).find((m) => m.id === id);
+    if (msg) speech.speakMessage(msg, { auto: false });
+  });
 
   $("#form-list-new")?.addEventListener("submit", (e) => {
     e.preventDefault();
