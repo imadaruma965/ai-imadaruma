@@ -1665,6 +1665,102 @@ button.calendar-event { cursor: pointer; }
   flex-wrap: wrap;
 }
 
+/* 営業・案件パイプライン */
+.sales-summary {
+  margin: 0.4rem 0 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.sales-sum-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.75rem;
+}
+.sales-sum-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-weight: var(--weight-normal);
+}
+.sales-sum-grid strong {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+@media (min-width: 640px) {
+  .sales-sum-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.sales-form {
+  margin-bottom: 0.3rem;
+}
+.sales-row .row-actions {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sales-row-actions select,
+.sales-row-actions input[type="date"] {
+  min-height: 1.9rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+.sales-row.sales-row-overdue {
+  border-color: #efbdca;
+  background: #fff7f9;
+}
+.sales-row.sales-row-today {
+  border-color: #f0c9a8;
+  background: var(--peach);
+}
+.sales-won-block {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.7rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #fafcff;
+}
+.sales-home-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 640px) {
+  .sales-home-summary {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+.sales-home-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.sales-home-card .name {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.sales-home-card .num {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+.sales-home-card.overdue {
+  border-color: #f0c9a8;
+  background: var(--peach);
+}
+.sales-home-card.overdue .num {
+  color: var(--warn);
+}
+
 .title-with-voice {
   display: flex;
   gap: 0.35rem;

@@ -95,6 +95,34 @@ test("sanitizeStateData preserves liabilities and fiscalMeta", () => {
   assert.equal(data.fiscalMeta.note, "家賃＋税");
 });
 
+test("sanitizeStateData normalizes missing salesPipeline (old state) to an empty array", () => {
+  const data = sanitizeStateData({ tasks: [{ id: "1", title: "任務" }] });
+  assert.equal(Array.isArray(data.salesPipeline), true);
+  assert.equal(data.salesPipeline.length, 0);
+});
+
+test("sanitizeStateData preserves salesPipeline records and survives a JSON round trip", () => {
+  const data = sanitizeStateData({
+    salesPipeline: [
+      {
+        id: "sp1",
+        companyName: "A社",
+        status: "meeting",
+        proposalType: "heavy",
+        estimatedAmount: 150000,
+        nextActionDate: "2026-08-01",
+      },
+    ],
+  });
+  assert.equal(data.salesPipeline.length, 1);
+  assert.equal(data.salesPipeline[0].companyName, "A社");
+
+  // state.jsonへの保存はJSON.stringify/JSON.parseを経由するため、保存後の再読込を模して往復させても
+  // 内容が変わらないことを確認する。
+  const roundTripped = JSON.parse(JSON.stringify(data));
+  assert.deepEqual(roundTripped.salesPipeline, data.salesPipeline);
+});
+
 test("sanitizeStateData preserves incident log entries", () => {
   const data = sanitizeStateData({
     incidents: [{ id: "i1", date: "2026-07-16", type: "探索衝動", note: "調べ物に逸れた" }],

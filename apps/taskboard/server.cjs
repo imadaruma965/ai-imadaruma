@@ -125,6 +125,7 @@ function sanitizeStateData(raw) {
         : { entries: [] },
     appointments: Array.isArray(data.appointments) ? data.appointments : [],
     liabilities: Array.isArray(data.liabilities) ? data.liabilities : [],
+    salesPipeline: Array.isArray(data.salesPipeline) ? data.salesPipeline : [],
     fiscalMeta:
       data.fiscalMeta && typeof data.fiscalMeta === "object"
         ? {

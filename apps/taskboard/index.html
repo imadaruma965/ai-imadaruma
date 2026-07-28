@@ -42,6 +42,7 @@
     <button type="button" class="tab" data-view="reflect">内省</button>
     <button type="button" class="tab" data-view="week">週</button>
     <button type="button" class="tab" data-view="month">月</button>
+    <button type="button" class="tab" data-view="sales">営業</button>
     <button type="button" class="tab" data-view="all">一覧</button>
     <button type="button" class="tab" data-view="new">新規</button>
   </nav>
@@ -52,6 +53,11 @@
       <p class="lead">未完了の件数だけ先に見る。タップで中身を開く。</p>
       <p id="pending-banner" class="warn hidden" role="status"></p>
       <div id="imadaruma-progress" class="imadaruma-progress" aria-hidden="true"></div>
+
+      <div class="home-block">
+        <h3 class="home-head">営業</h3>
+        <div id="sales-home-summary" class="sales-home-summary"></div>
+      </div>
 
       <div class="home-block">
         <h3 class="home-head">優先順位</h3>
@@ -527,6 +533,102 @@
       <button type="button" class="btn ghost" id="month-save-review">振り返り保存</button>
     </section>
 
+    <!-- 営業・案件パイプライン -->
+    <section id="view-sales" class="view">
+      <h2 class="section-title">営業・案件パイプライン</h2>
+      <p class="lead tight">営業候補・応募・返信・面談・見積・受注・失注を1件ずつ記録する。正本は state.json。</p>
+
+      <div class="board-block sales">
+        <p class="board-head">状況サマリー</p>
+        <div id="sales-summary" class="sales-summary" aria-live="polite"></div>
+      </div>
+
+      <div class="board-block sales">
+        <p class="board-head">本日の営業KPI</p>
+        <div id="sales-daily-kpi" class="sales-summary" aria-live="polite"></div>
+      </div>
+
+      <div class="board-block sales">
+        <p class="board-head">営業先を登録</p>
+        <form id="form-sales" class="mini-form sales-form">
+          <input type="text" id="sales-company" placeholder="会社名・案件名" required />
+          <input type="text" id="sales-contact" placeholder="担当者（任意）" />
+          <select id="sales-channel" required>
+            <option value="CrowdWorks">CrowdWorks</option>
+            <option value="Lancers">Lancers</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Wantedly">Wantedly</option>
+            <option value="Indeed">Indeed</option>
+            <option value="紹介">紹介</option>
+            <option value="直接営業">直接営業</option>
+            <option value="その他">その他</option>
+          </select>
+          <input type="text" id="sales-service" placeholder="サービス（例: フレスト個別指導）" required />
+          <select id="sales-status" required>
+            <option value="candidate">候補</option>
+            <option value="contacted">接触済み</option>
+            <option value="applied">応募済み</option>
+            <option value="replied">返信あり</option>
+            <option value="meeting">面談</option>
+            <option value="proposal">提案・見積</option>
+            <option value="won">受注</option>
+            <option value="lost">失注</option>
+            <option value="paused">保留</option>
+          </select>
+          <select id="sales-proposal-type" required>
+            <option value="heavy">本提案</option>
+            <option value="light" selected>軽提案</option>
+            <option value="followup">追客</option>
+          </select>
+          <input type="number" id="sales-amount" placeholder="見込金額（円・任意）" min="0" step="1" />
+          <input type="text" id="sales-next-action" placeholder="次の行動" required />
+          <input type="date" id="sales-next-date" required />
+          <input type="date" id="sales-last-contact" placeholder="最終接触日（任意）" />
+          <input type="text" id="sales-url" placeholder="URL（任意）" />
+          <input type="text" id="sales-memo" placeholder="メモ（任意）" />
+          <button type="submit" class="btn primary compact">登録</button>
+        </form>
+      </div>
+
+      <div class="filters">
+        <select id="sales-filter-status">
+          <option value="">すべてのステータス</option>
+          <option value="candidate">候補</option>
+          <option value="contacted">接触済み</option>
+          <option value="applied">応募済み</option>
+          <option value="replied">返信あり</option>
+          <option value="meeting">面談</option>
+          <option value="proposal">提案・見積</option>
+          <option value="won">受注</option>
+          <option value="lost">失注</option>
+          <option value="paused">保留</option>
+        </select>
+        <select id="sales-filter-channel">
+          <option value="">すべてのチャネル</option>
+          <option value="CrowdWorks">CrowdWorks</option>
+          <option value="Lancers">Lancers</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Wantedly">Wantedly</option>
+          <option value="Indeed">Indeed</option>
+          <option value="紹介">紹介</option>
+          <option value="直接営業">直接営業</option>
+          <option value="その他">その他</option>
+        </select>
+        <select id="sales-filter-proposal">
+          <option value="">すべての提案区分</option>
+          <option value="heavy">本提案</option>
+          <option value="light">軽提案</option>
+          <option value="followup">追客</option>
+        </select>
+        <label><input type="checkbox" id="sales-filter-overdue" /> 期限超過のみ</label>
+        <label><input type="checkbox" id="sales-filter-today" /> 本日対応のみ</label>
+      </div>
+
+      <ul class="rows compact" id="list-sales"></ul>
+    </section>
+
     <!-- 全体一覧 -->
     <section id="view-all" class="view">
       <div class="filters">
@@ -758,6 +860,80 @@
     </form>
   </dialog>
 
+  <dialog id="sales-edit-dialog" class="liab-edit-dialog">
+    <form method="dialog" id="form-sales-edit">
+      <h3>営業レコードの編集</h3>
+      <input type="hidden" id="sales-edit-id" />
+      <label class="field">会社名・案件名<input type="text" id="sales-edit-company" required /></label>
+      <label class="field">担当者<input type="text" id="sales-edit-contact" /></label>
+      <label class="field">チャネル
+        <select id="sales-edit-channel">
+          <option value="CrowdWorks">CrowdWorks</option>
+          <option value="Lancers">Lancers</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Wantedly">Wantedly</option>
+          <option value="Indeed">Indeed</option>
+          <option value="紹介">紹介</option>
+          <option value="直接営業">直接営業</option>
+          <option value="その他">その他</option>
+        </select>
+      </label>
+      <label class="field">サービス<input type="text" id="sales-edit-service" /></label>
+      <label class="field">ステータス
+        <select id="sales-edit-status">
+          <option value="candidate">候補</option>
+          <option value="contacted">接触済み</option>
+          <option value="applied">応募済み</option>
+          <option value="replied">返信あり</option>
+          <option value="meeting">面談</option>
+          <option value="proposal">提案・見積</option>
+          <option value="won">受注</option>
+          <option value="lost">失注</option>
+          <option value="paused">保留</option>
+        </select>
+      </label>
+      <label class="field">提案区分
+        <select id="sales-edit-proposal-type">
+          <option value="heavy">本提案</option>
+          <option value="light">軽提案</option>
+          <option value="followup">追客</option>
+        </select>
+      </label>
+      <label class="field">見込金額（円）<input type="number" id="sales-edit-amount" min="0" step="1" /></label>
+      <label class="field">次の行動<input type="text" id="sales-edit-next-action" /></label>
+      <label class="field">次回対応日<input type="date" id="sales-edit-next-date" /></label>
+      <label class="field">最終接触日<input type="date" id="sales-edit-last-contact" /></label>
+      <label class="field">URL<input type="text" id="sales-edit-url" /></label>
+      <label class="field">メモ<textarea id="sales-edit-memo" rows="2"></textarea></label>
+
+      <div class="sales-won-block">
+        <p class="lead tight">受注時のみ（status=受注のとき記入）</p>
+        <label class="field">確定金額（円）<input type="number" id="sales-edit-agreed-amount" min="0" step="1" /></label>
+        <label class="field">納期<input type="date" id="sales-edit-delivery-date" /></label>
+        <label class="field">請求状態
+          <select id="sales-edit-invoice-status">
+            <option value="not_required">不要</option>
+            <option value="not_issued">未発行</option>
+            <option value="issued">発行済</option>
+          </select>
+        </label>
+        <label class="field">入金状態
+          <select id="sales-edit-payment-status">
+            <option value="unpaid">未入金</option>
+            <option value="paid">入金済</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn primary">保存</button>
+        <button type="button" class="btn ghost" id="sales-edit-cancel">閉じる</button>
+        <button type="button" class="btn danger" id="sales-edit-delete">削除</button>
+      </div>
+    </form>
+  </dialog>
+
   <footer class="foot">
     <div class="foot-actions">
       <button type="button" class="btn ghost compact" id="btn-seed">シード読込</button>
@@ -770,6 +946,7 @@
 
   <script src="seed-data.js"></script>
   <script src="governance.js"></script>
+  <script src="sales-pipeline.js"></script>
   <script src="notification-service.js"></script>
   <script src="voice-service.js"></script>
   <script src="governance-monitor.js"></script>

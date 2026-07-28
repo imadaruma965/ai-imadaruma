@@ -349,6 +349,9 @@
           : { entries: [] },
       appointments: Array.isArray(data.appointments) ? data.appointments : [],
       liabilities: Array.isArray(data.liabilities) ? data.liabilities.map(normalizeLiability) : [],
+      salesPipeline: Array.isArray(data.salesPipeline)
+        ? data.salesPipeline.map((r) => window.TaskboardSales.normalizeSalesRecord(r, { uid }))
+        : [],
       fiscalMeta:
         data.fiscalMeta && typeof data.fiscalMeta === "object"
           ? {
@@ -411,6 +414,7 @@
       personalFinance: { entries: [] },
       appointments: [],
       liabilities: [],
+      salesPipeline: [],
       fiscalMeta: { defenseLine: null, note: "" },
     };
   }
@@ -429,6 +433,7 @@
       personalFinance: state.personalFinance || { entries: [] },
       appointments: state.appointments || [],
       liabilities: state.liabilities || [],
+      salesPipeline: state.salesPipeline || [],
       fiscalMeta: state.fiscalMeta || { defenseLine: null, note: "" },
     };
   }
@@ -446,6 +451,7 @@
     state.personalFinance = next.personalFinance || { entries: [] };
     state.appointments = next.appointments || [];
     state.liabilities = next.liabilities || [];
+    state.salesPipeline = next.salesPipeline || [];
     state.fiscalMeta = next.fiscalMeta || { defenseLine: null, note: "" };
   }
 
@@ -2102,6 +2108,191 @@
     alert(onToday ? "今日の任務に追加した" : "今日が7件超のため、任務には入れたが今日枠は外した");
   }
 
+  function readSalesFilters() {
+    return {
+      status: $("#sales-filter-status")?.value || "",
+      channel: $("#sales-filter-channel")?.value || "",
+      proposalType: $("#sales-filter-proposal")?.value || "",
+      overdueOnly: !!$("#sales-filter-overdue")?.checked,
+      todayOnly: !!$("#sales-filter-today")?.checked,
+    };
+  }
+
+  function salesRowHtml(r) {
+    const Sales = window.TaskboardSales;
+    const overdue = Sales.isOverdueRecord(r, todayISO());
+    const dueToday = Sales.isDueTodayRecord(r, todayISO());
+    const amount = r.estimatedAmount != null ? yen(r.estimatedAmount) : "—";
+    const wonBlock =
+      r.status === "won"
+        ? `<span class="muted">受注: 確定額 ${r.agreedAmount != null ? yen(r.agreedAmount) : "未記入"} ・ 納期 ${escapeHtml(
+            r.deliveryDate || "未設定"
+          )} ・ 請求 ${escapeHtml(Sales.INVOICE_STATUSES.includes(r.invoiceStatus) ? { not_required: "不要", not_issued: "未発行", issued: "発行済" }[r.invoiceStatus] : r.invoiceStatus)} ・ 入金 ${
+            r.paymentStatus === "paid" ? "入金済" : "未入金"
+          }</span>`
+        : "";
+    return `<li class="row-item sales-row ${overdue ? "sales-row-overdue" : ""} ${dueToday ? "sales-row-today" : ""}" data-sales-id="${r.id}">
+      <div class="row-main">
+        <strong>${escapeHtml(r.companyName || "（未記入）")}${r.contactName ? ` · ${escapeHtml(r.contactName)}` : ""}</strong>
+        <span class="muted">${escapeHtml(r.channel || "チャネル未設定")} ・ ${escapeHtml(r.service || "サービス未設定")} ・ ${escapeHtml(
+      Sales.PROPOSAL_TYPE_LABELS[r.proposalType] || r.proposalType
+    )} ・ 見込 ${amount}</span>
+        <span class="muted">次の行動: ${escapeHtml(r.nextAction || "未記入")}${
+      r.memo ? ` ・ ${escapeHtml(r.memo)}` : ""
+    }</span>
+        ${wonBlock}
+      </div>
+      <div class="row-actions sales-row-actions">
+        <select class="sales-status-select" data-sales-status>
+          ${Sales.SALES_STATUSES.map(
+            (s) => `<option value="${s}" ${s === r.status ? "selected" : ""}>${Sales.STATUS_LABELS[s]}</option>`
+          ).join("")}
+        </select>
+        <input type="date" class="sales-date-input" data-sales-next-date value="${r.nextActionDate || ""}" />
+        <button type="button" class="btn ghost compact" data-sales-edit>編集</button>
+        <button type="button" class="btn ghost compact" data-sales-del>削除</button>
+      </div>
+    </li>`;
+  }
+
+  function renderSalesPipeline() {
+    const list = $("#list-sales");
+    if (!list || !window.TaskboardSales) return;
+    const Sales = window.TaskboardSales;
+    if (!Array.isArray(state.salesPipeline)) state.salesPipeline = [];
+    const today = todayISO();
+
+    const summary = Sales.summarizeSalesPipeline(state.salesPipeline, { now: new Date() });
+    const summaryHost = $("#sales-summary");
+    if (summaryHost) {
+      summaryHost.innerHTML = `
+        <div class="sales-sum-grid">
+          <div><span class="sales-sum-label">候補</span><strong>${summary.candidate}</strong></div>
+          <div><span class="sales-sum-label">接触・応募済み</span><strong>${summary.contacted + summary.applied}</strong></div>
+          <div><span class="sales-sum-label">返信</span><strong>${summary.replied}</strong></div>
+          <div><span class="sales-sum-label">面談</span><strong>${summary.meeting}</strong></div>
+          <div><span class="sales-sum-label">提案・見積</span><strong>${summary.proposal}</strong></div>
+          <div><span class="sales-sum-label">受注</span><strong>${summary.won}</strong></div>
+          <div><span class="sales-sum-label">見込売上合計</span><strong>${yen(summary.estimatedTotal)}</strong></div>
+          <div><span class="sales-sum-label">次回対応期限超過</span><strong>${summary.overdueCount}</strong></div>
+        </div>`;
+    }
+
+    const daily = Sales.calculateDailySalesActions(state.salesPipeline, today);
+    const dailyHost = $("#sales-daily-kpi");
+    if (dailyHost) {
+      dailyHost.innerHTML = `
+        <div class="sales-sum-grid">
+          <div><span class="sales-sum-label">本提案 heavy</span><strong>${daily.heavy} / ${daily.targets.heavy}</strong></div>
+          <div><span class="sales-sum-label">軽提案 light</span><strong>${daily.light} / ${daily.targets.light}</strong></div>
+          <div><span class="sales-sum-label">追客 followup</span><strong>${daily.followup} / ${daily.targets.followup}</strong></div>
+          <div><span class="sales-sum-label">合計</span><strong>${daily.total} / ${daily.targets.total}</strong></div>
+        </div>`;
+    }
+
+    const filters = readSalesFilters();
+    const filtered = Sales.filterSalesPipeline(state.salesPipeline, filters, { now: new Date() });
+    const sorted = Sales.sortSalesPipeline(filtered, { now: new Date() });
+    list.innerHTML = sorted.length ? sorted.map(salesRowHtml).join("") : `<li class="muted">条件に合う営業先はありません</li>`;
+
+    list.querySelectorAll("[data-sales-status]").forEach((sel) => {
+      sel.addEventListener("change", () => {
+        const id = sel.closest("[data-sales-id]")?.dataset.salesId;
+        const r = state.salesPipeline.find((x) => x.id === id);
+        if (!r) return;
+        r.status = sel.value;
+        r.updatedAt = new Date().toISOString();
+        save();
+        renderSalesPipeline();
+        renderSalesHomeSummary();
+      });
+    });
+    list.querySelectorAll("[data-sales-next-date]").forEach((input) => {
+      input.addEventListener("change", () => {
+        const id = input.closest("[data-sales-id]")?.dataset.salesId;
+        const r = state.salesPipeline.find((x) => x.id === id);
+        if (!r) return;
+        r.nextActionDate = input.value || null;
+        r.updatedAt = new Date().toISOString();
+        save();
+        renderSalesPipeline();
+        renderSalesHomeSummary();
+      });
+    });
+    list.querySelectorAll("[data-sales-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-sales-id]")?.dataset.salesId;
+        if (id) openSalesEdit(id);
+      });
+    });
+    list.querySelectorAll("[data-sales-del]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("[data-sales-id]")?.dataset.salesId;
+        if (!id || !confirm("この営業レコードを削除しますか？")) return;
+        state.salesPipeline = state.salesPipeline.filter((x) => x.id !== id);
+        save();
+        renderSalesPipeline();
+        renderSalesHomeSummary();
+      });
+    });
+  }
+
+  function openSalesEdit(id) {
+    const r = state.salesPipeline.find((x) => x.id === id);
+    if (!r) return;
+    const dlg = $("#sales-edit-dialog");
+    if (!dlg) return;
+    $("#sales-edit-id").value = r.id;
+    $("#sales-edit-company").value = r.companyName || "";
+    $("#sales-edit-contact").value = r.contactName || "";
+    $("#sales-edit-channel").value = r.channel || "";
+    $("#sales-edit-service").value = r.service || "";
+    $("#sales-edit-status").value = r.status;
+    $("#sales-edit-proposal-type").value = r.proposalType;
+    $("#sales-edit-amount").value = r.estimatedAmount ?? "";
+    $("#sales-edit-next-action").value = r.nextAction || "";
+    $("#sales-edit-next-date").value = r.nextActionDate || "";
+    $("#sales-edit-last-contact").value = r.lastContactDate || "";
+    $("#sales-edit-url").value = r.sourceUrl || "";
+    $("#sales-edit-memo").value = r.memo || "";
+    $("#sales-edit-agreed-amount").value = r.agreedAmount ?? "";
+    $("#sales-edit-delivery-date").value = r.deliveryDate || "";
+    $("#sales-edit-invoice-status").value = r.invoiceStatus;
+    $("#sales-edit-payment-status").value = r.paymentStatus;
+    dlg.showModal();
+  }
+
+  function renderSalesHomeSummary() {
+    const host = $("#sales-home-summary");
+    if (!host || !window.TaskboardSales) return;
+    if (!Array.isArray(state.salesPipeline)) state.salesPipeline = [];
+    const s = window.TaskboardSales.buildHomeSalesSummary(state.salesPipeline, { now: new Date() });
+    host.innerHTML = `
+      <button type="button" class="sales-home-card" data-goto-sales>
+        <span class="name">今日の営業実績</span>
+        <span class="num">${s.daily.total} / ${s.daily.targets.total}</span>
+      </button>
+      <button type="button" class="sales-home-card" data-goto-sales>
+        <span class="name">本日対応</span>
+        <span class="num">${s.todayCount}</span>
+      </button>
+      <button type="button" class="sales-home-card ${s.overdueCount ? "overdue" : ""}" data-goto-sales>
+        <span class="name">期限超過</span>
+        <span class="num">${s.overdueCount}</span>
+      </button>
+      <button type="button" class="sales-home-card" data-goto-sales>
+        <span class="name">面談予定</span>
+        <span class="num">${s.meetingCount}</span>
+      </button>
+      <button type="button" class="sales-home-card" data-goto-sales>
+        <span class="name">未請求の受注</span>
+        <span class="num">${s.unbilledWonCount}</span>
+      </button>`;
+    host.querySelectorAll("[data-goto-sales]").forEach((btn) => {
+      btn.addEventListener("click", () => setView("sales"));
+    });
+  }
+
   function formatApptWhen(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -2492,6 +2683,8 @@
     renderInvoices();
     renderPersonalFinance();
     renderLiabilities();
+    renderSalesPipeline();
+    renderSalesHomeSummary();
     renderAppointments();
     renderImadarumaProgress();
     renderDoneList();
@@ -3258,6 +3451,89 @@
     save();
     renderLiabilities();
     $("#liab-edit-dialog")?.close();
+  });
+
+  $("#form-sales")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!Array.isArray(state.salesPipeline)) state.salesPipeline = [];
+    const amountRaw = $("#sales-amount").value;
+    const record = window.TaskboardSales.normalizeSalesRecord(
+      {
+        id: uid(),
+        companyName: $("#sales-company").value.trim(),
+        contactName: $("#sales-contact").value.trim(),
+        channel: $("#sales-channel").value,
+        service: $("#sales-service").value.trim(),
+        status: $("#sales-status").value,
+        proposalType: $("#sales-proposal-type").value,
+        estimatedAmount: amountRaw === "" ? null : Number(amountRaw),
+        nextAction: $("#sales-next-action").value.trim(),
+        nextActionDate: $("#sales-next-date").value || null,
+        lastContactDate: $("#sales-last-contact").value || null,
+        sourceUrl: $("#sales-url").value.trim(),
+        memo: $("#sales-memo").value.trim(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { uid }
+    );
+    state.salesPipeline.push(record);
+    save();
+    e.target.reset();
+    $("#sales-status").value = "candidate";
+    $("#sales-proposal-type").value = "light";
+    renderSalesPipeline();
+    renderSalesHomeSummary();
+  });
+
+  ["#sales-filter-status", "#sales-filter-channel", "#sales-filter-proposal", "#sales-filter-overdue", "#sales-filter-today"].forEach(
+    (sel) => {
+      $(sel)?.addEventListener("change", () => renderSalesPipeline());
+    }
+  );
+
+  $("#sales-edit-cancel")?.addEventListener("click", () => {
+    $("#sales-edit-dialog")?.close();
+  });
+
+  $("#sales-edit-delete")?.addEventListener("click", () => {
+    const id = $("#sales-edit-id").value;
+    if (!id || !confirm("この営業レコードを削除しますか？")) return;
+    state.salesPipeline = (state.salesPipeline || []).filter((x) => x.id !== id);
+    save();
+    renderSalesPipeline();
+    renderSalesHomeSummary();
+    $("#sales-edit-dialog")?.close();
+  });
+
+  $("#form-sales-edit")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = $("#sales-edit-id").value;
+    const r = (state.salesPipeline || []).find((x) => x.id === id);
+    if (!r) return;
+    const amountRaw = $("#sales-edit-amount").value;
+    const agreedRaw = $("#sales-edit-agreed-amount").value;
+    r.companyName = $("#sales-edit-company").value.trim();
+    r.contactName = $("#sales-edit-contact").value.trim();
+    r.channel = $("#sales-edit-channel").value;
+    r.service = $("#sales-edit-service").value.trim();
+    r.status = $("#sales-edit-status").value;
+    r.proposalType = $("#sales-edit-proposal-type").value;
+    r.estimatedAmount = amountRaw === "" ? null : Number(amountRaw);
+    r.nextAction = $("#sales-edit-next-action").value.trim();
+    r.nextActionDate = $("#sales-edit-next-date").value || null;
+    r.lastContactDate = $("#sales-edit-last-contact").value || null;
+    r.sourceUrl = $("#sales-edit-url").value.trim();
+    r.memo = $("#sales-edit-memo").value.trim();
+    r.agreedAmount = agreedRaw === "" ? null : Number(agreedRaw);
+    r.deliveryDate = $("#sales-edit-delivery-date").value || null;
+    r.invoiceStatus = $("#sales-edit-invoice-status").value;
+    r.paymentStatus = $("#sales-edit-payment-status").value;
+    r.updatedAt = new Date().toISOString();
+    save();
+    renderSalesPipeline();
+    renderSalesHomeSummary();
+    $("#sales-edit-dialog")?.close();
   });
 
   $("#btn-gcal-connect")?.addEventListener("click", async () => {
