@@ -6,9 +6,13 @@ const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const crypto = require("node:crypto");
 const { Agent, CursorAgentError, AuthenticationError } = require("@cursor/sdk");
+const { loadLocalEnv, hasCursorApiKey, getCursorApiKey } = require("./lib/load-local-env.cjs");
 const gcal = require("./gcal.cjs");
 const knowledgeSearch = require("./lib/knowledge-search.cjs");
 const smartRabbitContext = require("./lib/smart-rabbit-context.cjs");
+
+// cwd や起動シェルに依存せず、apps/taskboard/.env.local を読む（既存envは上書きしない）
+loadLocalEnv();
 
 const APP_DIR = __dirname;
 const REPO_ROOT = path.resolve(APP_DIR, "../..");
@@ -547,7 +551,7 @@ ${clip(message, 4000)}
 
 async function openSmartRabbitAgent(sessionId, existingId) {
   const options = {
-    apiKey: process.env.CURSOR_API_KEY,
+    apiKey: getCursorApiKey(),
     model: { id: MODEL },
     name: `スマートラビット・キングダムOS ${sessionId}`,
     mode: "plan",
@@ -676,7 +680,7 @@ async function runSmartRabbitTurn(payload) {
 
 async function openAgent(date, existingId) {
   const options = {
-    apiKey: process.env.CURSOR_API_KEY,
+    apiKey: getCursorApiKey(),
     model: { id: MODEL },
     name: `AI尊徳・キングダムOS ${date}`,
     mode: "plan",
@@ -858,7 +862,9 @@ function createServer() {
         sync: true,
         port: PORT,
         ...access,
-        sontokuConnected: Boolean(process.env.CURSOR_API_KEY),
+        sontokuConnected: hasCursorApiKey(),
+        smartRabbitConnected: hasCursorApiKey(),
+        cursorApiConfigured: hasCursorApiKey(),
         gcal: gcalStatus,
       });
       return;
@@ -897,7 +903,7 @@ function createServer() {
 
     if (req.method === "GET" && url.pathname === "/api/sontoku/status") {
       json(res, 200, {
-        connected: Boolean(process.env.CURSOR_API_KEY),
+        connected: hasCursorApiKey(),
         provider: "Cursor SDK",
         model: MODEL,
       });
@@ -905,7 +911,7 @@ function createServer() {
     }
 
     if (req.method === "POST" && url.pathname === "/api/sontoku") {
-      if (!process.env.CURSOR_API_KEY) {
+      if (!hasCursorApiKey()) {
         json(res, 503, {
           error: "cursor_api_key_missing",
           message: "CURSOR_API_KEYが未設定です。.env.localを設定してキングダムOSを再起動してください。",
@@ -948,7 +954,7 @@ function createServer() {
 
     if (req.method === "GET" && url.pathname === "/api/smart-rabbit/status") {
       json(res, 200, {
-        connected: Boolean(process.env.CURSOR_API_KEY),
+        connected: hasCursorApiKey(),
         provider: "Cursor SDK",
         model: MODEL,
         modes: knowledgeSearch.listModes(),
@@ -991,7 +997,7 @@ function createServer() {
     }
 
     if (req.method === "POST" && url.pathname === "/api/smart-rabbit") {
-      if (!process.env.CURSOR_API_KEY) {
+      if (!hasCursorApiKey()) {
         json(res, 503, {
           error: "cursor_api_key_missing",
           message: "CURSOR_API_KEYが未設定です。.env.localを設定してキングダムOSを再起動してください。",
@@ -1243,9 +1249,9 @@ if (require.main === module) {
       console.log("携帯（外出先）: Tailscale未設定 → apps/taskboard/setup-tailscale.sh を参照");
     }
     console.log(
-      process.env.CURSOR_API_KEY
-        ? `AI尊徳: Cursor SDK接続準備済み（model: ${MODEL}）`
-        : "AI尊徳: 未接続（apps/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
+      hasCursorApiKey()
+        ? `AI尊徳 / スマートラビット: Cursor SDK接続準備済み（model: ${MODEL}）`
+        : "AI尊徳 / スマートラビット: 未接続（apps/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
     );
   });
 }
@@ -1272,4 +1278,7 @@ module.exports = {
   getCachedSmartRabbitResult,
   contentHashOf,
   sanitizeBusiness,
+  hasCursorApiKey,
+  getCursorApiKey,
+  loadLocalEnv,
 };

@@ -218,3 +218,56 @@ test("status endpoint reports Cursor connection without exposing secrets", async
   assert.equal(body.connected, false);
   assert.equal(JSON.stringify(body).includes("cursor_"), false);
 });
+
+test("sontoku and smart-rabbit status share the same Cursor API configured flag", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+    else delete process.env.CURSOR_API_KEY;
+  });
+  const address = server.address();
+  const base = `http://127.0.0.1:${address.port}`;
+  const [sontoku, rabbit] = await Promise.all([
+    fetch(`${base}/api/sontoku/status`).then((r) => r.json()),
+    fetch(`${base}/api/smart-rabbit/status`).then((r) => r.json()),
+  ]);
+  assert.equal(sontoku.connected, false);
+  assert.equal(rabbit.connected, false);
+
+  process.env.CURSOR_API_KEY = "test-key-not-real";
+  const [sontokuOn, rabbitOn] = await Promise.all([
+    fetch(`${base}/api/sontoku/status`).then((r) => r.json()),
+    fetch(`${base}/api/smart-rabbit/status`).then((r) => r.json()),
+  ]);
+  assert.equal(sontokuOn.connected, true);
+  assert.equal(rabbitOn.connected, true);
+  assert.equal(JSON.stringify(sontokuOn).includes("test-key"), false);
+  assert.equal(JSON.stringify(rabbitOn).includes("test-key"), false);
+});
+
+test("sontoku POST returns 503 with a setup hint when CURSOR_API_KEY is missing", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/sontoku`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ date: "2026-07-28", event: "open", context: {} }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 503);
+  assert.equal(body.error, "cursor_api_key_missing");
+  assert.match(body.message, /CURSOR_API_KEY/);
+  assert.equal(JSON.stringify(body).includes("crsr_"), false);
+  assert.equal(JSON.stringify(body).includes("test-key"), false);
+});

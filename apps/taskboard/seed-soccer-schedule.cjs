@@ -5,30 +5,13 @@
  * 使い方:
  *   node apps/taskboard/seed-soccer-schedule.cjs
  */
-const fs = require("node:fs");
 const path = require("node:path");
+const { loadLocalEnv } = require("./lib/load-local-env.cjs");
 
 const APP_DIR = __dirname;
-const ENV_FILE = path.join(APP_DIR, ".env.local");
-
-function loadEnvLocal() {
-  if (!fs.existsSync(ENV_FILE)) return;
-  const text = fs.readFileSync(ENV_FILE, "utf8");
-  text.split(/\r?\n/).forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) return;
-    const m = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-    if (!m) return;
-    let v = m[2].trim();
-    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-      v = v.slice(1, -1);
-    }
-    if (process.env[m[1]] == null || process.env[m[1]] === "") process.env[m[1]] = v;
-  });
-}
 
 async function main() {
-  loadEnvLocal();
+  loadLocalEnv({ envFile: path.join(APP_DIR, ".env.local") });
   // アラーム: 1日前 / 180分前 / 90分前（このシードでは強制）
   process.env.GCAL_REMINDERS_MINUTES = "1440,180,90";
 

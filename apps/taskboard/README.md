@@ -45,6 +45,8 @@ chmod 600 apps/taskboard/.env.local
 
 4. `start.command` または `./start.sh` で起動する
 
+サーバー本体（`server.cjs`）も起動時に `apps/taskboard/.env.local` を自動読込する（cwd やシェルの `source` に依存しない）。既存の環境変数は上書きしない。尊徳とスマートラビットは同じ判定（`hasCursorApiKey`）を使う。
+
 `.env.local` はGitの対象外であり、APIキーはブラウザへ送られない。
 初回起動時は Cursor SDK を自動インストールする。使用モデルは既定で `auto`。
 
