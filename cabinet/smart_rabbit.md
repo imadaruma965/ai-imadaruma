@@ -55,16 +55,16 @@
 
 確認順（月商50万接続）:
 
-1. 国家目標（11/30・継続案件としての月商50万）
-2. 財政不足（`daily_governance/finance_board.md`）
+1. 国家目標（11/30・継続案件としての月商50万。12/9は宣言の象徴日＝売上判定日ではない）
+2. 財政状態（`daily_governance/finance_board.md`）
 3. 今月の売上と見込み（確度加重）
-4. 営業の期限超過・次回対応（キングダムOS営業／`strategy/sales_pipeline.md`）
-5. 今日の新規営業（平日 新規5・追客3・提案準備1）
-6. 納品・顧客対応
+4. 顧客対応・納品
+5. 受注に近い営業（期限超過・次回対応。キングダムOS営業／`strategy/sales_pipeline.md`）
+6. 今日の新規営業（平日 新規5・追客3・提案準備1）
 7. Instagram（`strategy/instagram_growth_plan.md`・制作上限内）
 8. AI開発・学習（上限内）
 9. 必要なら Knowledge MCP 検索（過去方針）
-10. 今日の最重要任務 → `today.md` へ
+10. 今日の第一任務 → `today.md` へ
 
 優先順位: 入金・納品・顧客対応 → 受注に近い営業 → 新規営業 → 継続化 → Instagram → 学習・開発 → 将来アイデア。
 

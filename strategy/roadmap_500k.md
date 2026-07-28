@@ -57,7 +57,8 @@
 
 > **状態**: 運用正本（既決を保持し、明日から実行できる粒度へ更新）  
 > **上位目標**: 2026-11-30までにサッカー以外で月商50万円を**継続案件として**確立する  
-> **接続**: `monetization_2026h2.md`（売り順）／`sales_pipeline.md`＋キングダムOS営業タブ／`instagram_growth_plan.md`／財政ボード
+> **日付の区別**: **11月30日＝事業目標の達成判定日**。**12月9日＝統治奪還を宣言する象徴日・通過儀礼日**（売上判定日ではない）。正本は `constitution/mission.md`。  
+> **接続**: `monetization_2026h2.md`（売り順）／`sales_pipeline.md`＋キングダムOS営業タブ／`instagram_growth_plan.md`／`daily_governance/finance_board.md`
 
 ### A. 事業優先順位（既決の実行順）
 
