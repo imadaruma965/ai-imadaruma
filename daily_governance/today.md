@@ -3,6 +3,8 @@
 > 朝の閣議で決定した今日の実行計画。日中はこのファイルだけを見る。
 > 脱線したら `impulse_protocol.md` を開く。
 > 運用リズム: `strategy/ops_rhythm_2026h2.md`
+> **総理起動**: Smart Rabbit Skill → 出力を本ファイルへ転記（`morning_cabinet.md` §5b）
+> **接続**: `roadmap_500k.md` v2／`finance_board.md`／営業タブ／`instagram_growth_plan.md`
 
 ---
 

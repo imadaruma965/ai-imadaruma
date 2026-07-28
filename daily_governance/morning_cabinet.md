@@ -13,7 +13,11 @@
 | **実施タイミング** | 君主の1日の最初の統治行為 |
 | **担当** | AI尊徳が提案、君主が最終決定 |
 | **前提** | 前日の `night_review.md` を確認してから始める |
-| **戦略接続** | `strategy/roadmap_500k.md` の今週の実行指示を参照 |
+| **戦略接続** | `strategy/roadmap_500k.md` の実行ロードマップ v2 を参照 |
+| **財政** | `daily_governance/finance_board.md` |
+| **営業** | キングダムOS営業タブ ＋ `strategy/sales_pipeline.md` |
+| **Instagram** | `strategy/instagram_growth_plan.md`（売上優先・制作上限） |
+| **総理** | Smart Rabbit Skill（出力形式は Skill 正本） |
 
 ---
 
@@ -43,6 +47,8 @@
 | 期限切れ | | |
 | 本日期限・明日 | | |
 | 3日以内の PAY/PO/DL | | |
+| **財政**（`finance_board`：不足・7日以内支払・未入金） | | |
+| **営業期限超過**（OS `nextActionDate` 過ぎ） | | |
 
 **今日の義務（today へ転記）**:
 
@@ -106,11 +112,35 @@
 
 | 行動 | 収益源 | 15分タスク |
 |------|--------|-----------|
-| | imadaruma.sound / DS / その他 | |
+| 新規接触（目標5） | sound / SNS受託 / その他 | |
+| 追客（目標3） | | |
+| 提案・商談準備（目標1） | | |
 
 **最低売上行動（これができれば今日は前進）**:
 
 - [ ]
+
+**営業対象（今日・OSから）**:
+
+1. 
+2. 
+3. 
+
+---
+
+### 5b. Smart Rabbit 出力転記欄（総理起動時）
+
+```text
+今日の第一任務:
+売上に直結する3行動:
+期限超過:
+財政警戒:
+営業対象:
+Instagram実行:
+開発・学習上限:
+今日やらないこと:
+Knowledge参照元:
+```
 
 ---
 
@@ -185,7 +215,14 @@
 
 ```
 あなたは AI尊徳 です。朝の閣議を開始してください。
-night_review.md と strategy/roadmap_500k.md を踏まえ、
+night_review.md と strategy/roadmap_500k.md（v2）と finance_board.md を踏まえ、
 今日の統治計画を提案してください。
 最後に、君主への短い実行命令を出してください。
+```
+
+## Smart Rabbit（総理）への起動
+
+```
+/smart_rabbit または Skill「smart_rabbit」を起動。
+月商50万接続の確認順と「今日の出力形式」に従い、today.md へ転記可能な計画を出すこと。
 ```

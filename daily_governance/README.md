@@ -21,7 +21,8 @@ AI栄一が設計した戦略を、ここで日々の行動に落とし込む。
 ## 運用サイクル
 
 ```
-朝   → morning_cabinet.md   AI尊徳による朝の閣議
+朝   → morning_cabinet.md   尊徳閣議 ＋ Smart Rabbit（総理）出力
+     → finance_board.md / 営業タブ を参照
 日中 → today.md             実行・進捗・ログ
 脱線 → impulse_protocol.md  衝動・逃避からの復帰
 夜   → night_review.md      AI尊徳による統治レビュー
