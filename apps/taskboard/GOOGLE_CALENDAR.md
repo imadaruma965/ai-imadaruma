@@ -57,7 +57,9 @@ cd apps/taskboard && ./install-autostart.sh
 
 キングダムOS → **今日** → **Googleに接続** → ブラウザで許可。
 
-トークンは `apps/taskboard/data/gcal-token.json` に保存（Git対象外）。
+トークンは `apps/taskboard/data/google-token.json` に保存（旧 `gcal-token.json` も読込可。Git対象外）。
+
+認可スコープは **Calendar + Sheets** 共通です。Sheets 追記は `GOOGLE_SHEETS.md` を参照。
 
 ---
 

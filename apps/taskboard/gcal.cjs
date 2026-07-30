@@ -1,23 +1,19 @@
 /**
  * Google Calendar 連携（OAuth・予定作成・衝突検知・リマインダ）
+ * OAuth 本体は google-oauth.cjs（Calendar + Sheets 共通）
  */
-const fsp = require("node:fs/promises");
-const path = require("node:path");
 const { google } = require("googleapis");
+const oauth = require("./google-oauth.cjs");
 
-const TOKEN_FILE = path.join(__dirname, "data", "gcal-token.json");
-const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
-
-function configured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-}
-
-function redirectUri() {
-  return (
-    process.env.GOOGLE_REDIRECT_URI ||
-    `http://127.0.0.1:${process.env.GYOMU_TOCHI_PORT || 8765}/api/gcal/callback`
-  );
-}
+const {
+  configured,
+  redirectUri,
+  authUrl,
+  exchangeCode,
+  getAuthedClient,
+  TOKEN_FILE,
+  LEGACY_TOKEN_FILE,
+} = oauth;
 
 function reminderMinutes() {
   const raw = process.env.GCAL_REMINDERS_MINUTES || "1440,180,90";
@@ -27,75 +23,10 @@ function reminderMinutes() {
     .filter((n) => Number.isFinite(n) && n >= 0);
 }
 
-function createOAuthClient() {
-  if (!configured()) {
-    const err = new Error("google_oauth_not_configured");
-    err.code = "google_oauth_not_configured";
-    throw err;
-  }
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    redirectUri()
-  );
-}
-
-async function readToken() {
-  try {
-    return JSON.parse(await fsp.readFile(TOKEN_FILE, "utf8"));
-  } catch (error) {
-    if (error.code === "ENOENT") return null;
-    throw error;
-  }
-}
-
-async function writeToken(tokens) {
-  await fsp.mkdir(path.dirname(TOKEN_FILE), { recursive: true });
-  await fsp.writeFile(TOKEN_FILE, `${JSON.stringify(tokens, null, 2)}\n`, "utf8");
-}
-
-async function getAuthedClient() {
-  const client = createOAuthClient();
-  const token = await readToken();
-  if (!token?.refresh_token && !token?.access_token) {
-    const err = new Error("google_not_connected");
-    err.code = "google_not_connected";
-    throw err;
-  }
-  client.setCredentials(token);
-  client.on("tokens", async (fresh) => {
-    const merged = { ...token, ...fresh };
-    await writeToken(merged);
-  });
-  return client;
-}
-
-function authUrl() {
-  const client = createOAuthClient();
-  return client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: SCOPES,
-  });
-}
-
-async function exchangeCode(code) {
-  const client = createOAuthClient();
-  const { tokens } = await client.getToken(code);
-  await writeToken(tokens);
-  return tokens;
-}
-
 async function status() {
-  const conf = configured();
-  if (!conf) {
-    return { configured: false, connected: false, redirectUri: redirectUri() };
-  }
-  const token = await readToken();
+  const base = await oauth.status();
   return {
-    configured: true,
-    connected: Boolean(token?.refresh_token || token?.access_token),
-    redirectUri: redirectUri(),
+    ...base,
     remindersMinutes: reminderMinutes(),
   };
 }
@@ -138,7 +69,6 @@ async function findConflicts(startAt, endAt, { excludeEventId } = {}) {
   return events.filter((ev) => {
     if (excludeEventId && ev.id === excludeEventId) return false;
     if (!ev.startAt || !ev.endAt) return false;
-    // all-day dates: treat as UTC day span roughly
     const bStart = new Date(ev.startAt);
     const bEnd = new Date(ev.endAt);
     return overlaps(start, end, bStart, bEnd);
@@ -229,4 +159,6 @@ module.exports = {
   todayEvents,
   tokyoDayBounds,
   TOKEN_FILE,
+  LEGACY_TOKEN_FILE,
+  getAuthedClient,
 };

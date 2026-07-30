@@ -8,5 +8,7 @@ apps/taskboard/data/mobile-access.txt
 apps/taskboard/data/autostart.log
 apps/taskboard/data/autostart.error.log
 apps/taskboard/data/gcal-token.json
+apps/taskboard/data/google-token.json
+apps/taskboard/secrets/
 daily_governance/chat_logs/sontoku-*.md
 daily_governance/chat_logs/smart-rabbit-*.md
