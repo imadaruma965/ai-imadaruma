@@ -1,6 +1,6 @@
 # ai_profiles — AI人格モデル参考資料
 
-人格再現のための調査DOCXを置く場所。主管定義の正本は常に `cabinet/ai_jurisdiction.md` と各 `cabinet/*.md`。
+人格再現のための調査DOCXを置く場所。主管定義の正本は常に `00_総理官邸/ai_jurisdiction.md` と各省庁フォルダ内の人格正本。
 
 | ファイル | 対象 |
 |----------|------|

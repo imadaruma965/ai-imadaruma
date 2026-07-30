@@ -2,8 +2,8 @@
 
 > **事業**: 睡眠・習慣・感情安定・七徳の日次  
 > **今期役割**: 国家が倒れない最低線  
-> **実体の正本**: `daily_governance/`（today／morning／evening／impulse）  
-> **接続**: AI尊徳 `cabinet/sontoku.md`
+> **実体の正本**: `02_厚生労働省/daily_governance/`（today／morning／evening／impulse）  
+> **接続**: AI尊徳 `02_厚生労働省/sontoku.md`
 
 ## この省が回すもの
 
@@ -11,7 +11,7 @@
 
 | 何 | 置き場 |
 |----|--------|
-| 今日の内政 | `daily_governance/today.md` 最低行動 |
+| 今日の内政 | `02_厚生労働省/daily_governance/today.md` 最低行動 |
 | 脱線 | `impulse_protocol.md` |
 | 後回し | `parking_lot.md` |
 

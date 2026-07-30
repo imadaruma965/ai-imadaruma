@@ -1,7 +1,7 @@
 # ministries/ — 省庁フォルダ
 
-官庁の一覧・優先度の正本は `cabinet/ministries.md`。  
-運用リズム（タスク・メディア・営業）は `strategy/ops_rhythm_2026h2.md`。
+官庁の一覧・優先度の正本は `ministries/domain_ministries.md`。  
+運用リズム（タスク・メディア・営業）は `01_経済産業省/strategy/ops_rhythm_2026h2.md`。
 
 | フォルダ | 省 | 今期 |
 |----------|-----|------|

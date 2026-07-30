@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣である。",
   "scripts": {
-    "taskboard": "node apps/taskboard/server.cjs",
-    "test:taskboard": "node --test apps/taskboard/server.test.cjs apps/taskboard/governance.test.cjs apps/taskboard/notification-service.test.cjs apps/taskboard/voice-service.test.cjs apps/taskboard/governance-monitor.test.cjs apps/taskboard/sales-pipeline.test.cjs apps/taskboard/finance-board.test.cjs apps/taskboard/smart-rabbit.test.cjs apps/taskboard/lib/knowledge-search.test.cjs apps/taskboard/lib/smart-rabbit-context.test.cjs apps/taskboard/lib/load-local-env.test.cjs apps/taskboard/lib/smart-rabbit-speech.test.cjs apps/taskboard/lib/account-research-sheet.test.cjs apps/taskboard/google-oauth.test.cjs"
+    "taskboard": "node 06_科学技術省/taskboard/server.cjs",
+    "test:taskboard": "node --test 06_科学技術省/taskboard/server.test.cjs 06_科学技術省/taskboard/governance.test.cjs 06_科学技術省/taskboard/notification-service.test.cjs 06_科学技術省/taskboard/voice-service.test.cjs 06_科学技術省/taskboard/governance-monitor.test.cjs 06_科学技術省/taskboard/sales-pipeline.test.cjs 06_科学技術省/taskboard/finance-board.test.cjs 06_科学技術省/taskboard/smart-rabbit.test.cjs 06_科学技術省/taskboard/lib/knowledge-search.test.cjs 06_科学技術省/taskboard/lib/smart-rabbit-context.test.cjs 06_科学技術省/taskboard/lib/load-local-env.test.cjs 06_科学技術省/taskboard/lib/smart-rabbit-speech.test.cjs 06_科学技術省/taskboard/lib/account-research-sheet.test.cjs 06_科学技術省/taskboard/google-oauth.test.cjs"
   },
   "repository": {
     "type": "git",

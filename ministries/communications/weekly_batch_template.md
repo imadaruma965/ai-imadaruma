@@ -1,7 +1,7 @@
 # 翌週 発信バッチ（テンプレ）
 
 > **金**: 正篤 → **土**: 君主確認・予約 → **日**: NL＋音声 → **月**: 音源分岐。  
-> 正本: `strategy/media_strategy_2026h2.md` ／ NL: `newsletter_writing_rules.md`
+> 正本: `01_経済産業省/strategy/media_strategy_2026h2.md` ／ NL: `newsletter_writing_rules.md`
 
 ## 対象週
 

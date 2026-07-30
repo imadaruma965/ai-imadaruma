@@ -14,14 +14,14 @@
 
 経済産業省：AI栄一（渋沢栄一・戦略）  
 厚生労働省：AI尊徳（二宮尊徳・実行）  
-文部科学省：AIヤマト（大和魂・象徴。教育・精神性）  
+教育省：AIヤマト（大和魂・象徴。教育・精神性）  
 外務省：AI坂本龍馬（渉外・外交）  
 法務省：AI韓非子（法・規律・リスク管理）  
-科学省：AIテスラ（技術・科学研究）  
+科学技術省：AIテスラ（技術・科学研究）  
 情報省：AIダ・ヴィンチ（統括。配下にリサーチAI007／AIアショーカ）  
 メディア庁：AI北斎（ビジュアル）・AI正篤（文筆）
 
-※AI主管の唯一の正本は `cabinet/ai_jurisdiction.md`。以下は概要のみ。詳細・振る舞いの原則・起動時に読むファイルは同ファイルを参照すること。
+※AI主管の唯一の正本は `00_総理官邸/ai_jurisdiction.md`。以下は概要のみ。詳細・振る舞いの原則・起動時に読むファイルは同ファイルを参照すること。
 
 ### AI栄一（経済産業省）
 
@@ -44,7 +44,7 @@
 * モデル：アショーカ王（マウリヤ朝第3代）
 * 通称：アショーカ
 * 役割：自己統治論の定期研究（歴史・科学・思想）。内部メモと実践ツール草案
-* 正本：`cabinet/ashoka.md`／Skill：`.claude/skills/ashoka/`
+* 正本：`07_情報省/ashoka/ashoka.md`／Skill：`.claude/skills/ashoka/`
 * 参考：`sources/ai_profiles/ashoka_profile.docx`
 
 ### AI正篤（メディア庁）
@@ -52,12 +52,12 @@
 * モデル：安岡正篤（やすおか まさひろ）
 * 通称：正篤（まさひろ）※せいとく／まさのりではない
 * 役割：アショーカの成果と自己統治論を、LinkedIn／SNS／Kindle等の稿へ翻訳する（原則・君主名義）
-* 正本：`cabinet/masahiro.md`／Skill：`.claude/skills/masahiro/`
+* 正本：`08_メディア庁/masahiro.md`／Skill：`.claude/skills/masahiro/`
 * 参考：`sources/ai_profiles/yasuoka_masahiro_profile.docx`
 
 ### 新設メンバー（2026-07-27）
 
-AIスマートラビット（総理）・AIヤマト（文科省）・AI坂本龍馬（外務省）・AI韓非子（法務省）・AIテスラ（科学省）・AIダ・ヴィンチ（情報省）・リサーチAI007（情報省実務班）・AI北斎（メディア庁）。各人格の詳細は `cabinet/ai_jurisdiction.md` と各 `cabinet/<name>.md` を正本とする。
+AIスマートラビット（総理）・AIヤマト（文科省）・AI坂本龍馬（外務省）・AI韓非子（法務省）・AIテスラ（科学技術省）・AIダ・ヴィンチ（情報省）・リサーチAI007（情報省実務班）・AI北斎（メディア庁）。各人格の詳細は `00_総理官邸/ai_jurisdiction.md` と各省庁フォルダ内の人格正本を正とする。
 
 ---
 
@@ -183,15 +183,23 @@ grep -R "統治総理AI\|AI孫子\|AI蕭何\|軍師\|相国" .
 
 ## 11. ディレクトリの理解
 
-以下の方針で理解すること（フォルダ名は変更しない）。
+リポジトリルートは**国家**として見える。各省庁が部屋、人格正本がその部屋の住人である。
 
 ```text
-constitution/        憲法府
-cabinet/             内閣府
-strategy/            戦略府
-daily_governance/    日次統治府
-sources/originals/   正本保管庫
-archives/legacy/     旧制度記録庫
+constitution/                 憲法府（最高法規）
+00_総理官邸/                  執務室（スマートラビット・主管正本）
+01_経済産業省/                栄一 ＋ strategy/
+02_厚生労働省/                尊徳 ＋ daily_governance/
+03_教育省/                    ヤマト（明君七徳・人格ルーティン）
+04_外務省/                    坂本龍馬
+05_法務省/                    韓非子（契約・セキュリティ監査）
+06_科学技術省/                テスラ ＋ taskboard/ ＋ scripts/（旧科学＋IT）
+07_情報省/                    ダ・ヴィンチ ＋ ashoka/ ＋ research_007/
+08_メディア庁/                北斎・正篤
+09_財務省/                    収入・支出・漏れ検知（AI選定中）
+ministries/                   旧事業ドメイン六省（参照・降格レイヤー）
+sources/originals/            正本保管庫
+archives/legacy/              旧制度記録庫
 ```
 
 ---

@@ -1,7 +1,7 @@
 # Phase 2-1 計画書 — 五領域による国家状態診断 / 未統治状態の検知
 
 - 作成日: 2026-07-24
-- 対象アプリ: `apps/taskboard`（統治手帳）
+- 対象アプリ: `06_科学技術省/taskboard`（統治手帳）
 - ステータス: **実装完了・テスト合格（37/37）。§13.1は案A（朝ジャーナルに「今日の一事」入力欄を追加）を採用して実装済み。§13.2はnpm install実施済み、既存テスト14件が実装前に合格していることを確認済み。§18で追加実装（完成分）を記録。**
 
 ---
@@ -37,7 +37,7 @@
 
 ### 4.1 データ永続化
 
-- 正本は `apps/taskboard/data/state.json`（gitignore対象、自動生成、`{updatedAt, data}` 形式）。
+- 正本は `06_科学技術省/taskboard/data/state.json`（gitignore対象、自動生成、`{updatedAt, data}` 形式）。
 - 読み書きは `server.cjs` の `readStateRecord()` / `writeStateRecord()`（`server.cjs:140-176`）。楽観ロック（`updatedAt`不一致で409）。
 - スキーマの防御的検証は `server.cjs` の `sanitizeStateData()`（`110-138`）と `app.js` の `hydrateFromData`/`blankState`（`319-401`）の二重構成。
 - フロントは `localStorage`（キー: `imadaruma-gyomu-tochi-v1`）にも保持し、サーバーと同期する。
@@ -74,14 +74,14 @@
 
 ### 4.5 テスト・Lint
 
-- テストランナー: Node標準 `node:test` + `node:assert/strict`。実行: `npm run test:taskboard`（`node --test apps/taskboard/server.test.cjs`）。
+- テストランナー: Node標準 `node:test` + `node:assert/strict`。実行: `npm run test:taskboard`（`node --test 06_科学技術省/taskboard/server.test.cjs`）。
 - `app.js` 側ロジックのテストは現状ゼロ。
 - Lint/型チェックのスクリプトはリポジトリに存在しない（TypeScript未使用）。
 - **現状、ルートに `node_modules` が未インストールのため `npm run test:taskboard` は `@cursor/sdk` 解決エラーで失敗する（環境未整備。コードの不具合ではない）。実装着手前に `npm install` を行い、クリーンな既存テスト合格を確認したい（§13で許可を確認）。**
 
 ## 5. データモデル
 
-新規ファイル `apps/taskboard/governance.js` に、状態(`state`)を受け取り診断結果を返す**純粋関数**として実装する（副作用なし、`state.json`のスキーマは変更しない＝派生データ）。
+新規ファイル `06_科学技術省/taskboard/governance.js` に、状態(`state`)を受け取り診断結果を返す**純粋関数**として実装する（副作用なし、`state.json`のスキーマは変更しない＝派生データ）。
 
 ### 5.1 五領域ID（既存命名との整合）
 
@@ -230,7 +230,7 @@ if (typeof window !== "undefined") {
 
 ## 11. AI尊徳との接続準備
 
-- `apps/taskboard/app.js`の`sontokuContext()`（`2196-2233`）に`domainAssessments`（5件の要約: id/status/score/summaryのみ、reasons等の詳細は送らない）と`activeAlerts`（type/severity/titleのみ、最大5件）を追加。
+- `06_科学技術省/taskboard/app.js`の`sontokuContext()`（`2196-2233`）に`domainAssessments`（5件の要約: id/status/score/summaryのみ、reasons等の詳細は送らない）と`activeAlerts`（type/severity/titleのみ、最大5件）を追加。
 - `server.cjs`の`normalizeContext()`（`227-260`）に対応するサニタイズ（配列長・文字列長の上限）を追加。**プロンプト本文（`basePrompt`/`turnPrompt`）は変更しない**（ユーザー指示「全面変更は行わない」に従い、コンテキストJSONへの追加のみ）。
 - `buildGovernanceContext()`は`sontokuContext()`とは別関数として`governance.js`に置き、`sontokuContext()`内部から呼び出す形にして重複を避ける。
 
@@ -274,19 +274,19 @@ if (typeof window !== "undefined") {
 
 | ファイル | 種別 | 内容 |
 |---|---|---|
-| `apps/taskboard/governance.js` | 新規 | 診断・検知の純粋関数群 |
-| `apps/taskboard/governance.test.cjs` | 新規 | 上記のユニットテスト（8ケース以上） |
-| `apps/taskboard/app.js` | 変更 | `renderGovernanceStatus()`追加、`render()`/`setView`から呼び出し、`sontokuContext()`拡張 |
-| `apps/taskboard/index.html` | 変更 | `<script src="governance.js">`追加、`#governance-status`DOM追加（+ §13.1案A採用時は朝ジャーナルに「今日の一事」入力欄追加） |
-| `apps/taskboard/server.cjs` | 変更 | `normalizeContext()`に`domainAssessments`/`activeAlerts`のサニタイズ追加 |
-| `apps/taskboard/styles.css` | 変更 | `--danger`変数、`.governance-status`関連スタイル追加 |
-| `apps/taskboard/server.test.cjs` | 変更なし（想定） | 既存テストの動作確認のみ |
+| `06_科学技術省/taskboard/governance.js` | 新規 | 診断・検知の純粋関数群 |
+| `06_科学技術省/taskboard/governance.test.cjs` | 新規 | 上記のユニットテスト（8ケース以上） |
+| `06_科学技術省/taskboard/app.js` | 変更 | `renderGovernanceStatus()`追加、`render()`/`setView`から呼び出し、`sontokuContext()`拡張 |
+| `06_科学技術省/taskboard/index.html` | 変更 | `<script src="governance.js">`追加、`#governance-status`DOM追加（+ §13.1案A採用時は朝ジャーナルに「今日の一事」入力欄追加） |
+| `06_科学技術省/taskboard/server.cjs` | 変更 | `normalizeContext()`に`domainAssessments`/`activeAlerts`のサニタイズ追加 |
+| `06_科学技術省/taskboard/styles.css` | 変更 | `--danger`変数、`.governance-status`関連スタイル追加 |
+| `06_科学技術省/taskboard/server.test.cjs` | 変更なし（想定） | 既存テストの動作確認のみ |
 | `package.json` | 変更 | `test:taskboard`スクリプトに`governance.test.cjs`を追加 |
 | `docs/development/phase-2-1-governance-diagnostics-plan.md` | 新規（本ファイル） | 本計画書 |
 
 ## 16. テスト計画
 
-`apps/taskboard/governance.test.cjs`（`node:test`、`server.test.cjs`と同じ流儀）：
+`06_科学技術省/taskboard/governance.test.cjs`（`node:test`、`server.test.cjs`と同じ流儀）：
 
 1. `assessDomains()`が常に5領域すべてを返す（順序固定）
 2. データ不足の領域が`status: "unknown"`になる
@@ -330,10 +330,10 @@ governanceSummary: {
 }
 ```
 
-### 18.4 NotificationService（`apps/taskboard/notification-service.js`、新規）
+### 18.4 NotificationService（`06_科学技術省/taskboard/notification-service.js`、新規）
 `notify()` / `schedule()` / `cancel()` のインターフェースのみ。中身は`console.log`と`{ok, stub:true, ...}`の返却のみで、実通知は行わない。`governance.js`と同じ isomorphic 形式（`window.NotificationService` / `module.exports`）。
 
-### 18.5 VoiceService（`apps/taskboard/voice-service.js`、新規）
+### 18.5 VoiceService（`06_科学技術省/taskboard/voice-service.js`、新規）
 `speak()` はブラウザの`SpeechSynthesis`が使える場合のみ実際に読み上げ、使えない場合（Node環境含む）は`console.log`スタブにフォールバックする。`listen()` / `stop()` はインターフェースのみ（`listen()`は常に`not_implemented`を返す。マイク入力の本実装は次Phase）。`stop()`はSpeechSynthesis利用時のみ`speechSynthesis.cancel()`を呼ぶ。
 
 ### 18.6 `getGovernanceAlerts()`（`governance.js`）
@@ -348,8 +348,8 @@ GovernanceEvent = Object.freeze({
 定義のみ。既存の`detectGovernanceAlerts()`が返す`type`文字列（`morning_governance_not_started`等）へは接続していない（指示通り、まだ使用しない）。今後、通知・音声・AI介入を共通イベント化する際の型として使う想定。
 
 ### 18.8 変更ファイル一覧（追加分）
-新規: `apps/taskboard/notification-service.js`, `apps/taskboard/notification-service.test.cjs`, `apps/taskboard/voice-service.js`, `apps/taskboard/voice-service.test.cjs`
-変更: `apps/taskboard/governance.js`, `apps/taskboard/governance.test.cjs`, `apps/taskboard/app.js`, `apps/taskboard/index.html`, `apps/taskboard/styles.css`, `package.json`
+新規: `06_科学技術省/taskboard/notification-service.js`, `06_科学技術省/taskboard/notification-service.test.cjs`, `06_科学技術省/taskboard/voice-service.js`, `06_科学技術省/taskboard/voice-service.test.cjs`
+変更: `06_科学技術省/taskboard/governance.js`, `06_科学技術省/taskboard/governance.test.cjs`, `06_科学技術省/taskboard/app.js`, `06_科学技術省/taskboard/index.html`, `06_科学技術省/taskboard/styles.css`, `package.json`
 
 ### 18.9 テスト
 `governance.test.cjs`に4件追加（`getGovernanceAlerts`の一致確認、`GovernanceEvent`の内容とfreeze確認、`governanceSummary`が最悪領域と最重要警報を正しく拾うこと、警報が0件のときの安全な既定値）。`notification-service.test.cjs`（3件）・`voice-service.test.cjs`（4件）を新規追加。`npm run test:taskboard`は37/37合格。

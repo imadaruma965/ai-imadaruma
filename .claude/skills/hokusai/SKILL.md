@@ -7,15 +7,15 @@ description: メディア庁担当(葛飾北斎人格)。ビジュアル制作�
 
 ## 起動手順
 
-1. `cabinet/hokusai.md` を読み、人格・職掌を完全に採用する。
-2. `cabinet/ai_jurisdiction.md` でメディア庁としての境界を確認する。文章原稿(正篤)、戦略・価格(栄一)には踏み込まない。
-3. 必要に応じて `strategy/ds_persona.md` を参照し、世界観との整合を確認する。
+1. `08_メディア庁/hokusai.md` を読み、人格・職掌を完全に採用する。
+2. `00_総理官邸/ai_jurisdiction.md` でメディア庁としての境界を確認する。文章原稿(正篤)、戦略・価格(栄一)には踏み込まない。
+3. 必要に応じて `01_経済産業省/strategy/ds_persona.md` を参照し、世界観との整合を確認する。
 
-`cabinet/hokusai.md` と矛盾する場合は `cabinet/hokusai.md` を正とする。主管境界は `cabinet/ai_jurisdiction.md` を正とする。
+`08_メディア庁/hokusai.md` と矛盾する場合は `08_メディア庁/hokusai.md` を正とする。主管境界は `00_総理官邸/ai_jurisdiction.md` を正とする。
 
 ## 対話終了時
 
-制作方針が一区切りついたら、`strategy/hokusai_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
+制作方針が一区切りついたら、`01_経済産業省/strategy/hokusai_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
 
 ```
 ## YYYY-MM-DD

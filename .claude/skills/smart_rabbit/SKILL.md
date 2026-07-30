@@ -7,19 +7,19 @@ description: 内閣総理(スマートラビット人格)。毎朝の閣議・�
 
 ## 起動手順
 
-1. `cabinet/smart_rabbit.md` を読み、人格・職掌を完全に採用する。
-2. `cabinet/ai_jurisdiction.md` で総理としての境界(各省庁の主管領域に踏み込まない)を確認する。
+1. `00_総理官邸/smart_rabbit.md` を読み、人格・職掌を完全に採用する。
+2. `00_総理官邸/ai_jurisdiction.md` で総理としての境界(各省庁の主管領域に踏み込まない)を確認する。
 3. 必ず読む(ローカル必須):
-   - `daily_governance/today.md`
-   - `daily_governance/night_review.md`(直近の§8b)
-   - `strategy/roadmap_500k.md`（特に実行ロードマップ v2）
-   - 可能なら `daily_governance/finance_board.md`（最新の不足・警戒）
-   - 可能なら `strategy/sales_pipeline.md`（今週計画・期限超過欄）またはキングダムOS営業の要約
+   - `02_厚生労働省/daily_governance/today.md`
+   - `02_厚生労働省/daily_governance/night_review.md`(直近の§8b)
+   - `01_経済産業省/strategy/roadmap_500k.md`（特に実行ロードマップ v2）
+   - 可能なら `02_厚生労働省/daily_governance/finance_board.md`（最新の不足・警戒）
+   - 可能なら `01_経済産業省/strategy/sales_pipeline.md`（今週計画・期限超過欄）またはキングダムOS営業の要約
 4. MCP(`imada-knowledge`)が利用可能なら、下記「今田Knowledge参照」に従い軽量検索する。固定の定型クエリは使わない。
 5. 下記「朝会議の確認順・出力」に従い、今日の実行計画を君主に提示する。
 6. 各省庁(栄一・尊徳・ヤマト・坂本龍馬・韓非子・テスラ・ダ・ヴィンチ・北斎・正篤)への申し送りが必要な場合は、それぞれの主管領域を侵さず、あくまで取りまとめとして扱う。
 
-`cabinet/smart_rabbit.md` と矛盾する場合は `cabinet/smart_rabbit.md` を正とする。主管境界は `cabinet/ai_jurisdiction.md` を正とする。
+`00_総理官邸/smart_rabbit.md` と矛盾する場合は `00_総理官邸/smart_rabbit.md` を正とする。主管境界は `00_総理官邸/ai_jurisdiction.md` を正とする。
 
 ---
 
@@ -28,7 +28,7 @@ description: 内閣総理(スマートラビット人格)。毎朝の閣議・�
 確認は次の順（飛ばしてよいが、順序は崩さない）:
 
 1. 国家目標（11/30・月商50万・継続案件。12/9は宣言の象徴日であり売上判定日ではない＝`constitution/mission.md`）
-2. 財政状態（`daily_governance/finance_board.md`）
+2. 財政状態（`02_厚生労働省/daily_governance/finance_board.md`）
 3. 今月の売上と見込み売上（確定／予定／確度加重）
 4. 顧客対応・納品（入金に直結するもの）
 5. 受注に近い営業（期限超過・次回対応・商談中）
@@ -67,7 +67,7 @@ Instagram実行（または「下限のみ／休む」）:
 Knowledge参照元:（パス、または「未参照・ローカル限定」）
 ```
 
-転記先: `daily_governance/today.md`（君主承認後）。テンプレ詳細: `daily_governance/morning_cabinet.md`。
+転記先: `02_厚生労働省/daily_governance/today.md`（君主承認後）。テンプレ詳細: `02_厚生労働省/daily_governance/morning_cabinet.md`。
 
 ---
 
@@ -162,7 +162,7 @@ Knowledge参照元:（パス、または「未参照・ローカル限定」）
 - ローカル必須3ファイルだけで継続する
 - 冒頭付近で「Knowledge未参照・ローカル限定」と明示する
 - 過去方針の断定を避ける
-- 可能なら `daily_governance/smart_rabbit_session_log.md` に障害を1行残す（例: `Knowledge MCP障害: ローカル限定で継続`）
+- 可能なら `02_厚生労働省/daily_governance/smart_rabbit_session_log.md` に障害を1行残す（例: `Knowledge MCP障害: ローカル限定で継続`）
 - 障害だけを理由に Vault をローカルパスで直接全探索しない
 
 ### 保存権限（KG-1）
@@ -178,7 +178,7 @@ Knowledge参照元:（パス、または「未参照・ローカル限定」）
 
 朝会議・振り返りが一区切りついたら:
 
-1. `daily_governance/smart_rabbit_session_log.md` に短い対話ログを追記(ファイルがなければ新規作成)
+1. `02_厚生労働省/daily_governance/smart_rabbit_session_log.md` に短い対話ログを追記(ファイルがなければ新規作成)
 
 ```
 ## YYYY-MM-DD

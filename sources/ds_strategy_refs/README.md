@@ -14,9 +14,9 @@
 
 | 領域 | 正本（ai-imadaruma） | 本フォルダ |
 |------|----------------------|------------|
-| DS顧客・ペルソナ | `strategy/ds_persona.md` | 参考のみ |
-| 自己統治論R&D | `strategy/ds_rnd.md` | — |
-| 50万ロードマップ | `strategy/roadmap_500k.md` | マネタイズ階層は要突合 |
+| DS顧客・ペルソナ | `01_経済産業省/strategy/ds_persona.md` | 参考のみ |
+| 自己統治論R&D | `01_経済産業省/strategy/ds_rnd.md` | — |
+| 50万ロードマップ | `01_経済産業省/strategy/roadmap_500k.md` | マネタイズ階層は要突合 |
 | ブランド核の将来取り込み | 未（必要時にstrategyへ要約移植） | v7を母体に |
 
 矛盾がある場合は、**ロードマップと `ds_persona.md` を優先**し、本フォルダは改訂の材料とする。

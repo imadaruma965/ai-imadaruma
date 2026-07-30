@@ -1,7 +1,7 @@
 # Phase 3-A 計画書 — 「AIが朝の統治へ参加する」
 
 - 作成日: 2026-07-24
-- 対象アプリ: `apps/taskboard`（統治手帳）
+- 対象アプリ: `06_科学技術省/taskboard`（統治手帳）
 - 前提: Phase 2-1（五領域診断・未統治検知・NotificationService/VoiceServiceのインターフェース）を維持し、既存機能を壊さない追加実装のみ行う。
 - ステータス: **実装完了・テスト合格（46/46）。§4.3の設計判断はユーザー確認済み（開始ボタンへの誘導のみを採用、自動開始はしない）。**
 
@@ -10,7 +10,7 @@
 ## 1. 事前確認（作業前ルール）
 
 ### 1.1 git status
-`apps/taskboard/*`（5ファイル変更）・`package.json`が未ステージ、Phase 2-1で作成した新規ファイル群（`governance.js`系、`notification-service.*`、`voice-service.*`）と`docs/`が未追跡。いずれも本セッションでの成果物で、ユーザーの指示通り未コミットのまま。working treeは「クリーン」ではないが、これは前Phaseからの継続であり、他者の変更が混入している状態ではない。
+`06_科学技術省/taskboard/*`（5ファイル変更）・`package.json`が未ステージ、Phase 2-1で作成した新規ファイル群（`governance.js`系、`notification-service.*`、`voice-service.*`）と`docs/`が未追跡。いずれも本セッションでの成果物で、ユーザーの指示通り未コミットのまま。working treeは「クリーン」ではないが、これは前Phaseからの継続であり、他者の変更が混入している状態ではない。
 
 ### 1.2 変更確認
 Phase 2-1の差分（`git diff --stat`）: `app.js`(+69) `index.html`(+11) `server.cjs`(+17) `styles.css`(+75) `package.json`(+1/-1)。新規: `governance.js`/`governance.test.cjs`/`notification-service.js`/`notification-service.test.cjs`/`voice-service.js`/`voice-service.test.cjs`。
@@ -49,7 +49,7 @@ Phase 2-1の差分（`git diff --stat`）: `app.js`(+69) `index.html`(+11) `serv
 
 ## 4. 実装設計
 
-### 4.1 NotificationService（`apps/taskboard/notification-service.js`変更）
+### 4.1 NotificationService（`06_科学技術省/taskboard/notification-service.js`変更）
 
 `notify(payload)`を次のように変更する。`schedule()`/`cancel()`は変更しない。
 
@@ -78,12 +78,12 @@ notify(payload) {
 
 `tag: payload.type`を付けることで、同種の警報が短時間に重複しても既存の通知UIをOSレベルでも自然に置き換えられる（`GovernanceMonitor`側の重複排除と二重の安全網）。
 
-### 4.2 VoiceServiceの実配線（`apps/taskboard/app.js`変更、`voice-service.js`自体は変更なし）
+### 4.2 VoiceServiceの実配線（`06_科学技術省/taskboard/app.js`変更、`voice-service.js`自体は変更なし）
 
 - **朝の挨拶**: `ensureSontokuOpening()`の成功時（`pushSontokuMessage("sontoku", data.reply, ...)`の直後）に`window.VoiceService?.speak(data.reply)`を追加する。この関数は既に「日付ごとに1回だけ」ガードされているため、挨拶の読み上げも自然に1日1回になる。
 - **警報・今日の重点**: Morning Flow（§4.3）の最終ステップで、`buildGovernanceContext()`の`governanceSummary.oneLineSummary`と`governanceSummary.topAlert.title`をまとめて1回だけ読み上げる。`renderGovernanceStatus()`（`render()`から毎回呼ばれる関数）の中では読み上げない＝保存のたびに音声が鳴るのを防ぐ。
 
-### 4.3 Morning Flow（`apps/taskboard/app.js`に`runMorningFlow()`新設）
+### 4.3 Morning Flow（`06_科学技術省/taskboard/app.js`に`runMorningFlow()`新設）
 
 ```js
 let morningFlowState = { date: null, done: false };
@@ -127,7 +127,7 @@ async function runMorningFlow() {
 
 もし「実際に25分タイマーまで自動起動してほしい」という意図であれば、`runMorningFlow()`の最終ステップを`startPomodoro()`の呼び出しに変更する（1行の変更で対応可能）。
 
-### 4.4 GovernanceMonitor（`apps/taskboard/governance-monitor.js`新規）
+### 4.4 GovernanceMonitor（`06_科学技術省/taskboard/governance-monitor.js`新規）
 
 ```js
 function createGovernanceMonitor({ getState, computeAlerts, onNewAlert, now, intervalMs } = {}) {
@@ -192,12 +192,12 @@ governanceMonitor?.start();
 
 | ファイル | 種別 | 内容 |
 |---|---|---|
-| `apps/taskboard/notification-service.js` | 変更 | `notify()`をBrowser Notification APIへ接続 |
-| `apps/taskboard/notification-service.test.cjs` | 変更 | 新しい`notify()`の分岐（API未対応/許可済み/未確認/拒否）のテストに更新 |
-| `apps/taskboard/governance-monitor.js` | 新規 | `createGovernanceMonitor()` |
-| `apps/taskboard/governance-monitor.test.cjs` | 新規 | 重複排除・start/stop・異常系のテスト |
-| `apps/taskboard/app.js` | 変更 | `runMorningFlow()`新設、`ensureSontokuOpening()`に音声読み上げ追加、`setView("day")`から`runMorningFlow()`呼び出し、`GovernanceMonitor`の起動配線 |
-| `apps/taskboard/index.html` | 変更 | `<script src="governance-monitor.js">`追加 |
+| `06_科学技術省/taskboard/notification-service.js` | 変更 | `notify()`をBrowser Notification APIへ接続 |
+| `06_科学技術省/taskboard/notification-service.test.cjs` | 変更 | 新しい`notify()`の分岐（API未対応/許可済み/未確認/拒否）のテストに更新 |
+| `06_科学技術省/taskboard/governance-monitor.js` | 新規 | `createGovernanceMonitor()` |
+| `06_科学技術省/taskboard/governance-monitor.test.cjs` | 新規 | 重複排除・start/stop・異常系のテスト |
+| `06_科学技術省/taskboard/app.js` | 変更 | `runMorningFlow()`新設、`ensureSontokuOpening()`に音声読み上げ追加、`setView("day")`から`runMorningFlow()`呼び出し、`GovernanceMonitor`の起動配線 |
+| `06_科学技術省/taskboard/index.html` | 変更 | `<script src="governance-monitor.js">`追加 |
 | `package.json` | 変更 | `test:taskboard`に`governance-monitor.test.cjs`追加（`notification-service.test.cjs`は既存） |
 | `docs/development/phase-3-a-ai-morning-participation-plan.md` | 新規（本ファイル） | 本計画書 |
 

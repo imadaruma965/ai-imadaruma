@@ -4,7 +4,7 @@
 >
 > **上位規範**: `constitution/four_pillars.md`（四柱統治フレームワーク）
 >
-> **関連**: `constitution/mission.md`（第一国家目標）、`cabinet/ai_jurisdiction.md`（AI主管定義）、`cabinet/ministries.md`（六省）
+> **関連**: `constitution/mission.md`（第一国家目標）、`00_総理官邸/ai_jurisdiction.md`（AI主管定義）、`ministries/domain_ministries.md`（六省）
 
 ---
 
@@ -30,7 +30,7 @@
   └── Internal Affairs　→ 内務省
 ```
 
-官庁名の一覧・今期優先は `cabinet/ministries.md` を正とする。  
+官庁名の一覧・今期優先は `ministries/domain_ministries.md` を正とする。  
 **原則:**
 
 - **四柱**は国家統治の原理・構造を表す上位分類である
@@ -127,7 +127,7 @@
 | 層 | 確認内容 | 参照 |
 |----|---------|------|
 | **四柱** | 人格・内政・外交・財政の最低行動 | `four_pillars.md` |
-| **6領域** | 各領域の状態・主戦場・15分タスク | `daily_governance/` |
+| **6領域** | 各領域の状態・主戦場・15分タスク | `02_厚生労働省/daily_governance/` |
 
 ```
 朝閣議
@@ -143,7 +143,7 @@
 
 ## AI主管との接続
 
-> 四柱・6領域の定義はAI名称に依存しない。AI主管は `cabinet/ai_jurisdiction.md` に分離して定義する。
+> 四柱・6領域の定義はAI名称に依存しない。AI主管は `00_総理官邸/ai_jurisdiction.md` に分離して定義する。
 
 | 担当 | AI | 管轄範囲 |
 |------|-----|---------|
@@ -158,9 +158,9 @@
 |---------|------|
 | `constitution/four_pillars.md` | 四柱の原典（AI主管定義は含まない） |
 | `constitution/mission.md` | 第一国家目標の詳細 |
-| `cabinet/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
-| `cabinet/eiichi.md` | 戦略メンター AI栄一 |
-| `cabinet/sontoku.md` | 実行マネージャー AI尊徳 |
+| `00_総理官邸/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
+| `01_経済産業省/eiichi.md` | 戦略メンター AI栄一 |
+| `02_厚生労働省/sontoku.md` | 実行マネージャー AI尊徳 |
 | `cabinet/chief_statecraft_minister.md` | 旧：統治総理AI（移行予定）→ AI尊徳（実行マネージャー） |
 
 ---

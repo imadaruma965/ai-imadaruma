@@ -138,27 +138,20 @@ ai-imadaruma/
 │   ├── mission.md                         # 国家目標（更新予定）
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
-├── cabinet/                               # 内閣
-│   ├── monarch.md                         # 君主
-│   ├── eiichi.md                          # 戦略メンター AI栄一
-│   ├── sontoku.md                         # 実行マネージャー AI尊徳
-│   ├── ai_jurisdiction.md                 # AI主管定義
-│   └── chief_statecraft_minister.md       # 旧：統治総理AI（移行予定）
-├── strategy/                              # 戦略（AI栄一管轄）
-│   ├── README.md                          # 戦略領域の全体像
-│   ├── roadmap_500k.md                    # 50万円獲得ロードマップ
-│   ├── revenue_sources.md                 # 収益源一覧
-│   ├── eiichi_weekly_review.md            # 週次戦略レビュー
-│   ├── eiichi_monthly_review.md           # 月次戦略レビュー
-│   ├── no_battle_rules.md                 # やらない戦
-│   ├── offer_review.md                    # 商品・オファー見直し
-│   └── sales_pipeline.md                  # 売上導線管理
-├── daily_governance/                      # 日次統治（毎日使う）
+├── 00_総理官邸/                           # 執務室（総理・主管正本・君主）
+├── 01_経済産業省/                         # 栄一 ＋ strategy/
+├── 02_厚生労働省/                         # 尊徳 ＋ daily_governance/
+├── 03_教育省/ … 08_メディア庁/         # 各省庁（人格正本）
+├── 06_科学技術省/                               # 統治手帳（taskboard）・scripts
+├── ministries/                            # 事業ドメイン六省（AI省庁とは別）
+├── 01_経済産業省/strategy/                # 戦略（AI栄一管轄）
+│   ├── README.md
+│   ├── roadmap_500k.md
+│   └── …
+├── 02_厚生労働省/daily_governance/        # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md
-│   ├── impulse_protocol.md
-│   ├── parking_lot.md
-│   └── evening_review.md
+│   └── …
 └── archives/
     ├── daily_logs/
     ├── weekly_reviews/
@@ -166,6 +159,7 @@ ai-imadaruma/
 ```
 
 ★新 = Phase 1で作成済み。旧ファイルは Phase 2以降で移行・アーカイブ予定。
+旧 `cabinet/` は各省庁フォルダへ再配置済み。
 
 ## 毎日の運用フロー
 
@@ -187,11 +181,11 @@ AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.cl
 
 ### `/sontoku`（日次実行）
 
-呼び出すと、`cabinet/sontoku.md` の人格を採用し、`daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`02_厚生労働省/sontoku.md` の人格を採用し、`02_厚生労働省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ### `/eiichi`（戦略・ロードマップ）
 
-呼び出すと、`cabinet/eiichi.md` の人格を採用し、`strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`01_経済産業省/eiichi.md` の人格を採用し、`01_経済産業省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 
