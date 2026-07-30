@@ -2825,7 +2825,8 @@
   let smartRabbitActiveMode = "general";
   let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
   let smartRabbitSpeech = null;
-  let currentViewName = "home";
+  let currentViewName = "smartrabbit";
+  const smartRabbitOpeningAttempted = new Set();
 
   function ensureSmartRabbitSpeech() {
     if (smartRabbitSpeech) return smartRabbitSpeech;
@@ -2968,6 +2969,7 @@
       status: metadata.status || "ok",
       knowledgeRefs: metadata.knowledgeRefs || null,
       error: metadata.error || null,
+      kind: metadata.kind || null,
     };
     session.messages.push(msg);
     session.updatedAt = msg.at;
@@ -3267,6 +3269,45 @@
     }
   }
 
+  function smartRabbitOpeningKey() {
+    return `sr-open-${todayISO()}`;
+  }
+
+  // 「総理」タブを開いた最初の一回だけ、スマートラビットから挨拶→今日の予定→至急対応の順で話しかける。
+  async function ensureSmartRabbitOpening() {
+    const key = smartRabbitOpeningKey();
+    ensureSmartRabbitSession(key, "today");
+    const hasLiveOpening = getSmartRabbitMessages(key).some(
+      (message) => message.kind === "opening" && message.status !== "error"
+    );
+    if (hasLiveOpening || smartRabbitOpeningAttempted.has(key) || smartRabbitBusy) return;
+    smartRabbitOpeningAttempted.add(key);
+    if (state.smartRabbitActiveSession !== key) {
+      state.smartRabbitActiveSession = key;
+      save();
+    }
+    renderSmartRabbitPanel();
+    setSmartRabbitBusy(true);
+    try {
+      const data = await requestSmartRabbit({ sessionId: key, mode: "today", message: "", event: "open", messageId: uid() });
+      const assistantMsg = pushSmartRabbitMessage(key, "assistant", data.reply, {
+        mode: data.mode || "today",
+        status: "ok",
+        knowledgeRefs: data.knowledge || null,
+        kind: "opening",
+      });
+      setSmartRabbitStatus(`Cursor接続済み · ${data.model}`, "connected");
+      renderSmartRabbitPanel();
+      if (assistantMsg) ensureSmartRabbitSpeech().maybeAutoSpeak(assistantMsg);
+    } catch (error) {
+      pushSmartRabbitMessage(key, "error", error.message, { mode: "today", status: "error", id: uid() });
+      setSmartRabbitStatus("接続エラー", "error");
+      renderSmartRabbitPanel();
+    } finally {
+      setSmartRabbitBusy(false);
+    }
+  }
+
   // ユーザー発言は送信前にpush(=保存)する。AI応答が失敗しても発言は失われない(Phase 1-8)。
   async function sendSmartRabbitUserMessage(text) {
     const trimmed = String(text || "").trim();
@@ -3346,6 +3387,7 @@
     if (name === "smartrabbit") {
       updateSmartRabbitSpeechToggleUi();
       refreshSmartRabbitStatus();
+      ensureSmartRabbitOpening();
     }
     render();
   }
@@ -3520,7 +3562,7 @@
       /* no audio */
     }
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("キングダムOS", { body: message });
+      new Notification("統治手帳", { body: message });
     }
   }
 
@@ -4436,6 +4478,11 @@
   render();
   refreshSontokuStatus();
   refreshSmartRabbitStatus();
+  // 起動時の既定タブが「総理」のため、setView()を経由せずここでも開幕挨拶を発火させる。
+  if (currentViewName === "smartrabbit") {
+    updateSmartRabbitSpeechToggleUi();
+    ensureSmartRabbitOpening();
+  }
 
   // GovernanceMonitor（Phase 3-A）: 60秒ごとに未統治警報を再チェックし、新規のものだけ通知する。
   const governanceMonitor =

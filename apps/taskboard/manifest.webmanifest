@@ -1,6 +1,6 @@
 {
-  "name": "賢いうさぎのキングダムOS",
-  "short_name": "キングダムOS",
+  "name": "賢いウサギの統治手帳",
+  "short_name": "統治手帳",
   "description": "今日・予定・タスク・振り返り",
   "start_url": "/?source=homescreen",
   "display": "standalone",

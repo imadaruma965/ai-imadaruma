@@ -498,6 +498,75 @@ function knowledgeBlock(knowledge) {
   return `【Knowledge検索結果(クエリ: ${knowledge.query})】\n${lines}\n\n回答では参照した項目のパスを「参照したKnowledge」として示すこと。ここにない情報を断定しないこと。`;
 }
 
+function formatEventTime(iso) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
+}
+
+function formatEventRange(ev) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(ev.startAt || ""))) return "終日";
+  return `${formatEventTime(ev.startAt)}〜${formatEventTime(ev.endAt)}`;
+}
+
+// direction未指定・"in"は受取(支払うべき請求書)、"out"のみ送付(受け取るべき請求書)。app.js側のラベル判定と揃える。
+function findDuePayableInvoices(stateData, todayStr) {
+  const invoices = Array.isArray(stateData.invoices) ? stateData.invoices : [];
+  return invoices
+    .filter((inv) => inv && inv.direction !== "out" && inv.status !== "paid" && inv.dueDate && inv.dueDate <= todayStr)
+    .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)));
+}
+
+function findOverdueExternalTasks(stateData, todayStr) {
+  const tasks = Array.isArray(stateData.tasks) ? stateData.tasks : [];
+  return tasks.filter(
+    (t) => t && !t.deletedAt && t.status !== "done" && t.dueDate && t.dueDate < todayStr && (t.external || t.forced)
+  );
+}
+
+// スマートラビットの「総理」タブを開いた直後の一言用。今日の実データ(Google予定・請求書・対外期限)だけを渡し、
+// AIが数字や予定を作文しないよう素材として渡す(本文組み立てはプロンプト側の指示に委ねる)。
+async function buildOpeningBriefing(date, stateData) {
+  const lines = [];
+
+  lines.push("【今日の予定(Googleカレンダー)】");
+  try {
+    const st = await gcal.status();
+    if (!st.connected) {
+      lines.push("(未接続のため取得不可)");
+    } else {
+      const { items } = await gcal.todayEvents(date);
+      if (!items.length) {
+        lines.push("(本日の登録なし)");
+      } else {
+        items.forEach((ev) => lines.push(`- ${formatEventRange(ev)} ${ev.title}`));
+      }
+    }
+  } catch {
+    lines.push("(取得エラー)");
+  }
+
+  const duePayables = findDuePayableInvoices(stateData, date);
+  if (duePayables.length) {
+    lines.push("", "【至急:支払い期限が来ている請求書(受取分)】");
+    duePayables.slice(0, 8).forEach((inv) => {
+      const amount = typeof inv.amount === "number" ? `${inv.amount.toLocaleString("ja-JP")}円` : "金額未記載";
+      lines.push(`- ${inv.party || "(取引先未設定)"} / ${amount} / 期限: ${inv.dueDate}${inv.notes ? ` / ${inv.notes}` : ""}`);
+    });
+  }
+
+  const overdueExternal = findOverdueExternalTasks(stateData, date);
+  if (overdueExternal.length) {
+    lines.push("", "【至急:期限超過中の対外タスク】");
+    overdueExternal.slice(0, 8).forEach((t) => lines.push(`- ${t.title || "(無題)"} / 期限: ${t.dueDate}`));
+  }
+
+  return lines.join("\n");
+}
+
 async function smartRabbitBasePrompt(date, mode) {
   const cfg = knowledgeSearch.MODE_CONFIG[knowledgeSearch.resolveMode(mode)];
   const [persona, skill, recentLog, today] = await Promise.all([
@@ -542,18 +611,26 @@ ${recentLog || "(まだ記録なし)"}
 ${today || "(未記入)"}`;
 }
 
-function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, businessContextText, firstTurn }) {
+function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, businessContextText, firstTurn, event, opening }) {
   const cfg = knowledgeSearch.MODE_CONFIG[knowledgeSearch.resolveMode(mode)];
   const localTime = context && context.localTime ? context.localTime : date;
+  const request =
+    event === "open"
+      ? `今さんが「総理」タブを開いた。まず短く挨拶し、次の順で必ず伝える:
+1) 【今日の予定(Googleカレンダー)】の内容を、時刻→予定名の順でそのまま簡潔に伝える(予定が無ければ「今日の予定はなし」と伝える。未接続/取得エラーならその旨だけ伝える)
+2) 【至急:支払い期限が来ている請求書(受取分)】【至急:期限超過中の対外タスク】がある場合、そこにあるものだけを使い、支払い等を先に済ませるよう一言で促す(無ければこの項目は触れない)
+3) 通常の優先タスクや相談を促す一言で締める
+下に無い予定・金額・件名を作文しないこと。`
+      : `今さんの相談:\n${clip(message, 4000)}`;
   return `${firstTurn ? "ここからキングダムOSでのスマートラビット相談セッションを開始する。\n\n" : ""}【現在時刻】
 ${localTime} / 日付: ${date} / モード: ${cfg.label}
 
-${businessContextText || "【業務コンテキスト】\n(利用不可)"}
+${opening ? `${opening}\n\n` : ""}${businessContextText || "【業務コンテキスト】\n(利用不可)"}
 
 ${knowledgeBlock(knowledge)}
 
-【今さんの相談】
-${clip(message, 4000)}
+【今回の入力】
+${request}
 
 スマートラビットとして、今さんに直接返答すること。`;
 }
@@ -618,7 +695,7 @@ async function appendSmartRabbitChatLog({ date, sessionId, mode, message, respon
 }
 
 async function runSmartRabbitTurn(payload) {
-  const { date, sessionId } = payload;
+  const { date, sessionId, event } = payload;
   const mode = knowledgeSearch.resolveMode(payload.mode);
   const message = String(payload.message || "").trim();
   const context = normalizeSmartRabbitContext(payload.context);
@@ -632,6 +709,7 @@ async function runSmartRabbitTurn(payload) {
     now: new Date(),
   });
   const businessContextText = smartRabbitContext.contextToPromptText(businessContext);
+  const opening = event === "open" ? await buildOpeningBriefing(date, stateRecord.data || {}) : null;
   const sessions = await readSmartRabbitSessions();
   const { agent, firstTurn } = await openSmartRabbitAgent(sessionId, sessions[sessionId]?.agentId);
   try {
@@ -643,6 +721,8 @@ async function runSmartRabbitTurn(payload) {
       knowledge,
       businessContextText,
       firstTurn,
+      event,
+      opening,
     })}`;
     const run = await withTimeout(agent.send(prompt, { mode: "plan" }), SMART_RABBIT_AGENT_TIMEOUT_MS);
     const result = await withTimeout(run.wait(), SMART_RABBIT_AGENT_TIMEOUT_MS);
@@ -660,7 +740,7 @@ async function runSmartRabbitTurn(payload) {
       date,
       sessionId,
       mode,
-      message,
+      message: event === "open" ? "(「総理」タブを開いた)" : message,
       response: result.result,
       agentId: agent.agentId,
       runId: result.id,
@@ -1020,7 +1100,7 @@ function createServer() {
           return;
         }
         const trimmedMessage = String(body.message || "").trim();
-        if (!trimmedMessage) {
+        if (body.event !== "open" && !trimmedMessage) {
           json(res, 400, { error: "empty_message", message: "メッセージを入力してください。" });
           return;
         }

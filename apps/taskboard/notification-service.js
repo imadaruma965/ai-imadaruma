@@ -4,7 +4,7 @@
 (function (root) {
   const NotificationService = {
     notify(payload) {
-      const title = (payload && payload.title) || "キングダムOS";
+      const title = (payload && payload.title) || "統治手帳";
       const body = (payload && payload.message) || "";
       const tag = (payload && payload.type) || undefined;
 
