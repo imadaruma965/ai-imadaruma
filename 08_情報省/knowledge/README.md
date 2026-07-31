@@ -1,10 +1,14 @@
-# knowledge — いまだナレッジ（ダヴィンチ図書館の蔵書入口）
+# knowledge — いまだナレッジ（ダヴィンチ図書館）
 
-Finder / Cursor から中身を見る入口。
+Vault 本体は隣のフォルダに移設済み:
 
-- `vault/` … Obsidian Vault `imada-knowledge` へのシンボリックリンク
-- 実体パス（正）: `/Users/imadatadahito/Documents/imada-knowledge`
-- Vault 本体はここへ複製しない。Claude Code / Cursor の自動格納先も Vault 側のまま
-- デスクトップに Vault がまだ無い場合、`vault` はリンク切れに見える。MacBook から同期するか、同じパスに clone / 配置すれば中身が見える
+```text
+08_情報省/imada-knowledge/
+```
 
-館長（ダ・ヴィンチ）が編集方針を統括する。
+- `vault/` … そこへの相対リンク（Finder / Cursor から開く入口）
+- 毎朝のカテゴリ振り分けは Vault 内の運用（`06_ダ・ヴィンチ図書館/`・Claude RemoteTrigger「AIダ・ヴィンチ編集」）
+- Claude Code / Cursor の取込コードは Vault の `integrations/`・`scripts/`（本体と一緒に移設済み）
+- 互換のため `~/imada-knowledge` と `~/Documents/imada-knowledge` も同じ場所を指すシンボリックリンク
+
+Vault は別 Git リポジトリ（`imadaruma965/imada-knowledge`）。国家 OS の Git には含めない。

@@ -43,8 +43,9 @@ test("listModes exposes all seven MVP consultation modes", () => {
   assert.ok(modes.some((m) => m.id === "instagram"));
 });
 
-test("DEFAULT_VAULT_ROOT points at the user's Documents vault", () => {
-  assert.equal(DEFAULT_VAULT_ROOT, path.join(os.homedir(), "Documents", "imada-knowledge"));
+test("DEFAULT_VAULT_ROOT points at 08_情報省/imada-knowledge", () => {
+  const repoRoot = path.resolve(__dirname, "..", "..", "..");
+  assert.equal(DEFAULT_VAULT_ROOT, path.join(repoRoot, "08_情報省", "imada-knowledge"));
 });
 
 test("cascadeSearch dedupes hits across folders and caps 05_AI対話 contributions", () => {

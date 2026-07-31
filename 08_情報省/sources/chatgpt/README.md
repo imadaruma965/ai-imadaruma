@@ -2,7 +2,8 @@
 
 > **状態**: deprecated（KG-2 / 2026-07-28）  
 > **即削除しない**。移行期間後に削除を検討する。  
-> **知識・原本会話の唯一の正本**: `/Users/imadatadahito/Documents/imada-knowledge/`（`05_AI対話/`）  
+> **知識・原本会話の唯一の正本**: `08_情報省/imada-knowledge/`（`05_AI対話/`）  
+> （互換リンク: `~/imada-knowledge` / `~/Documents/imada-knowledge`）
 > **このリポ（`ai-imadaruma`）に原本会話を保存しない。**
 
 ---

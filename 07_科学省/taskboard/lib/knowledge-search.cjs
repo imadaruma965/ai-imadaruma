@@ -1,15 +1,13 @@
 "use strict";
 
-const os = require("node:os");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
-// imada-knowledge is a sibling repo on the same machine (not nested in this repo).
-// Override with IMADA_KNOWLEDGE_VAULT_PATH if the two repos are not checked out
-// as siblings under the same parent directory.
-const DEFAULT_VAULT_ROOT = path.join(os.homedir(), "Documents", "imada-knowledge");
+// 正本: 08_情報省/imada-knowledge（ダヴィンチ図書館）。別Gitリポジトリ。
+// Override with IMADA_KNOWLEDGE_VAULT_PATH if needed.
+const DEFAULT_VAULT_ROOT = path.join(REPO_ROOT, "08_情報省", "imada-knowledge");
 const VAULT_ROOT = process.env.IMADA_KNOWLEDGE_VAULT_PATH
   ? path.resolve(process.env.IMADA_KNOWLEDGE_VAULT_PATH)
   : DEFAULT_VAULT_ROOT;
