@@ -17,8 +17,8 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 層 | 場所 | 役割 |
 |----|------|------|
-| **DOCX正本** | `07_情報省/sources/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
-| **Markdown実装版** | `憲法府/philosophy/` `憲法府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
+| **DOCX正本** | `08_情報省/sources/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
+| **Markdown実装版** | `00_憲法府/philosophy/` `00_憲法府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
 
 **ルール:**
 
@@ -31,21 +31,21 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 正本ファイル | Markdown実装版 | 備考 |
 |------------|---------------|------|
-| `07_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx` | `憲法府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
-| `07_情報省/sources/originals/imada_life_philosophy_v02.docx` | `憲法府/philosophy/imada_life_philosophy.md` | |
-| `07_情報省/sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `憲法府/constitution/four_pillars.md` | |
-| `07_情報省/sources/originals/imadaruma_明君七徳_v02.docx` | `憲法府/constitution/meikun_shichitoku.md` | |
+| `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx` | `00_憲法府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `08_情報省/sources/originals/imada_life_philosophy_v02.docx` | `00_憲法府/philosophy/imada_life_philosophy.md` | |
+| `08_情報省/sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_憲法府/constitution/four_pillars.md` | |
+| `08_情報省/sources/originals/imadaruma_明君七徳_v02.docx` | `00_憲法府/constitution/meikun_shichitoku.md` | |
 
 **旧版（参照用・履歴用）:**
 
 | 旧版ファイル | 備考 |
 |------------|------|
-| `07_情報省/sources/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
+| `08_情報省/sources/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
 
 ### じぶん憲法（最高法規）
 
-- **正本DOCX**: `07_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx`
-- **Markdown実装版**: `憲法府/constitution/jibun_constitution.md`
+- **正本DOCX**: `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx`
+- **Markdown実装版**: `00_憲法府/constitution/jibun_constitution.md`
 - **標語**: 葦なる刃は、静かに尖れる。
 - **中核文**: 人生は選択である。選択が国家を定める。
 
@@ -128,9 +128,9 @@ ai-imadaruma/
 │       ├── imada_life_philosophy_v02.docx
 │       ├── imadaruma_四柱統治フレームワーク_v1.docx
 │       └── imadaruma_明君七徳_v02.docx
-├── 憲法府/philosophy/                            # 最上位規範（実装版）
+├── 00_憲法府/philosophy/                            # 最上位規範（実装版）
 │   └── imada_life_philosophy.md           # いまだライフ理念体系
-├── 憲法府/constitution/                          # 統治法・実行構造（実装版）
+├── 00_憲法府/constitution/                          # 統治法・実行構造（実装版）
 │   ├── jibun_constitution.md              # じぶん憲法 v3 実装版
 │   ├── four_pillars.md                    # 四柱統治フレームワーク ★新
 │   ├── meikun_shichitoku.md               # 明君七徳 ★新
@@ -138,17 +138,17 @@ ai-imadaruma/
 │   ├── mission.md                         # 国家目標（更新予定）
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
-├── 00_総理官邸/                           # 執務室（総理・主管正本・君主）
-├── 01_経産省/                         # 栄一 ＋ strategy/
-├── 02_内務省/                         # 尊徳 ＋ daily_governance/
-├── 03_教育省/ … 08_文化省/         # 各省庁（人格正本）
-├── 06_科学省/                               # 統治手帳（taskboard）・scripts
-├── 07_情報省/archives/domain_ministries/                            # 事業ドメイン六省（AI省庁とは別）
-├── 01_経産省/strategy/                # 戦略（AI栄一管轄）
+├── 01_首相官邸/                           # 執務室（総理・主管正本・君主）
+├── 02_経産省/                         # 栄一 ＋ strategy/
+├── 03_内務省/                         # 尊徳 ＋ daily_governance/
+├── 04_教育省/ … 09_文化省/         # 各省庁（人格正本）
+├── 07_科学省/                               # 統治手帳（taskboard）・scripts
+├── 08_情報省/archives/domain_ministries/                            # 事業ドメイン六省（AI省庁とは別）
+├── 02_経産省/strategy/                # 戦略（AI栄一管轄）
 │   ├── README.md
 │   ├── roadmap_500k.md
 │   └── …
-├── 02_内務省/daily_governance/        # 日次統治（毎日使う）
+├── 03_内務省/daily_governance/        # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md
 │   └── …
@@ -181,11 +181,11 @@ AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.cl
 
 ### `/sontoku`（日次実行）
 
-呼び出すと、`02_内務省/sontoku.md` の人格を採用し、`02_内務省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`03_内務省/sontoku.md` の人格を採用し、`03_内務省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ### `/eiichi`（戦略・ロードマップ）
 
-呼び出すと、`01_経産省/eiichi.md` の人格を採用し、`01_経産省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`02_経産省/eiichi.md` の人格を採用し、`02_経産省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 
