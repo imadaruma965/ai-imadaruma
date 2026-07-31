@@ -188,6 +188,34 @@ body {
 .view { display: none; padding: 1rem 0.95rem; }
 .view.active { display: block; }
 
+/* —— 省庁の部屋: 首相官邸・内務省のサブタブ —— */
+.room-subtabs {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.4rem 0.95rem 0;
+  flex-wrap: wrap;
+}
+.room-subtab {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.76rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.room-subtab:hover {
+  border-color: #8a6fd1;
+  color: #5a3fa0;
+}
+.room-subtab.active {
+  background: var(--lilac);
+  border-color: #b7a5e6;
+  color: #5a3fa0;
+  font-weight: var(--weight-medium);
+}
+
 .lead {
   color: var(--muted);
   font-size: 0.82rem;
@@ -499,6 +527,38 @@ body {
 .sontoku-form input:focus {
   outline: 2px solid var(--accent-soft);
   border-color: var(--accent);
+}
+
+/* —— 内閣メンバーピッカー —— */
+.cabinet-picker {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0.4rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.65rem;
+  -webkit-overflow-scrolling: touch;
+}
+.cabinet-chip {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.78rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cabinet-chip:hover {
+  border-color: #8a6fd1;
+  color: #5a3fa0;
+}
+.cabinet-chip.active {
+  background: var(--lilac);
+  border-color: #b7a5e6;
+  color: #5a3fa0;
+  font-weight: var(--weight-medium);
 }
 
 /* —— AIスマートラビット(総理)相談チャット —— */

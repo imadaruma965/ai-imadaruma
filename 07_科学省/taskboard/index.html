@@ -37,20 +37,32 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button type="button" class="tab" data-view="home">全体</button>
-    <button type="button" class="tab" data-view="day">今日</button>
-    <button type="button" class="tab active" data-view="smartrabbit">総理</button>
-    <button type="button" class="tab" data-view="reflect">内省</button>
-    <button type="button" class="tab" data-view="week">週</button>
-    <button type="button" class="tab" data-view="month">月</button>
-    <button type="button" class="tab" data-view="sales">営業</button>
-    <button type="button" class="tab" data-view="all">一覧</button>
-    <button type="button" class="tab" data-view="new">新規</button>
+    <button type="button" class="tab active" data-view="home" data-ministry="pmo">首相官邸</button>
+    <button type="button" class="tab" data-view="month" data-ministry="keisansho">経産省</button>
+    <button type="button" class="tab" data-view="day" data-ministry="naimu">内務省</button>
+    <button type="button" class="tab" data-view="reflect" data-ministry="kyouiku">教育省</button>
+    <button type="button" class="tab" data-view="sales" data-ministry="gaimu">外務省</button>
+    <button type="button" class="tab" data-view="houmu" data-ministry="houmu">法務省</button>
+    <button type="button" class="tab" data-view="kagaku" data-ministry="kagaku">科学省</button>
+    <button type="button" class="tab" data-view="jouhou" data-ministry="jouhou">情報省</button>
+    <button type="button" class="tab" data-view="bunka" data-ministry="bunka">文化省</button>
+    <button type="button" class="tab" data-view="zaimu" data-ministry="zaimu">財務省</button>
+  </nav>
+
+  <nav class="room-subtabs" id="room-subtabs-pmo" data-ministry="pmo" role="tablist">
+    <button type="button" class="room-subtab active" data-view="home">全体</button>
+    <button type="button" class="room-subtab" data-view="all">一覧</button>
+    <button type="button" class="room-subtab" data-view="new">新規</button>
+    <button type="button" class="room-subtab" data-view="smartrabbit">相談</button>
+  </nav>
+  <nav class="room-subtabs hidden" id="room-subtabs-naimu" data-ministry="naimu" role="tablist">
+    <button type="button" class="room-subtab" data-view="day">今日</button>
+    <button type="button" class="room-subtab" data-view="week">週</button>
   </nav>
 
   <main>
     <!-- 全体 -->
-    <section id="view-home" class="view">
+    <section id="view-home" class="view active">
       <p class="lead">未完了の件数だけ先に見る。タップで中身を開く。</p>
       <p id="pending-banner" class="warn hidden" role="status"></p>
       <div id="imadaruma-progress" class="imadaruma-progress" aria-hidden="true"></div>
@@ -225,9 +237,9 @@
     </section>
 
     <!-- 総理(スマートラビット)への相談 -->
-    <section id="view-smartrabbit" class="view active">
+    <section id="view-smartrabbit" class="view">
       <h2 class="section-title">総理への相談</h2>
-      <p class="day-flow-hint">戦略相談・発想・営業/Instagram/リサーチ/商品設計/財政判断など。日々の進捗・タスク管理はAI尊徳(今日タブ)へ。</p>
+      <p class="day-flow-hint">戦略相談・発想・営業/Instagram/リサーチ/商品設計/財政判断など。日々の進捗・タスク管理はAI尊徳(内務省・今日)へ。</p>
 
       <div class="smartrabbit-chat" id="smartrabbit-chat">
         <div class="smartrabbit-chat-head">
@@ -285,8 +297,9 @@
 
     <!-- 内省（朝晩の記録） -->
     <section id="view-reflect" class="view">
-      <h2 class="section-title">内省</h2>
-      <p class="day-flow-hint">朝晩のジャーナリング・行動KPI・国難ログをここに記録する。</p>
+      <h2 class="section-title">教育省</h2>
+      <p class="day-flow-hint">明君七徳・精神性を担うAIヤマト。朝晩のジャーナリング・行動KPI・国難ログをここに記録する。</p>
+      <div id="chat-mount-yamato"></div>
 
       <div class="journal-panel am">
         <div class="panel-head-inline">
@@ -475,7 +488,11 @@
 
     <!-- 月 -->
     <section id="view-month" class="view">
-      <h2 class="section-title">今月の計画</h2>
+      <h2 class="section-title">経産省</h2>
+      <p class="day-flow-hint">戦略メンターAI栄一。今月の目標・KPI進捗確認の場。財務の実数（負債・請求書・個人財務）は財務省タブへ。</p>
+      <div id="chat-mount-eiichi"></div>
+
+      <h3 class="subhead">今月の計画</h3>
       <p class="lead">目標日 <strong>2026-12-09</strong>。現在値を直打ち → 保存。</p>
       <div class="goal-triple">
         <label class="field">目的（今月の意図）
@@ -509,6 +526,21 @@
         <button type="button" class="btn primary compact" id="month-save-board">KPIボードを保存</button>
         <span id="month-board-msg" class="msg"></span>
       </div>
+
+      <ul class="rows compact" id="list-month"></ul>
+      <h3 class="subhead">いつか</h3>
+      <ul class="rows compact" id="list-someday"></ul>
+      <label class="field">月の振り返り
+        <textarea id="month-review" rows="2"></textarea>
+      </label>
+      <button type="button" class="btn ghost" id="month-save-review">振り返り保存</button>
+    </section>
+
+    <!-- 財務省 -->
+    <section id="view-zaimu" class="view">
+      <h2 class="section-title">財務省</h2>
+      <p class="day-flow-hint">収入・支出・売上漏れ・請求漏れをリアルに追うAIルカ。</p>
+      <div id="chat-mount-luca"></div>
 
       <div class="board-block finance-gov">
         <p class="board-head">財政スナップショット（月末予測）</p>
@@ -602,20 +634,43 @@
         </form>
         <ul class="rows compact" id="list-pf"></ul>
       </div>
+    </section>
 
-      <ul class="rows compact" id="list-month"></ul>
-      <h3 class="subhead">いつか</h3>
-      <ul class="rows compact" id="list-someday"></ul>
-      <label class="field">月の振り返り
-        <textarea id="month-review" rows="2"></textarea>
-      </label>
-      <button type="button" class="btn ghost" id="month-save-review">振り返り保存</button>
+    <!-- 法務省 -->
+    <section id="view-houmu" class="view">
+      <h2 class="section-title">法務省</h2>
+      <p class="day-flow-hint">規約・契約・自動化構想のリスク点検を行うAI韓非子。</p>
+      <div id="chat-mount-houmu"></div>
+    </section>
+
+    <!-- 科学省 -->
+    <section id="view-kagaku" class="view">
+      <h2 class="section-title">科学省</h2>
+      <p class="day-flow-hint">技術・自動化の実現可能性を検討するAIテスラ。統治手帳自体もここの管轄。</p>
+      <div id="chat-mount-kagaku"></div>
+    </section>
+
+    <!-- 情報省(ダヴィンチ図書館) -->
+    <section id="view-jouhou" class="view">
+      <h2 class="section-title">情報省</h2>
+      <p class="day-flow-hint">ダヴィンチ図書館。館長ダ・ヴィンチ、諜報部ルパン、研究部アショーカを切り替えて相談できる。</p>
+      <div class="cabinet-picker" id="jouhou-picker" role="tablist" aria-label="情報省のAIを選ぶ"></div>
+      <div id="chat-mount-jouhou"></div>
+    </section>
+
+    <!-- 文化省 -->
+    <section id="view-bunka" class="view">
+      <h2 class="section-title">文化省</h2>
+      <p class="day-flow-hint">ビジュアルの北斎、文筆の正篤を切り替えて相談できる。</p>
+      <div class="cabinet-picker" id="bunka-picker" role="tablist" aria-label="文化省のAIを選ぶ"></div>
+      <div id="chat-mount-bunka"></div>
     </section>
 
     <!-- 営業・案件パイプライン -->
     <section id="view-sales" class="view">
-      <h2 class="section-title">営業・案件パイプライン</h2>
-      <p class="lead tight">営業候補・応募・返信・面談・見積・受注・失注を1件ずつ記録する。正本は state.json。</p>
+      <h2 class="section-title">外務省</h2>
+      <p class="day-flow-hint">渉外・交渉を担うAI坂本龍馬。営業・案件パイプライン(応募・返信・面談・見積・受注・失注)を1件ずつ記録する。正本は state.json。</p>
+      <div id="chat-mount-sakamoto_ryoma"></div>
 
       <div class="board-block sales">
         <p class="board-head">状況サマリー</p>

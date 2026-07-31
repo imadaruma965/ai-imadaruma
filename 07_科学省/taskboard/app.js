@@ -394,6 +394,8 @@
         data.smartRabbitChat && typeof data.smartRabbitChat === "object" ? data.smartRabbitChat : {},
       smartRabbitActiveSession:
         typeof data.smartRabbitActiveSession === "string" ? data.smartRabbitActiveSession : "",
+      cabinetChat: data.cabinetChat && typeof data.cabinetChat === "object" ? data.cabinetChat : {},
+      cabinetActiveMember: typeof data.cabinetActiveMember === "string" ? data.cabinetActiveMember : "",
       incidents: Array.isArray(data.incidents) ? data.incidents : [],
       invoices: Array.isArray(data.invoices) ? data.invoices : [],
       personalFinance:
@@ -456,6 +458,8 @@
       sontokuChat: {},
       smartRabbitChat: {},
       smartRabbitActiveSession: "",
+      cabinetChat: {},
+      cabinetActiveMember: "",
       incidents: [],
       invoices: [],
       personalFinance: { entries: [] },
@@ -478,6 +482,8 @@
       sontokuChat: state.sontokuChat,
       smartRabbitChat: state.smartRabbitChat,
       smartRabbitActiveSession: state.smartRabbitActiveSession || "",
+      cabinetChat: state.cabinetChat || {},
+      cabinetActiveMember: state.cabinetActiveMember || "",
       incidents: state.incidents,
       invoices: state.invoices || [],
       personalFinance: state.personalFinance || { entries: [] },
@@ -499,6 +505,8 @@
     state.sontokuChat = next.sontokuChat;
     state.smartRabbitChat = next.smartRabbitChat || {};
     state.smartRabbitActiveSession = next.smartRabbitActiveSession || "";
+    state.cabinetChat = next.cabinetChat || {};
+    state.cabinetActiveMember = next.cabinetActiveMember || "";
     state.incidents = next.incidents;
     state.invoices = next.invoices || [];
     state.personalFinance = next.personalFinance || { entries: [] };
@@ -610,6 +618,28 @@
       next.smartRabbitActiveSession = localActive;
       changed = true;
     }
+
+    next.cabinetChat = { ...(next.cabinetChat || {}) };
+    const localCabinet = localSnap.cabinetChat || {};
+    const remoteCabinet = next.cabinetChat;
+    Object.entries(localCabinet).forEach(([memberId, localSession]) => {
+      const remoteSession = remoteCabinet[memberId];
+      const localUpdatedAt = String(localSession?.updatedAt || localSession?.createdAt || "");
+      const remoteUpdatedAt = String(remoteSession?.updatedAt || remoteSession?.createdAt || "");
+      const localMessageCount = Array.isArray(localSession?.messages) ? localSession.messages.length : 0;
+      const remoteMessageCount = Array.isArray(remoteSession?.messages) ? remoteSession.messages.length : 0;
+      const shouldUseLocal =
+        !remoteSession || localUpdatedAt > remoteUpdatedAt || localMessageCount > remoteMessageCount;
+      if (shouldUseLocal) {
+        remoteCabinet[memberId] = localSession;
+        changed = true;
+      }
+    });
+    const localActiveMember = String(localSnap.cabinetActiveMember || "");
+    if (localActiveMember && next.cabinetActiveMember !== localActiveMember) {
+      next.cabinetActiveMember = localActiveMember;
+      changed = true;
+    }
     return { next, changed };
   }
 
@@ -647,7 +677,8 @@
         Object.keys(local.plans).length > 0 ||
         Object.keys(local.kpis).length > 0 ||
         Object.keys(local.sontokuChat).length > 0 ||
-        Object.keys(local.smartRabbitChat).length > 0;
+        Object.keys(local.smartRabbitChat).length > 0 ||
+        Object.keys(local.cabinetChat).length > 0;
       if (hasLocal) {
         const payload = {
           tasks: local.tasks,
@@ -659,6 +690,8 @@
           sontokuChat: local.sontokuChat,
           smartRabbitChat: local.smartRabbitChat,
           smartRabbitActiveSession: local.smartRabbitActiveSession || "",
+          cabinetChat: local.cabinetChat || {},
+          cabinetActiveMember: local.cabinetActiveMember || "",
           incidents: local.incidents || [],
           invoices: local.invoices || [],
           personalFinance: local.personalFinance || { entries: [] },
@@ -2825,8 +2858,308 @@
   let smartRabbitActiveMode = "general";
   let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
   let smartRabbitSpeech = null;
-  let currentViewName = "smartrabbit";
+  let currentViewName = "home";
+
+  // 省庁の部屋ナビゲーション: 主タブ(data-ministry)とその配下のview一覧・既定view。
+  const MINISTRY_SUBVIEWS = {
+    pmo: [
+      { view: "home", label: "全体" },
+      { view: "all", label: "一覧" },
+      { view: "new", label: "新規" },
+      { view: "smartrabbit", label: "相談" },
+    ],
+    naimu: [
+      { view: "day", label: "今日" },
+      { view: "week", label: "週" },
+    ],
+  };
+  const VIEW_TO_MINISTRY = { month: "keisansho", reflect: "kyouiku", sales: "gaimu" };
+  Object.entries(MINISTRY_SUBVIEWS).forEach(([ministry, subviews]) => {
+    subviews.forEach((sv) => {
+      VIEW_TO_MINISTRY[sv.view] = ministry;
+    });
+  });
+  ["houmu", "kagaku", "jouhou", "bunka", "zaimu"].forEach((m) => {
+    VIEW_TO_MINISTRY[m] = m;
+  });
+
+  const JOUHOU_MEMBERS = ["davinci", "lupin", "ashoka"];
+  const BUNKA_MEMBERS = ["hokusai", "masahiro"];
+  let jouhouActiveMember = "davinci";
+  let bunkaActiveMember = "hokusai";
+
+  function renderMinistrySubPicker(pickerId, memberIds, activeId) {
+    const host = $(`#${pickerId}`);
+    if (!host) return;
+    host.innerHTML = memberIds
+      .map((id) => {
+        const meta = getCabinetMemberMeta(id) || {};
+        return `<button type="button" class="cabinet-chip${
+          id === activeId ? " active" : ""
+        }" data-member-id="${escapeHtml(id)}">${escapeHtml(meta.avatar || "🏛️")} ${escapeHtml(meta.name || id)}</button>`;
+      })
+      .join("");
+  }
+
+  async function enterJouhouRoom() {
+    await loadCabinetMembers();
+    renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
+    ensureCabinetRoomMounted("chat-mount-jouhou", jouhouActiveMember);
+  }
+
+  async function enterBunkaRoom() {
+    await loadCabinetMembers();
+    renderMinistrySubPicker("bunka-picker", BUNKA_MEMBERS, bunkaActiveMember);
+    ensureCabinetRoomMounted("chat-mount-bunka", bunkaActiveMember);
+  }
   const smartRabbitOpeningAttempted = new Set();
+
+  /* —— 内閣(全省庁AI)メンバー・省庁の部屋ごとの埋め込みチャット —— */
+  let cabinetMembers = [];
+  const cabinetOpeningAttempted = new Set();
+  const CABINET_MEMBER_FALLBACK = {
+    smart_rabbit: { name: "スマートラビット", title: "総理・内閣統括", avatar: "🐇" },
+    eiichi: { name: "栄一", title: "経産省・戦略メンター", avatar: "💴" },
+    sontoku: { name: "尊徳", title: "内務省・実行マネージャー", avatar: "🌾" },
+    yamato: { name: "ヤマト", title: "教育省・教育/精神性", avatar: "⛩️" },
+    sakamoto_ryoma: { name: "坂本龍馬", title: "外務省・渉外/外交", avatar: "⚔️" },
+    kanpishi: { name: "韓非子", title: "法務省・法/規律/リスク管理", avatar: "⚖️" },
+    tesla: { name: "テスラ", title: "科学省・技術/科学研究", avatar: "⚡" },
+    davinci: { name: "ダ・ヴィンチ", title: "情報省・館長/編集長", avatar: "📖" },
+    lupin: { name: "ルパン", title: "情報省・諜報部/情報収集", avatar: "🗝️" },
+    ashoka: { name: "アショーカ", title: "情報省・研究部/思想研究", avatar: "🦁" },
+    hokusai: { name: "北斎", title: "文化省・ビジュアル制作", avatar: "🎨" },
+    masahiro: { name: "正篤", title: "文化省・文筆", avatar: "🖋️" },
+    luca: { name: "ルカ", title: "財務省・収入/支出/漏れ検知", avatar: "🧮" },
+  };
+
+  function getCabinetMemberMeta(memberId) {
+    return cabinetMembers.find((m) => m.id === memberId) || CABINET_MEMBER_FALLBACK[memberId] || null;
+  }
+
+  // 情報省・文化省のサブピッカー表示名のため、可能ならサーバーの正本一覧で上書きする
+  // (取得に失敗してもCABINET_MEMBER_FALLBACKで動作は継続する)。
+  async function loadCabinetMembers() {
+    if (cabinetMembers.length) return;
+    try {
+      const response = await fetch("/api/cabinet/members", { cache: "no-store", headers: authHeaders() });
+      const data = await response.json().catch(() => ({}));
+      if (Array.isArray(data.members) && data.members.length) cabinetMembers = data.members;
+    } catch {
+      /* フォールバックのまま続行 */
+    }
+  }
+
+  function ensureCabinetSession(memberId) {
+    if (!state.cabinetChat[memberId]) {
+      state.cabinetChat[memberId] = {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: [],
+      };
+    }
+    return state.cabinetChat[memberId];
+  }
+
+  function getCabinetMessages(memberId) {
+    return ensureCabinetSession(memberId).messages;
+  }
+
+  function pushCabinetMessage(memberId, role, text, metadata = {}) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return null;
+    const session = ensureCabinetSession(memberId);
+    const id = metadata.id || uid();
+    if (session.messages.some((m) => m.id === id)) return null;
+    const msg = {
+      id,
+      role,
+      text: trimmed,
+      at: new Date().toISOString(),
+      status: metadata.status || "ok",
+      error: metadata.error || null,
+      kind: metadata.kind || null,
+    };
+    session.messages.push(msg);
+    session.updatedAt = msg.at;
+    save();
+    return msg;
+  }
+
+  async function requestCabinet(payload) {
+    const response = await fetch("/api/cabinet", {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ date: todayISO(), ...payload }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.message || "内閣メンバーとの接続に失敗しました。");
+    }
+    return data;
+  }
+
+  // 省庁の部屋(mountEl)にメンバー1名分のチャットUIを埋め込む。各部屋は独立したDOM/状態を
+  // 持つ(busy・再送待ちも部屋ごと)ので、同時に複数の部屋がDOM上に存在しても干渉しない。
+  // 会話データ(state.cabinetChat[memberId])とAPI呼び出しはメンバーIDだけで完結しており、
+  // 部屋を跨いで同じメンバーへ再訪しても会話は保持される。
+  function mountCabinetChatWidget(mountEl, memberId) {
+    if (!mountEl) return;
+    const meta = getCabinetMemberMeta(memberId) || { name: memberId, title: "", avatar: "🏛️" };
+    mountEl.innerHTML = `
+      <div class="smartrabbit-chat" data-member="${escapeHtml(memberId)}">
+        <div class="smartrabbit-chat-head">
+          <span class="panel-icon smartrabbit-avatar" aria-hidden="true">${escapeHtml(meta.avatar || "🏛️")}</span>
+          <div class="smartrabbit-head-main">
+            <strong class="panel-title">AI${escapeHtml(meta.name)}(${escapeHtml(meta.title || meta.ministry || "")})</strong>
+            <p class="smartrabbit-sub"><span class="smartrabbit-status" data-role="status">接続確認中</span></p>
+          </div>
+        </div>
+        <div class="smartrabbit-messages" data-role="messages" aria-live="polite"></div>
+        <form class="smartrabbit-form" data-role="form">
+          <input type="text" data-role="input" placeholder="相談したいことを書く…" autocomplete="off" />
+          <button type="submit" class="btn primary compact" data-role="send">送る</button>
+        </form>
+        <div class="smartrabbit-retry-row hidden" data-role="retry-row">
+          <span class="warn">応答に失敗しました。発言は保存済みです。</span>
+          <button type="button" class="btn ghost compact" data-role="retry">再送する</button>
+        </div>
+      </div>`;
+
+    let busy = false;
+    let pendingRetry = null; // { text, messageId }
+
+    const els = {
+      status: mountEl.querySelector('[data-role="status"]'),
+      messages: mountEl.querySelector('[data-role="messages"]'),
+      form: mountEl.querySelector('[data-role="form"]'),
+      input: mountEl.querySelector('[data-role="input"]'),
+      send: mountEl.querySelector('[data-role="send"]'),
+      retryRow: mountEl.querySelector('[data-role="retry-row"]'),
+      retryBtn: mountEl.querySelector('[data-role="retry"]'),
+    };
+
+    function setStatus(text, stateName) {
+      if (!els.status) return;
+      els.status.textContent = text;
+      els.status.dataset.state = stateName || "";
+    }
+
+    function setBusy(value) {
+      busy = value;
+      if (els.input) els.input.disabled = value;
+      if (els.send) {
+        els.send.disabled = value;
+        els.send.textContent = value ? "思考中…" : "送る";
+      }
+      if (value) setStatus("Cursorで思考中", "busy");
+    }
+
+    function render() {
+      const msgs = getCabinetMessages(memberId);
+      if (els.messages) {
+        els.messages.innerHTML = msgs
+          .map((m) => {
+            const cls = m.role === "user" ? "user" : m.role === "error" ? "error" : "assistant";
+            const metaLine = m.status === "partial" ? '<span class="msg-meta">応答待ち・発言は保存済み</span>' : "";
+            return `<div class="smartrabbit-msg ${cls}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${metaLine}</div>`;
+          })
+          .join("");
+        els.messages.scrollTop = els.messages.scrollHeight;
+      }
+      els.retryRow?.classList.toggle("hidden", !pendingRetry);
+    }
+
+    async function sendTurn(text, messageId) {
+      setBusy(true);
+      try {
+        const data = await requestCabinet({ memberId, message: text, messageId });
+        pushCabinetMessage(memberId, "assistant", data.reply, { status: "ok" });
+        setStatus(`Cursor接続済み · ${data.model}`, "connected");
+        pendingRetry = null;
+        render();
+      } catch (error) {
+        pushCabinetMessage(memberId, "error", error.message, { status: "error", id: uid() });
+        setStatus("接続エラー", "error");
+        pendingRetry = { text, messageId };
+        render();
+      } finally {
+        setBusy(false);
+        els.input?.focus();
+      }
+    }
+
+    async function sendUserMessage(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed || busy) return;
+      const messageId = uid();
+      pushCabinetMessage(memberId, "user", trimmed, { id: messageId, status: "ok" });
+      render();
+      await sendTurn(trimmed, messageId);
+    }
+
+    els.form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = els.input?.value || "";
+      if (els.input) els.input.value = "";
+      sendUserMessage(text);
+    });
+    els.retryBtn?.addEventListener("click", () => {
+      if (!pendingRetry || busy) return;
+      const { text, messageId } = pendingRetry;
+      sendTurn(text, messageId);
+    });
+
+    render();
+    fetch("/api/cabinet/status", { cache: "no-store", headers: authHeaders() })
+      .then((r) => r.json())
+      .then((data) => {
+        setStatus(data.connected ? `Cursor接続済み · ${data.model}` : "Cursor APIキー未設定", data.connected ? "connected" : "error");
+      })
+      .catch(() => setStatus("接続確認に失敗", "error"));
+
+    // 部屋を初めて開いた一回だけ、呼び出し直後の一言を発火させる。
+    (async () => {
+      const messages = getCabinetMessages(memberId);
+      const hasLiveOpening = messages.some((m) => m.kind === "opening" && m.status !== "error");
+      if (hasLiveOpening || cabinetOpeningAttempted.has(memberId)) {
+        render();
+        return;
+      }
+      cabinetOpeningAttempted.add(memberId);
+      render();
+      setBusy(true);
+      try {
+        const data = await requestCabinet({ memberId, message: "", event: "open", messageId: uid() });
+        pushCabinetMessage(memberId, "assistant", data.reply, { status: "ok", kind: "opening" });
+        setStatus(`Cursor接続済み · ${data.model}`, "connected");
+        render();
+      } catch (error) {
+        pushCabinetMessage(memberId, "error", error.message, { status: "error", id: uid() });
+        setStatus("接続エラー", "error");
+        render();
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }
+
+  // 部屋のマウント枠にidを付けてある場合だけ、初回表示時に1回だけmountする
+  // (data-mounted属性で二重mount・二重の開幕挨拶を防ぐ)。
+  function ensureCabinetRoomMounted(mountElId, memberId) {
+    const mountEl = $(`#${mountElId}`);
+    if (!mountEl || mountEl.dataset.mounted === "1") return;
+    mountEl.dataset.mounted = "1";
+    mountCabinetChatWidget(mountEl, memberId);
+  }
+
+  // 情報省・文化省など複数AIが同居する部屋: サブピッカーで選んだメンバーへ差し替える。
+  function remountCabinetRoom(mountElId, memberId) {
+    const mountEl = $(`#${mountElId}`);
+    if (!mountEl) return;
+    mountEl.dataset.mounted = "1";
+    mountCabinetChatWidget(mountEl, memberId);
+  }
 
   function ensureSmartRabbitSpeech() {
     if (smartRabbitSpeech) return smartRabbitSpeech;
@@ -3373,10 +3706,10 @@
     if (prev === "smartrabbit" && name !== "smartrabbit") {
       stopSmartRabbitSpeech("leave-tab");
     }
-    $$(".tab").forEach((t) => {
-      if (name === "cat" || name === "quad" || name === "domain") t.classList.remove("active");
-      else t.classList.toggle("active", t.dataset.view === name);
-    });
+    const ministry = VIEW_TO_MINISTRY[name];
+    $$(".tab").forEach((t) => t.classList.toggle("active", Boolean(ministry) && t.dataset.ministry === ministry));
+    $$(".room-subtabs").forEach((strip) => strip.classList.toggle("hidden", strip.dataset.ministry !== ministry));
+    $$(".room-subtab").forEach((btn) => btn.classList.toggle("active", btn.dataset.view === name));
     $$(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
     if (["day", "week", "month", "reflect"].includes(name)) loadPlanFields();
     if (name === "day") {
@@ -3389,6 +3722,14 @@
       refreshSmartRabbitStatus();
       ensureSmartRabbitOpening();
     }
+    if (name === "month") ensureCabinetRoomMounted("chat-mount-eiichi", "eiichi");
+    if (name === "reflect") ensureCabinetRoomMounted("chat-mount-yamato", "yamato");
+    if (name === "sales") ensureCabinetRoomMounted("chat-mount-sakamoto_ryoma", "sakamoto_ryoma");
+    if (name === "zaimu") ensureCabinetRoomMounted("chat-mount-luca", "luca");
+    if (name === "houmu") ensureCabinetRoomMounted("chat-mount-houmu", "kanpishi");
+    if (name === "kagaku") ensureCabinetRoomMounted("chat-mount-kagaku", "tesla");
+    if (name === "jouhou") enterJouhouRoom();
+    if (name === "bunka") enterBunkaRoom();
     render();
   }
 
@@ -3772,6 +4113,21 @@
   $("#smartrabbit-new-session")?.addEventListener("click", () => startNewSmartRabbitSession());
   $("#smartrabbit-session-select")?.addEventListener("change", (e) => setActiveSmartRabbitSession(e.target.value));
   $("#smartrabbit-retry")?.addEventListener("click", () => retrySmartRabbit());
+  $$(".room-subtab").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view)));
+  $("#jouhou-picker")?.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".cabinet-chip");
+    if (!btn || !btn.dataset.memberId || btn.dataset.memberId === jouhouActiveMember) return;
+    jouhouActiveMember = btn.dataset.memberId;
+    renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
+    remountCabinetRoom("chat-mount-jouhou", jouhouActiveMember);
+  });
+  $("#bunka-picker")?.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".cabinet-chip");
+    if (!btn || !btn.dataset.memberId || btn.dataset.memberId === bunkaActiveMember) return;
+    bunkaActiveMember = btn.dataset.memberId;
+    renderMinistrySubPicker("bunka-picker", BUNKA_MEMBERS, bunkaActiveMember);
+    remountCabinetRoom("chat-mount-bunka", bunkaActiveMember);
+  });
   $("#smartrabbit-context-preview")?.addEventListener("toggle", () => refreshSmartRabbitContextPreview());
   $("#smartrabbit-speech-toggle")?.addEventListener("click", () => {
     const speech = ensureSmartRabbitSpeech();
@@ -4478,11 +4834,6 @@
   render();
   refreshSontokuStatus();
   refreshSmartRabbitStatus();
-  // 起動時の既定タブが「総理」のため、setView()を経由せずここでも開幕挨拶を発火させる。
-  if (currentViewName === "smartrabbit") {
-    updateSmartRabbitSpeechToggleUi();
-    ensureSmartRabbitOpening();
-  }
 
   // GovernanceMonitor（Phase 3-A）: 60秒ごとに未統治警報を再チェックし、新規のものだけ通知する。
   const governanceMonitor =
