@@ -10,6 +10,7 @@ const { loadLocalEnv, hasCursorApiKey, getCursorApiKey } = require("./lib/load-l
 const gcal = require("./gcal.cjs");
 const knowledgeSearch = require("./lib/knowledge-search.cjs");
 const smartRabbitContext = require("./lib/smart-rabbit-context.cjs");
+const cabinetRegistry = require("./lib/cabinet-registry.cjs");
 
 // cwd や起動シェルに依存せず、07_科学省/taskboard/.env.local を読む（既存envは上書きしない）
 loadLocalEnv();
@@ -19,6 +20,7 @@ const REPO_ROOT = path.resolve(APP_DIR, "../..");
 const DATA_DIR = path.join(APP_DIR, "data");
 const SESSION_FILE = path.join(DATA_DIR, ".sontoku-sessions.json");
 const SMART_RABBIT_SESSION_FILE = path.join(DATA_DIR, ".smartrabbit-sessions.json");
+const CABINET_SESSION_FILE = path.join(DATA_DIR, ".cabinet-sessions.json");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 const CHAT_LOG_DIR = path.join(REPO_ROOT, "03_内務省", "daily_governance", "chat_logs");
 const PORT = Number(process.env.PORT || process.env.GYOMU_TOCHI_PORT || 8765);
@@ -29,7 +31,9 @@ const SONTOKU_RATE_LIMIT_PER_MINUTE = 10;
 const SONTOKU_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const SMART_RABBIT_RATE_LIMIT_PER_MINUTE = 10;
 const SMART_RABBIT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const SMART_RABBIT_AGENT_TIMEOUT_MS = 55 * 1000;
+// リサーチ系(ルパン・ダ・ヴィンチ・アショーカ等)はWebSearch/WebFetchを伴い55秒では
+// 打ち切られやすいため、スマートラビット・内閣共通でここを底上げする。
+const SMART_RABBIT_AGENT_TIMEOUT_MS = 180 * 1000;
 const SMART_RABBIT_REQUEST_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const MIME_TYPES = {
@@ -185,6 +189,26 @@ async function writeSmartRabbitSessions(sessions) {
   await fsp.rename(temporary, SMART_RABBIT_SESSION_FILE);
 }
 
+// 内閣メンバーのセッションストアは memberId -> Cursor agentId の対応表のみを持つ。
+// メンバーごとに1本の継続対話とし(スマートラビットのような複数セッションUIは持たない)、
+// 会話本文はクライアント側 state.cabinetChat[memberId] が正本。
+async function readCabinetSessions() {
+  try {
+    const parsed = JSON.parse(await fsp.readFile(CABINET_SESSION_FILE, "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    if (error.code === "ENOENT" || error instanceof SyntaxError) return {};
+    throw error;
+  }
+}
+
+async function writeCabinetSessions(sessions) {
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  const temporary = `${CABINET_SESSION_FILE}.tmp`;
+  await fsp.writeFile(temporary, `${JSON.stringify(sessions, null, 2)}\n`, "utf8");
+  await fsp.rename(temporary, CABINET_SESSION_FILE);
+}
+
 function sanitizeStateData(raw) {
   const data = raw && typeof raw === "object" ? raw : {};
   return {
@@ -198,6 +222,8 @@ function sanitizeStateData(raw) {
     smartRabbitChat: data.smartRabbitChat && typeof data.smartRabbitChat === "object" ? data.smartRabbitChat : {},
     smartRabbitActiveSession:
       typeof data.smartRabbitActiveSession === "string" ? data.smartRabbitActiveSession : "",
+    cabinetChat: data.cabinetChat && typeof data.cabinetChat === "object" ? data.cabinetChat : {},
+    cabinetActiveMember: typeof data.cabinetActiveMember === "string" ? data.cabinetActiveMember : "",
     incidents: Array.isArray(data.incidents) ? data.incidents : [],
     invoices: Array.isArray(data.invoices) ? data.invoices : [],
     personalFinance:
@@ -711,6 +737,7 @@ async function runSmartRabbitTurn(payload) {
   const businessContextText = smartRabbitContext.contextToPromptText(businessContext);
   const opening = event === "open" ? await buildOpeningBriefing(date, stateRecord.data || {}) : null;
   const sessions = await readSmartRabbitSessions();
+  const hadExistingSession = Boolean(sessions[sessionId]);
   const { agent, firstTurn } = await openSmartRabbitAgent(sessionId, sessions[sessionId]?.agentId);
   try {
     const prompt = `${firstTurn ? `${await smartRabbitBasePrompt(date, mode)}\n\n` : ""}${smartRabbitTurnPrompt({
@@ -725,7 +752,17 @@ async function runSmartRabbitTurn(payload) {
       opening,
     })}`;
     const run = await withTimeout(agent.send(prompt, { mode: "plan" }), SMART_RABBIT_AGENT_TIMEOUT_MS);
-    const result = await withTimeout(run.wait(), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    let result;
+    try {
+      result = await withTimeout(run.wait(), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    } catch (error) {
+      // タイムアウトでこちらが待つのを諦めても、Cursor側のrunは動き続けていることがある。
+      // キャンセルしておかないと、次回このagentIdを再開したときに「already has active run」で固着する。
+      if (error?.code === "timeout") {
+        await run.cancel().catch(() => {});
+      }
+      throw error;
+    }
     if (result.status !== "finished" || !result.result) {
       throw new Error(result.error?.message || `Cursor run ended with ${result.status}`);
     }
@@ -762,6 +799,191 @@ async function runSmartRabbitTurn(payload) {
         warnings: businessContext.warnings,
       },
     };
+  } catch (error) {
+    // 内閣メンバーと同様、壊れたセッション対応をそのまま残さない(自己修復)。
+    if (hadExistingSession && sessions[sessionId]) {
+      delete sessions[sessionId];
+      await writeSmartRabbitSessions(sessions).catch(() => {});
+    }
+    throw error;
+  } finally {
+    await disposeAgent(agent);
+  }
+}
+
+// 内閣メンバー共通のベースプロンプト。人格md・Skill md・AI主管境界(ai_jurisdiction.md)・
+// 直近セッション記録を読み、その人格として対話する前提を組み立てる。
+async function cabinetBasePrompt(member, date) {
+  const [jurisdiction, persona, skill, recentLog] = await Promise.all([
+    readOptional(path.join(REPO_ROOT, "01_首相官邸", "ai_jurisdiction.md"), 24000),
+    readOptional(path.join(REPO_ROOT, member.personaFile), 20000),
+    readOptional(path.join(REPO_ROOT, member.skillFile), 12000),
+    member.sessionLogFile ? readOptional(path.join(REPO_ROOT, member.sessionLogFile), 6000) : Promise.resolve(""),
+  ]);
+
+  return `あなたはキングダムOSのAI${member.name}(${member.title})である。以下の主管境界・人格正本・運用規則を採用し、今さんと対話する。
+
+重要な境界:
+- この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
+- 自分の主管領域(下記境界参照)を超える相談は、断定して答えず、担当する省・AIへの申し送りとして案内してよい。
+- 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
+- 応答の冒頭は必ず「**${member.name}**:」とする。
+- 本日は ${date}。
+
+【AI主管境界 01_首相官邸/ai_jurisdiction.md(抜粋)】
+${jurisdiction}
+
+【人格正本 ${member.personaFile}】
+${persona}
+
+【運用規則 ${member.skillFile}】
+${skill}
+
+【直近のセッション記録】
+${recentLog || "(まだ記録なし)"}`;
+}
+
+function cabinetTurnPrompt({ date, member, message, event, businessContextText, firstTurn }) {
+  const request =
+    event === "open"
+      ? `今さんが内閣で${member.name}を呼び出した。短く名乗り、担当領域で今支援できることを一言添える。`
+      : `今さんの発言:\n${clip(message, 4000)}`;
+  return `${firstTurn ? `ここからキングダムOSでの${member.name}との継続対話を開始する。\n\n` : ""}【現在時刻・日付】
+${date}
+
+${businessContextText || "【業務コンテキスト】\n(利用不可)"}
+
+【今回の入力】
+${request}
+
+${member.name}として、今さんに直接返答すること。`;
+}
+
+async function openCabinetAgent(member, existingId) {
+  const options = {
+    apiKey: getCursorApiKey(),
+    model: { id: MODEL },
+    name: `AI${member.name}・キングダムOS内閣`,
+    mode: "plan",
+    local: {
+      cwd: REPO_ROOT,
+      settingSources: ["project"],
+      sandboxOptions: { enabled: true },
+    },
+  };
+
+  if (existingId) {
+    try {
+      return { agent: await Agent.resume(existingId, options), firstTurn: false };
+    } catch (error) {
+      if (error?.code !== "agent_not_found") throw error;
+    }
+  }
+  return { agent: await Agent.create(options), firstTurn: true };
+}
+
+async function appendCabinetChatLog({ date, member, message, response, agentId, runId }) {
+  await fsp.mkdir(CHAT_LOG_DIR, { recursive: true });
+  const file = path.join(CHAT_LOG_DIR, `cabinet-${member.id}-${date}.md`);
+  let exists = true;
+  try {
+    await fsp.access(file);
+  } catch {
+    exists = false;
+  }
+  const time = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
+  const header = exists
+    ? ""
+    : `# 内閣・AI${member.name}(${member.title}) 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。原本会話であり正式Knowledgeではない。\n\n`;
+  const entry = `## ${time} (内閣)\n\n**今さん**\n\n${markdownQuote(message)}\n\n**${member.name}**\n\n${markdownQuote(
+    response
+  )}\n\n<!-- run: ${runId} -->\n\n`;
+  await fsp.appendFile(file, `${header}${entry}`, "utf8");
+}
+
+async function runCabinetTurn(payload) {
+  const { date, event = "message" } = payload;
+  const memberId = String(payload.memberId || "").trim();
+  const member = cabinetRegistry.getMember(memberId);
+  if (!member) {
+    throw Object.assign(new Error("unknown_member"), { code: "unknown_member" });
+  }
+  const message = String(payload.message || "").trim();
+  const stateRecord = await readStateRecord();
+  const businessContext = smartRabbitContext.buildSmartRabbitContext({
+    mode: cabinetRegistry.contextModeFor(memberId),
+    state: stateRecord.data || {},
+    userMessage: message,
+    knowledgeResults: null,
+    now: new Date(),
+  });
+  const businessContextText = smartRabbitContext.contextToPromptText(businessContext);
+  const sessions = await readCabinetSessions();
+  const hadExistingSession = Boolean(sessions[memberId]);
+  const { agent, firstTurn } = await openCabinetAgent(member, sessions[memberId]?.agentId);
+  try {
+    const prompt = `${firstTurn ? `${await cabinetBasePrompt(member, date)}\n\n` : ""}${cabinetTurnPrompt({
+      date,
+      member,
+      message,
+      event,
+      businessContextText,
+      firstTurn,
+    })}`;
+    const run = await withTimeout(agent.send(prompt, { mode: "plan" }), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    let result;
+    try {
+      result = await withTimeout(run.wait(), SMART_RABBIT_AGENT_TIMEOUT_MS);
+    } catch (error) {
+      // タイムアウトでこちらが待つのを諦めても、Cursor側のrunは動き続けていることがある。
+      // キャンセルしておかないと、次回このagentIdを再開したときに
+      // 「already has active run」で恒久的に固着してしまう(内閣メンバーは1人1セッションのため特に致命的)。
+      if (error?.code === "timeout") {
+        await run.cancel().catch(() => {});
+      }
+      throw error;
+    }
+    if (result.status !== "finished" || !result.result) {
+      throw new Error(result.error?.message || `Cursor run ended with ${result.status}`);
+    }
+    sessions[memberId] = {
+      agentId: agent.agentId,
+      lastRunId: result.id,
+      updatedAt: new Date().toISOString(),
+    };
+    await writeCabinetSessions(sessions);
+    await appendCabinetChatLog({
+      date,
+      member,
+      message: event === "open" ? `(${member.name}を呼び出した)` : message,
+      response: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+    });
+    return {
+      reply: result.result,
+      agentId: agent.agentId,
+      runId: result.id,
+      model: result.model?.id || MODEL,
+      memberId,
+      businessContext: {
+        sections: businessContext.sections.map((s) => ({ key: s.key, title: s.title, freshness: s.freshness })),
+        warnings: businessContext.warnings,
+      },
+    };
+  } catch (error) {
+    // 既存agentの再開に起因する失敗(タイムアウト・多重実行衝突など)で、次回も同じ壊れたセッションへ
+    // 再接続して固着し続けないよう、保存済みの対応関係を破棄する。次回は新規agentから開始する。
+    if (hadExistingSession && sessions[memberId]) {
+      delete sessions[memberId];
+      await writeCabinetSessions(sessions).catch(() => {});
+    }
+    throw error;
   } finally {
     await disposeAgent(agent);
   }
@@ -856,6 +1078,7 @@ async function runSontokuTurn(payload) {
   const message = String(payload.message || "").trim();
   const context = await enrichScheduleContext(normalizeContext(payload.context));
   const sessions = await readSessions();
+  const hadExistingSession = Boolean(sessions[date]);
   const { agent, firstTurn } = await openAgent(date, sessions[date]?.agentId);
   let run;
   try {
@@ -891,6 +1114,13 @@ async function runSontokuTurn(payload) {
       runId: result.id,
       model: result.model?.id || MODEL,
     };
+  } catch (error) {
+    // 内閣・スマートラビットと同様、壊れたセッション対応をそのまま残さない(自己修復)。
+    if (hadExistingSession && sessions[date]) {
+      delete sessions[date];
+      await writeSessions(sessions).catch(() => {});
+    }
+    throw error;
   } finally {
     await disposeAgent(agent);
   }
@@ -937,6 +1167,7 @@ function createServer() {
       (url.pathname.startsWith("/api/state") ||
         url.pathname.startsWith("/api/sontoku") ||
         url.pathname.startsWith("/api/smart-rabbit") ||
+        url.pathname.startsWith("/api/cabinet") ||
         url.pathname.startsWith("/api/appointments")) &&
       !isAuthorized(req)
     ) {
@@ -1140,6 +1371,90 @@ function createServer() {
             : timeoutError
               ? "応答がタイムアウトしました。もう一度お試しください。"
               : "スマートラビットとの接続に失敗しました。ターミナルのエラーを確認してください。",
+        });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/cabinet/members") {
+      json(res, 200, { members: cabinetRegistry.listMembers() });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/cabinet/status") {
+      json(res, 200, {
+        connected: hasCursorApiKey(),
+        provider: "Cursor SDK",
+        model: MODEL,
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/cabinet") {
+      if (!hasCursorApiKey()) {
+        json(res, 503, {
+          error: "cursor_api_key_missing",
+          message: "CURSOR_API_KEYが未設定です。.env.localを設定してキングダムOSを再起動してください。",
+        });
+        return;
+      }
+      try {
+        const body = await readJsonBody(req);
+        if (!validDate(body.date)) {
+          json(res, 400, { error: "invalid_date", message: "日付が正しくありません。" });
+          return;
+        }
+        const memberId = String(body.memberId || "").trim();
+        if (!cabinetRegistry.getMember(memberId)) {
+          json(res, 400, { error: "unknown_member", message: "不明な内閣メンバーです。" });
+          return;
+        }
+        const trimmedMessage = String(body.message || "").trim();
+        if (body.event !== "open" && !trimmedMessage) {
+          json(res, 400, { error: "empty_message", message: "メッセージを入力してください。" });
+          return;
+        }
+        const rateLimitKey = `cabinet:${memberId}`;
+        const messageId = String(body.messageId || "").trim() || null;
+        const cached = getCachedSmartRabbitResult(messageId);
+        if (cached) {
+          json(res, 200, cached);
+          return;
+        }
+        if (!checkSmartRabbitRateLimit(rateLimitKey)) {
+          json(res, 429, {
+            error: "rate_limited",
+            message: "短時間に呼び出しが多すぎます。1分待って再試行してください。",
+          });
+          return;
+        }
+        const result = await enqueueByDate(rateLimitKey, () =>
+          runCabinetTurn({ ...body, message: trimmedMessage, memberId })
+        );
+        cacheSmartRabbitResult(messageId, result);
+        json(res, 200, result);
+      } catch (error) {
+        console.error("[内閣]", error);
+        const authError =
+          error instanceof AuthenticationError ||
+          (error instanceof CursorAgentError && /auth|api.?key|unauthorized/i.test(error.message));
+        const timeoutError = error?.code === "timeout";
+        const unknownMember = error?.code === "unknown_member";
+        json(res, authError ? 401 : unknownMember ? 400 : timeoutError ? 504 : 500, {
+          error: authError
+            ? "cursor_auth_failed"
+            : unknownMember
+              ? "unknown_member"
+              : timeoutError
+                ? "cabinet_timeout"
+                : "cabinet_run_failed",
+          message: authError
+            ? "Cursor APIキーを確認してください。"
+            : unknownMember
+              ? "不明な内閣メンバーです。"
+              : timeoutError
+                ? "応答がタイムアウトしました。もう一度お試しください。"
+                : "内閣メンバーとの接続に失敗しました。ターミナルのエラーを確認してください。",
         });
       }
       return;
@@ -1376,4 +1691,5 @@ module.exports = {
   hasCursorApiKey,
   getCursorApiKey,
   loadLocalEnv,
+  cabinetTurnPrompt,
 };

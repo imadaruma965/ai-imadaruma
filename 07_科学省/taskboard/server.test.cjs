@@ -10,7 +10,15 @@ const {
   isLoopbackAddress,
   checkSontokuRateLimit,
   computeTrackRecord,
+  cabinetTurnPrompt,
 } = require("./server.cjs");
+
+// .env.local に実運用のTASKBOARD_TOKENが設定されている開発機でも、トークン未設定のCI環境でも
+// 同じテストが通るよう、設定済みならヘッダを付ける(server.cjsの起動時loadLocalEnv()で既に反映済み)。
+function tokenHeader(extra = {}) {
+  const token = process.env.TASKBOARD_TOKEN || "";
+  return token ? { ...extra, "X-Taskboard-Token": token } : extra;
+}
 
 test("validDate accepts only ISO calendar-shaped dates", () => {
   assert.equal(validDate("2026-07-15"), true);
@@ -306,4 +314,138 @@ test("sontoku POST returns 503 with a setup hint when CURSOR_API_KEY is missing"
   assert.match(body.message, /CURSOR_API_KEY/);
   assert.equal(JSON.stringify(body).includes("crsr_"), false);
   assert.equal(JSON.stringify(body).includes("test-key"), false);
+});
+
+test("cabinetTurnPrompt embeds member name and message, and names the responder", () => {
+  const prompt = cabinetTurnPrompt({
+    date: "2026-07-31",
+    member: { id: "luca", name: "ルカ" },
+    message: "今月の請求漏れを確認したい",
+    event: "message",
+    businessContextText: "【業務コンテキスト】\n■ 財政スナップショット\n  - 現在残高: 未登録",
+    firstTurn: true,
+  });
+  assert.match(prompt, /今月の請求漏れを確認したい/);
+  assert.match(prompt, /ルカとして、今さんに直接返答すること/);
+  assert.match(prompt, /財政スナップショット/);
+});
+
+test("cabinetTurnPrompt uses an opening request when event is 'open'", () => {
+  const prompt = cabinetTurnPrompt({
+    date: "2026-07-31",
+    member: { id: "eiichi", name: "栄一" },
+    message: "",
+    event: "open",
+    businessContextText: "",
+    firstTurn: true,
+  });
+  assert.match(prompt, /栄一を呼び出した/);
+});
+
+test("cabinet endpoints reject requests without a valid token", async (t) => {
+  const original = process.env.TASKBOARD_TOKEN;
+  process.env.TASKBOARD_TOKEN = "secret-cabinet-123";
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (original === undefined) delete process.env.TASKBOARD_TOKEN;
+    else process.env.TASKBOARD_TOKEN = original;
+  });
+  const address = server.address();
+  const unauthorized = await fetch(`http://127.0.0.1:${address.port}/api/cabinet/members`);
+  assert.equal(unauthorized.status, 401);
+  const authorized = await fetch(`http://127.0.0.1:${address.port}/api/cabinet/members`, {
+    headers: { "X-Taskboard-Token": "secret-cabinet-123" },
+  });
+  assert.equal(authorized.status, 200);
+});
+
+test("cabinet members endpoint lists all 13 personas without secrets", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/cabinet/members`, {
+    headers: tokenHeader(),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.members.length, 13);
+  assert.ok(body.members.some((m) => m.id === "smart_rabbit"));
+  assert.ok(body.members.some((m) => m.id === "luca"));
+  assert.equal(JSON.stringify(body).includes("cursor_"), false);
+});
+
+test("cabinet status endpoint reports connection state without secrets", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/cabinet/status`, {
+    headers: tokenHeader(),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.connected, false);
+  assert.equal(JSON.stringify(body).includes("cursor_"), false);
+});
+
+test("cabinet POST returns 503 with a setup hint when CURSOR_API_KEY is missing", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  delete process.env.CURSOR_API_KEY;
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey) process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/cabinet`, {
+    method: "POST",
+    headers: tokenHeader({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ date: "2026-07-31", memberId: "eiichi", message: "こんにちは" }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 503);
+  assert.equal(body.error, "cursor_api_key_missing");
+  assert.match(body.message, /\.env\.local/);
+});
+
+test("cabinet POST validates date, memberId, and message before calling the agent", async (t) => {
+  const originalKey = process.env.CURSOR_API_KEY;
+  process.env.CURSOR_API_KEY = "test-key-not-real";
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+    if (originalKey === undefined) delete process.env.CURSOR_API_KEY;
+    else process.env.CURSOR_API_KEY = originalKey;
+  });
+  const address = server.address();
+  const base = `http://127.0.0.1:${address.port}/api/cabinet`;
+  const post = (body) =>
+    fetch(base, { method: "POST", headers: tokenHeader({ "Content-Type": "application/json" }), body: JSON.stringify(body) });
+
+  const badDate = await post({ date: "not-a-date", memberId: "eiichi", message: "hi" });
+  assert.equal(badDate.status, 400);
+  assert.equal((await badDate.json()).error, "invalid_date");
+
+  const unknownMember = await post({ date: "2026-07-31", memberId: "not_a_real_member", message: "hi" });
+  assert.equal(unknownMember.status, 400);
+  assert.equal((await unknownMember.json()).error, "unknown_member");
+
+  const emptyMessage = await post({ date: "2026-07-31", memberId: "eiichi", message: "   " });
+  assert.equal(emptyMessage.status, 400);
+  assert.equal((await emptyMessage.json()).error, "empty_message");
 });
