@@ -104,11 +104,11 @@
 
 ## 壁打ちのKnowledge格納（毎回・重要分のみ）
 
-**正本は `imada-knowledge`。このリポの `sources/chatgpt/` には原本を置かない**（旧経路は deprecated。詳細: `sources/chatgpt/README.md` / `02_厚生労働省/daily_governance/chatgpt_capture.md`）。
+**正本は `imada-knowledge`。このリポの `07_情報省/sources/chatgpt/` には原本を置かない**（旧経路は deprecated。詳細: `07_情報省/sources/chatgpt/README.md` / `02_内務省/daily_governance/chatgpt_capture.md`）。
 
 終了時（決定・設計・重要な壁打ちがあるとき）:
 
-1. 必要なら `sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` で書き出しを整える  
+1. 必要なら `07_情報省/sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` で書き出しを整える  
 2. コピーした本文を Vault 側で保存する:
 
 ```bash
@@ -116,7 +116,7 @@ aistock chatgpt "題名"（タグ例: sound-ds-ig）
 ```
 
 または Vault の `00_受信箱/AIインポート/ChatGPT/` へ投下して `aipull`。  
-国家OSへの短い申し送りだけが必要なら `01_経済産業省/strategy/*_session_log.md` に1行（原本はVault）。
+国家OSへの短い申し送りだけが必要なら `01_経産省/strategy/*_session_log.md` に1行（原本はVault）。
 
 ## 貼り方（ChatGPT）
 

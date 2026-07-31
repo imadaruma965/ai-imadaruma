@@ -16,7 +16,7 @@ description: 法務省担当(韓非子人格)。規約・契約・自動化構�
 
 ## 対話終了時
 
-点検が一区切りついたら、`01_経済産業省/strategy/kanpishi_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
+点検が一区切りついたら、`01_経産省/strategy/kanpishi_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
 
 ```
 ## YYYY-MM-DD

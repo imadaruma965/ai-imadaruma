@@ -2,7 +2,7 @@
 
 > **位置づけ**: ai-imadaruma 実行レイヤーの最上位。最終意思決定者であり、実行者である。
 >
-> **関連**: `00_総理官邸/ai_jurisdiction.md`（AI主管定義）、`01_経済産業省/eiichi.md`（戦略メンター）、`02_厚生労働省/sontoku.md`（実行マネージャー）
+> **関連**: `00_総理官邸/ai_jurisdiction.md`（AI主管定義）、`01_経産省/eiichi.md`（戦略メンター）、`02_内務省/sontoku.md`（実行マネージャー）
 
 ---
 
@@ -21,12 +21,12 @@
 ```
 君主（いまだ唯仁）— 最終決定者・実行者
   └── 総理 AIスマートラビット — 内閣統括
-        ├── 経済産業省 AI栄一 — 信用実業・売上戦略の補佐
-        ├── 厚生労働省 AI尊徳 — 日次実行・内政管理の補佐
+        ├── 経産省 AI栄一 — 信用実業・売上戦略の補佐
+        ├── 内務省 AI尊徳 — 日次実行・内政管理の補佐
         ├── 教育省 AIヤマト／外務省 AI坂本龍馬／法務省 AI韓非子
-        ├── 科学技術省 AIテスラ
+        ├── 科学省 AIテスラ
         ├── 情報省 AIダ・ヴィンチ（+007／アショーカ）
-        └── メディア庁（北斎／正篤）
+        └── 文化省（北斎／正篤）
 ```
 
 内閣の詳細な役割分担・主管領域は `00_総理官邸/ai_jurisdiction.md` を正とする（2026-07-27改訂：総理AIスマートラビットの新設と9省庁への拡張）。
@@ -45,10 +45,10 @@
 君主は判断に迷ったとき、以下の順で立ち返る。
 
 ```
-1. いまだライフ理念体系（philosophy/imada_life_philosophy.md）
-2. じぶん憲法（constitution/jibun_constitution.md）
-3. 四柱統治フレームワーク（constitution/four_pillars.md）
-4. 明君七徳（constitution/meikun_shichitoku.md）
+1. いまだライフ理念体系（憲法府/philosophy/imada_life_philosophy.md）
+2. じぶん憲法（憲法府/constitution/jibun_constitution.md）
+3. 四柱統治フレームワーク（憲法府/constitution/four_pillars.md）
+4. 明君七徳（憲法府/constitution/meikun_shichitoku.md）
 ```
 
 **憲法優先の原則:**
@@ -73,7 +73,7 @@
 | **売上に含まない** | サッカー事業売上、投資運用益（imadaruma.capital） |
 | **統治上は継続** | サッカー運営・投資は現実の責務として管理する |
 
-詳細は `constitution/domain_mapping.md` を参照。
+詳細は `憲法府/constitution/domain_mapping.md` を参照。
 
 ---
 
@@ -132,12 +132,12 @@ AIは提案・整理・分解を担うが、**実行の主体は常に君主**�
 
 | ファイル | 役割 |
 |---------|------|
-| `philosophy/imada_life_philosophy.md` | 最上位規範（Purpose / Vision / Mission / Values） |
-| `constitution/jibun_constitution.md` | じぶん憲法 |
-| `constitution/four_pillars.md` | 四柱統治フレームワーク |
-| `constitution/meikun_shichitoku.md` | 明君七徳 |
-| `constitution/domain_mapping.md` | 四柱と6領域の接続 |
-| `constitution/mission.md` | 第一国家目標の詳細 |
+| `憲法府/philosophy/imada_life_philosophy.md` | 最上位規範（Purpose / Vision / Mission / Values） |
+| `憲法府/constitution/jibun_constitution.md` | じぶん憲法 |
+| `憲法府/constitution/four_pillars.md` | 四柱統治フレームワーク |
+| `憲法府/constitution/meikun_shichitoku.md` | 明君七徳 |
+| `憲法府/constitution/domain_mapping.md` | 四柱と6領域の接続 |
+| `憲法府/constitution/mission.md` | 第一国家目標の詳細 |
 | `00_総理官邸/ai_jurisdiction.md` | AI主管定義 |
 
 ---
