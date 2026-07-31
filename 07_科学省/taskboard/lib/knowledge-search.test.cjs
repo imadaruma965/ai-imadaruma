@@ -43,9 +43,9 @@ test("listModes exposes all seven MVP consultation modes", () => {
   assert.ok(modes.some((m) => m.id === "instagram"));
 });
 
-test("DEFAULT_VAULT_ROOT points at 08_情報省/imada-knowledge", () => {
+test("DEFAULT_VAULT_ROOT points at 08_情報省/ダヴィンチ図書館", () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
-  assert.equal(DEFAULT_VAULT_ROOT, path.join(repoRoot, "08_情報省", "imada-knowledge"));
+  assert.equal(DEFAULT_VAULT_ROOT, path.join(repoRoot, "08_情報省", "ダヴィンチ図書館"));
 });
 
 test("cascadeSearch dedupes hits across folders and caps 05_AI対話 contributions", () => {
@@ -84,7 +84,7 @@ test("cascadeSearch stops early once the limit is reached", () => {
 
 test("searchForMode degrades gracefully (does not throw) when the vault module is unreachable", async (t) => {
   if (fs.existsSync(VAULT_LIB_PATH)) {
-    t.skip("imada-knowledge vault is present in this environment; unavailable-path is covered by env override below");
+    t.skip("ダヴィンチ図書館 vault is present in this environment; unavailable-path is covered by env override below");
     return;
   }
   const result = await searchForMode("general", "月商50万円の営業戦略");

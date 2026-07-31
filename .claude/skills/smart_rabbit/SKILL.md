@@ -75,7 +75,7 @@ Knowledge参照元:（パス、または「未参照・ローカル限定」）
 
 ### 正本ルール
 
-- 知識の唯一の正本は Vault `imada-knowledge`（パス例: `/Users/imadatadahito/Documents/imada-knowledge/`）である。
+- 知識の唯一の正本は **ダヴィンチ図書館** Vault（パス: `08_情報省/ダヴィンチ図書館/`。互換: `~/imada-knowledge`）。MCP接続名は `imada-knowledge` のまま。
 - Vault全文を直接一括読込しない。フォルダwalk・全ファイル列挙読込を禁止する。
 - 原本会話を `ai-imadaruma` へ複製保存しない。
 - 必要な知識だけ MCP 経由で取得する。
@@ -130,7 +130,7 @@ Knowledge参照元:（パス、または「未参照・ローカル限定」）
 01_意思決定
 → 02_国家事業
 → 03_国家叡智
-→ 06_ダ・ヴィンチ図書館/共通原理
+→ 06_館運営/共通原理
 → 05_AI対話（最終手段）
 ```
 

@@ -4,7 +4,7 @@
 >
 > **上位規範**: `00_憲法府/constitution/four_pillars.md`（四柱統治フレームワーク）
 >
-> **関連**: `00_憲法府/constitution/mission.md`（第一国家目標）、`01_首相官邸/ai_jurisdiction.md`（AI主管定義）、`08_情報省/archives/domain_ministries/domain_ministries.md`（六省）
+> **関連**: `00_憲法府/constitution/mission.md`（第一国家目標）、`01_首相官邸/ai_jurisdiction.md`（AI主管定義）、`08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md`（六省）
 
 ---
 
@@ -30,7 +30,7 @@
   └── Internal Affairs　→ 内務省
 ```
 
-官庁名の一覧・今期優先は `08_情報省/archives/domain_ministries/domain_ministries.md` を正とする。  
+官庁名の一覧・今期優先は `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md` を正とする。  
 **原則:**
 
 - **四柱**は国家統治の原理・構造を表す上位分類である

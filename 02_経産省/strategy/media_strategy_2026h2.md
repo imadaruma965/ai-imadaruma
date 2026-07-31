@@ -2,7 +2,7 @@
 
 > **管轄**: AI栄一（設計）／文化通信省／正篤（稿）／尊徳（日程・分度）／君主（投稿・収録）  
 > **顧客**: `02_経産省/strategy/ds_persona.md`（前田＝コーチ・賢いウサギ）  
-> **NL執筆ルール**: `08_情報省/archives/domain_ministries/communications/newsletter_writing_rules.md`  
+> **NL執筆ルール**: `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/newsletter_writing_rules.md`  
 > **営業接続**: `02_経産省/strategy/ops_rhythm_2026h2.md` §3  
 > **更新日**: 2026-07-14  
 

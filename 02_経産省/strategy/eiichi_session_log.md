@@ -53,8 +53,8 @@
   - 自己統治論の立体研究は随時ではなく定期ワークと確認。`02_経産省/strategy/ds_rnd.md` にR&D方針を作成（原則3ヶ月に1回本更新、月1点検は任意）
   - **AI正篤（安岡正篤＝やすおかまさひろ）** を裏方・**文筆官**として確定（役職名にゴーストライターは使わない。稿は原則君主名義）
   - **AIアショーカ**を裏方・**研究官**として新設。四人体制は並列ではなく【表】栄一・尊徳／【裏】アショーカ・正篤。全体戦略メンターは栄一
-  - 人物プロファイルDOCXを `08_情報省/sources/ai_profiles/` に保管
-  - BrandStrategy／前田ペルソナ／KPI／LinkedIn Ops の4DOCXを `08_情報省/sources/ds_strategy_refs/` に参考保管
+  - 人物プロファイルDOCXを `08_情報省/ダヴィンチ図書館/91_原資料/ai_profiles/` に保管
+  - BrandStrategy／前田ペルソナ／KPI／LinkedIn Ops の4DOCXを `08_情報省/ダヴィンチ図書館/91_原資料/ds_strategy_refs/` に参考保管
   - **ペルソナ一本化（v0.3）**: 二次リサーチのうえ主職種を **ビジネス／専門コーチ** に。クラスター＝知的サービス個人（コンサル・講師含む）。メモは `02_経産省/strategy/ds_persona_market_note.md`
   - **今年版マネタイズ**を `02_経産省/strategy/monetization_2026h2.md` に確定提案: 主=sound／副=DS動画19,800→体験→伴走／Kindle=資産／サロン本格=今期やらない。希望4本は捨てず順番付け
   - 明日: LinkedInでコーチ検索→既存ならメッセージ、なければ申請→面談（一次生声）。尊徳の today へ
@@ -70,12 +70,12 @@
 
 - 話した内容: 六省設置。アショーカ・正篤はいらなかったか。朝・体制（タスク／メディア／営業）
 - 決定・約束:
-  - `08_情報省/archives/domain_ministries/domain_ministries.md` 作成
+  - `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md` 作成
   - アショーカ・正篤は廃止せず薄く残す
   - `02_経産省/strategy/ops_rhythm_2026h2.md` でタスク・メディア・営業を1枚に束ねる
   - `today.md` を7/14用に更新（pipeline3行・実送1・LI申請5）
   - `02_経産省/strategy/media_strategy_2026h2.md` — NL『183日…』（水日）＋カルーセル（月火金）を本丸化。日曜バッチ予約・形変え・LINE送客
-  - `08_情報省/archives/domain_ministries/communications/weekly_batch_template.md` 追加
+  - `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/weekly_batch_template.md` 追加
 - 次回への持ち越し:
   - コーチLinkedIn生声の結果
   - sound初提案の反応

@@ -2,9 +2,9 @@
 
 > **英題**: The Constitution of the Nation of Tadahito Imada
 >
-> **正本**: `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx`（第三版 / 2026年4月改訂）
+> **正本**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx`（第三版 / 2026年4月改訂）
 >
-> **旧版（参照用・履歴用）**: `08_情報省/sources/originals/imada_constitution_v2.docx`（第二版 / 2026年3月制定）
+> **旧版（参照用・履歴用）**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_constitution_v2.docx`（第二版 / 2026年3月制定）
 >
 > 本ファイルは運用しやすい要約・実装版である。全文・批准宣言は正本DOCXを参照する。
 > 内容が矛盾する場合、**v3 正本DOCXを優先**する。旧版は参照用とし、運用上は v3 を優先する。
@@ -184,7 +184,7 @@
 
 この憲法は、モチベーションが高い日のためではなく、**疲弊した夜のために**存在する。
 
-全文は正本DOCX `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx` を参照。
+全文は正本DOCX `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` を参照。
 
 ---
 

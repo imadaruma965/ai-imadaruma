@@ -1,6 +1,6 @@
 # いまだライフ理念体系 — 実装版
 
-> **正本**: `08_情報省/sources/originals/imada_life_philosophy_v02.docx`（ver.02 / 2026年6月正式採用）
+> **正本**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx`（ver.02 / 2026年6月正式採用）
 >
 > 本ファイルは運用しやすい要約・実装版である。典拠・全文・改訂履歴は正本DOCXを参照する。
 

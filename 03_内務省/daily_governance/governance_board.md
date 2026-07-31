@@ -12,7 +12,7 @@
 - **日次原料**: `night_review.md` §8b → `archives/daily_logs/`（実践の芽）  
 - 材料補足: `sales_pipeline.md`、手元の家計・フォロワー数（**週1目視で可**）  
 - 週次整理: `weekly_review.md` の前か直後に本ボードを埋める  
-- 発信: `08_情報省/archives/domain_ministries/communications/newsletter_writing_rules.md`  
+- 発信: `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/newsletter_writing_rules.md`  
 - 方針: `02_経産省/strategy/metrics_capture_note.md`
 
 **金曜の埋め方**: 今週の `archives/daily_logs/` を開き、§8b相当の行から「ネタになりそうな実践」をA欄へ2〜3個ピックする。毎日のフォロワー転記は不要。  

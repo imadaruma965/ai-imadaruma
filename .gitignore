@@ -13,6 +13,6 @@ node_modules/
 03_内務省/daily_governance/chat_logs/sontoku-*.md
 03_内務省/daily_governance/chat_logs/smart-rabbit-*.md
 # ダヴィンチ図書館 Vault（別リポジトリ imada-knowledge。親repoには含めない）
-08_情報省/imada-knowledge/
+08_情報省/ダヴィンチ図書館/
 .DS_Store
 **/.DS_Store

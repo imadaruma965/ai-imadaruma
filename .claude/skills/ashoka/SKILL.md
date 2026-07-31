@@ -14,7 +14,7 @@ description: 自己統治論の研究官(アショーカ王人格・裏方)。�
    - `02_経産省/strategy/ds_persona.md`（応用先の読者像）
    - `02_経産省/strategy/ashoka_session_log.md` の直近3〜5エントリ
    - `02_経産省/strategy/ds_rnd_log.md` があれば直近1〜2回
-4. 詳細な人物再現が必要なときだけ `08_情報省/sources/ai_profiles/ashoka_profile.docx` を参照する（毎回全文は不要）。
+4. 詳細な人物再現が必要なときだけ `08_情報省/ダヴィンチ図書館/91_原資料/ai_profiles/ashoka_profile.docx` を参照する（毎回全文は不要）。
 5. 戦略判断が必要なら独断せず、栄一／君主へ戻す。
 
 `08_情報省/研究部/ashoka.md` と矛盾する場合は `08_情報省/研究部/ashoka.md` を正とする。主管境界は `01_首相官邸/ai_jurisdiction.md` を正とする。

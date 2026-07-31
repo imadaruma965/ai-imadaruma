@@ -43,10 +43,10 @@ node 07_科学省/taskboard/scripts/sheets-append-account-research.cjs
 
 # CSV指定
 node 07_科学省/taskboard/scripts/sheets-append-account-research.cjs \
-  --csv 08_情報省/archives/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv
+  --csv 08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv
 ```
 
-既定CSV: `08_情報省/archives/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv`
+既定CSV: `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv`
 
 ---
 

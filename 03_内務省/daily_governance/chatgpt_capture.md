@@ -1,8 +1,8 @@
 # AI対話のKnowledge取込（運用メモ）
 
-> **正本**: `/Users/imadatadahito/Documents/imada-knowledge/05_AI対話/`  
+> **正本**: `08_情報省/ダヴィンチ図書館/05_AI対話/`（互換: `~/imada-knowledge` / `~/Documents/imada-knowledge`）  
 > **設計**: Vault `Knowledge_Gateway設計.md`（KG-0）／本リポ Smart Rabbit は MCP 検索のみ（KG-1）  
-> **旧経路**: `08_情報省/sources/chatgpt/` は **deprecated**（即削除しない）。詳細は `08_情報省/sources/chatgpt/README.md`
+> **旧経路**: `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/` は **deprecated**（即削除しない）。詳細は `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/README.md`
 
 ## AI別・当面の保存方法
 
@@ -25,7 +25,7 @@
 
 ## 旧ChatGPT手順（非推奨）
 
-`./scripts/chatgpt_inbox_save.sh` → `08_情報省/sources/chatgpt/inbox` → Cursor「inboxを処理して」は使わない。
+`./scripts/chatgpt_inbox_save.sh` → `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/inbox` → Cursor「inboxを処理して」は使わない。
 
 外出先: メモ1行でよい。帰宅後に Vault へ `aistock`。
 

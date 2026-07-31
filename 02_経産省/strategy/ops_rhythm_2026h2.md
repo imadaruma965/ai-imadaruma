@@ -1,7 +1,7 @@
 # 運用リズム今年版（タスク・メディア・営業）
 
 > **管轄**: AI栄一（設計）／AI尊徳（日次実行）／君主（決定・実行）  
-> **接続**: `monetization_2026h2.md`／`ds_persona.md`／`sales_pipeline.md`／`08_情報省/archives/domain_ministries/domain_ministries.md`  
+> **接続**: `monetization_2026h2.md`／`ds_persona.md`／`sales_pipeline.md`／`08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md`  
 > **作成日**: 2026-07-14  
 > **目的**: 「何を管理するか」で迷わず、商务・文化通信・内務だけを回す
 

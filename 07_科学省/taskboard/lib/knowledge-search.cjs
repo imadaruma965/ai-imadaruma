@@ -5,21 +5,21 @@ const { pathToFileURL } = require("node:url");
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
-// 正本: 08_情報省/imada-knowledge（ダヴィンチ図書館）。別Gitリポジトリ。
+// 正本: 08_情報省/ダヴィンチ図書館。別Gitリポジトリ。
 // Override with IMADA_KNOWLEDGE_VAULT_PATH if needed.
-const DEFAULT_VAULT_ROOT = path.join(REPO_ROOT, "08_情報省", "imada-knowledge");
+const DEFAULT_VAULT_ROOT = path.join(REPO_ROOT, "08_情報省", "ダヴィンチ図書館");
 const VAULT_ROOT = process.env.IMADA_KNOWLEDGE_VAULT_PATH
   ? path.resolve(process.env.IMADA_KNOWLEDGE_VAULT_PATH)
   : DEFAULT_VAULT_ROOT;
 const VAULT_LIB_PATH = path.join(VAULT_ROOT, "integrations", "imada-knowledge-mcp", "lib", "vault.mjs");
 
-// 06_ダ・ヴィンチ図書館直下は「共通原理」のみ優先参照する運用のため folders には
+// 06_館運営直下は「共通原理」のみ優先参照する運用のため folders には
 // サブパスまで渡す(vault.mjs 側は path.normalize したprefix一致で判定する)。
 const DEFAULT_CASCADE = [
   "01_意思決定",
   "02_国家事業",
   "03_国家叡智",
-  "06_ダ・ヴィンチ図書館",
+  "06_館運営",
   "05_AI対話",
 ];
 
@@ -37,27 +37,27 @@ const MODE_CONFIG = {
   },
   sales: {
     label: "営業",
-    folderOrder: ["02_国家事業", "01_意思決定", "03_国家叡智", "06_ダ・ヴィンチ図書館", "05_AI対話"],
+    folderOrder: ["02_国家事業", "01_意思決定", "03_国家叡智", "06_館運営", "05_AI対話"],
     focus: ["顧客", "提案", "価格", "案件", "営業履歴"],
   },
   instagram: {
     label: "Instagram",
-    folderOrder: ["02_国家事業", "03_国家叡智", "01_意思決定", "06_ダ・ヴィンチ図書館", "05_AI対話"],
+    folderOrder: ["02_国家事業", "03_国家叡智", "01_意思決定", "06_館運営", "05_AI対話"],
     focus: ["賢いウサギ", "AI自己統治", "ミドル再起", "投稿企画"],
   },
   research: {
     label: "リサーチ",
-    folderOrder: ["03_国家叡智", "06_ダ・ヴィンチ図書館", "01_意思決定", "02_国家事業", "05_AI対話"],
+    folderOrder: ["03_国家叡智", "06_館運営", "01_意思決定", "02_国家事業", "05_AI対話"],
     focus: ["根拠", "比較", "一次情報", "未確認事項"],
   },
   product: {
     label: "商品・サービス設計",
-    folderOrder: ["02_国家事業", "03_国家叡智", "01_意思決定", "06_ダ・ヴィンチ図書館", "05_AI対話"],
+    folderOrder: ["02_国家事業", "03_国家叡智", "01_意思決定", "06_館運営", "05_AI対話"],
     focus: ["商品設計", "サービス設計", "価格設定", "提供価値"],
   },
   finance: {
     label: "財政・優先順位",
-    folderOrder: ["01_意思決定", "02_国家事業", "03_国家叡智", "06_ダ・ヴィンチ図書館", "05_AI対話"],
+    folderOrder: ["01_意思決定", "02_国家事業", "03_国家叡智", "06_館運営", "05_AI対話"],
     focus: ["財政", "資金", "優先順位", "予算"],
   },
 };

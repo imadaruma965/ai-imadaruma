@@ -104,11 +104,11 @@
 
 ## 壁打ちのKnowledge格納（毎回・重要分のみ）
 
-**正本は `imada-knowledge`。このリポの `08_情報省/sources/chatgpt/` には原本を置かない**（旧経路は deprecated。詳細: `08_情報省/sources/chatgpt/README.md` / `03_内務省/daily_governance/chatgpt_capture.md`）。
+**正本は `imada-knowledge`。このリポの `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/` には原本を置かない**（旧経路は deprecated。詳細: `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/README.md` / `03_内務省/daily_governance/chatgpt_capture.md`）。
 
 終了時（決定・設計・重要な壁打ちがあるとき）:
 
-1. 必要なら `08_情報省/sources/chatgpt/CHATGPT_EXPORT_PROMPT.md` で書き出しを整える  
+1. 必要なら `08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/CHATGPT_EXPORT_PROMPT.md` で書き出しを整える  
 2. コピーした本文を Vault 側で保存する:
 
 ```bash

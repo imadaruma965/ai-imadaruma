@@ -952,7 +952,7 @@
       "手順: Custom instructions／Project／Memory に貼り直し",
       "戦略・主管を大きく変えた日は週次を待たず即実施",
       "ChatGPT壁打ちの重要分は inbox へ → Cursorで「inboxを処理して」",
-      "詳細: 08_情報省/sources/chatgpt/README.md / 03_内務省/daily_governance/chatgpt_capture.md",
+      "詳細: 08_情報省/ダヴィンチ図書館/91_原資料/chatgpt/README.md / 03_内務省/daily_governance/chatgpt_capture.md",
     ].join("\n");
 
     // 次の日曜（今日が日曜なら今日）

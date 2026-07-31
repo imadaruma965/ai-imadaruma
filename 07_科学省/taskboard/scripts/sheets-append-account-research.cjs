@@ -34,7 +34,7 @@ async function main() {
     argValue("--csv") ||
     path.join(
       __dirname,
-      "../../../08_情報省/archives/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv"
+      "../../../08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv"
     );
 
   const st = await gsheets.status();

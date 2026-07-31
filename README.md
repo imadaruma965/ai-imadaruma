@@ -17,7 +17,7 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 層 | 場所 | 役割 |
 |----|------|------|
-| **DOCX正本** | `08_情報省/sources/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
+| **DOCX正本** | `08_情報省/ダヴィンチ図書館/91_原資料/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
 | **Markdown実装版** | `00_憲法府/philosophy/` `00_憲法府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
 
 **ルール:**
@@ -31,20 +31,20 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 正本ファイル | Markdown実装版 | 備考 |
 |------------|---------------|------|
-| `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx` | `00_憲法府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
-| `08_情報省/sources/originals/imada_life_philosophy_v02.docx` | `00_憲法府/philosophy/imada_life_philosophy.md` | |
-| `08_情報省/sources/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_憲法府/constitution/four_pillars.md` | |
-| `08_情報省/sources/originals/imadaruma_明君七徳_v02.docx` | `00_憲法府/constitution/meikun_shichitoku.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` | `00_憲法府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx` | `00_憲法府/philosophy/imada_life_philosophy.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_憲法府/constitution/four_pillars.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_明君七徳_v02.docx` | `00_憲法府/constitution/meikun_shichitoku.md` | |
 
 **旧版（参照用・履歴用）:**
 
 | 旧版ファイル | 備考 |
 |------------|------|
-| `08_情報省/sources/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
 
 ### じぶん憲法（最高法規）
 
-- **正本DOCX**: `08_情報省/sources/originals/imadaruma_じぶん憲法_v3.docx`
+- **正本DOCX**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx`
 - **Markdown実装版**: `00_憲法府/constitution/jibun_constitution.md`
 - **標語**: 葦なる刃は、静かに尖れる。
 - **中核文**: 人生は選択である。選択が国家を定める。
@@ -143,7 +143,10 @@ ai-imadaruma/
 ├── 03_内務省/                         # 尊徳 ＋ daily_governance/
 ├── 04_教育省/ … 09_文化省/         # 各省庁（人格正本）
 ├── 07_科学省/                               # 統治手帳（taskboard）・scripts
-├── 08_情報省/archives/domain_ministries/                            # 事業ドメイン六省（AI省庁とは別）
+├── 08_情報省/
+│   ├── ダヴィンチ図書館/                 # Obsidian Vault（別Git）
+│   ├── 研究部/                          # アショーカ
+│   └── 諜報部/                          # ルパン
 ├── 02_経産省/strategy/                # 戦略（AI栄一管轄）
 │   ├── README.md
 │   ├── roadmap_500k.md
@@ -152,10 +155,7 @@ ai-imadaruma/
 │   ├── morning_cabinet.md
 │   ├── today.md
 │   └── …
-└── archives/
-    ├── daily_logs/
-    ├── weekly_reviews/
-    └── decisions/
+└── 08_情報省/ダヴィンチ図書館/90_国家OS保管/  # 旧制度・降格ドメイン等
 ```
 
 ★新 = Phase 1で作成済み。旧ファイルは Phase 2以降で移行・アーカイブ予定。
@@ -172,7 +172,7 @@ ai-imadaruma/
   ↓
 夕 → evening_review.md で振り返り
   ↓
-完了 → archives/daily_logs/ にコピー保存
+完了 → `08_情報省/ダヴィンチ図書館/90_国家OS保管/` に必要分のみ保管（日常は daily_governance）
 ```
 
 ## AI内閣の起動方法
