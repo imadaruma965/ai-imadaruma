@@ -11,6 +11,7 @@ const gcal = require("./gcal.cjs");
 const knowledgeSearch = require("./lib/knowledge-search.cjs");
 const smartRabbitContext = require("./lib/smart-rabbit-context.cjs");
 const cabinetRegistry = require("./lib/cabinet-registry.cjs");
+const accountResearchSheet = require("./lib/account-research-sheet.cjs");
 
 // cwd や起動シェルに依存せず、07_科学省/taskboard/.env.local を読む（既存envは上書きしない）
 loadLocalEnv();
@@ -1168,6 +1169,7 @@ function createServer() {
         url.pathname.startsWith("/api/sontoku") ||
         url.pathname.startsWith("/api/smart-rabbit") ||
         url.pathname.startsWith("/api/cabinet") ||
+        url.pathname.startsWith("/api/account-research") ||
         url.pathname.startsWith("/api/appointments")) &&
       !isAuthorized(req)
     ) {
@@ -1378,6 +1380,53 @@ function createServer() {
 
     if (req.method === "GET" && url.pathname === "/api/cabinet/members") {
       json(res, 200, { members: cabinetRegistry.listMembers() });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/account-research") {
+      try {
+        const csvPath = path.join(
+          REPO_ROOT,
+          "08_情報省",
+          "ダヴィンチ図書館",
+          "02_国家事業",
+          "Instagram",
+          "01_リサーチ原本",
+          "instagram_account_research_30_2026-07-29.csv"
+        );
+        const loaded = accountResearchSheet.loadAccountResearchCsv(csvPath);
+        const rows = loaded.data.map((row) => {
+          const padded = accountResearchSheet.padRow(row);
+          return {
+            genre: padded[0] || "",
+            name: padded[1] || "",
+            username: accountResearchSheet.usernameFromRow(padded),
+            url: padded[4] || "",
+            followers: padded[5] || "",
+            posts: padded[6] || "",
+            ratio: padded[7] || "",
+            mainGenre: padded[8] || "",
+            format: padded[9] || "",
+          };
+        });
+        json(res, 200, {
+          title: "賢いウサギ Instagram アカウントリサーチ30",
+          sheetUrl: accountResearchSheet.DEFAULT_SHEET_URL,
+          sheetTitle: accountResearchSheet.DEFAULT_SHEET_TITLE,
+          spreadsheetId: accountResearchSheet.DEFAULT_SPREADSHEET_ID,
+          vaultNote: "08_情報省/ダヴィンチ図書館/02_国家事業/Instagram/README.md",
+          csvPath: "08_情報省/ダヴィンチ図書館/02_国家事業/Instagram/01_リサーチ原本/instagram_account_research_30_2026-07-29.csv",
+          count: rows.length,
+          rows,
+        });
+      } catch (error) {
+        console.error("[account-research]", error);
+        json(res, 500, {
+          error: "account_research_load_failed",
+          message: "アカウントリサーチの読み込みに失敗しました。",
+          sheetUrl: accountResearchSheet.DEFAULT_SHEET_URL,
+        });
+      }
       return;
     }
 

@@ -2125,3 +2125,43 @@ button.calendar-event { cursor: pointer; }
     min-height: 2.75rem;
   }
 }
+
+/* Instagram アカウントリサーチ（情報省） */
+.board-block.research {
+  margin: 0.75rem 0 1rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.account-research-table-wrap {
+  margin-top: 0.55rem;
+  overflow: auto;
+  max-height: min(50vh, 28rem);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.account-research-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+.account-research-table th,
+.account-research-table td {
+  padding: 0.35rem 0.45rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.account-research-table th {
+  position: sticky;
+  top: 0;
+  background: #f4f7fa;
+  z-index: 1;
+  font-weight: var(--weight-bold);
+}
+.account-research-table td:nth-child(3) {
+  white-space: normal;
+  min-width: 8rem;
+}

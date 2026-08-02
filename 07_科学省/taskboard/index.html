@@ -73,6 +73,14 @@
       </div>
 
       <div class="home-block">
+        <h3 class="home-head">資料</h3>
+        <div class="toolbar" style="flex-wrap:wrap; gap:0.4rem">
+          <button type="button" class="btn ghost compact" id="btn-goto-account-research">IGリサーチ30（情報省）</button>
+          <a class="btn primary compact" href="https://docs.google.com/spreadsheets/d/1NzKgrJhHu_G2kQ7dXOnI9z434c3CbOhLu3j9IcFDkNo/edit" target="_blank" rel="noopener">Googleシートを開く</a>
+        </div>
+      </div>
+
+      <div class="home-block">
         <h3 class="home-head">優先順位</h3>
         <div id="quad-overview" class="overview-grid quad-grid"></div>
       </div>
@@ -654,6 +662,32 @@
     <section id="view-jouhou" class="view">
       <h2 class="section-title">情報省</h2>
       <p class="day-flow-hint">ダヴィンチ図書館。館長ダ・ヴィンチ、諜報部ルパン、研究部アショーカを切り替えて相談できる。</p>
+
+      <div class="board-block research" id="account-research-panel">
+        <p class="board-head">賢いウサギ · Instagramアカウントリサーチ30</p>
+        <p class="lead tight" id="account-research-meta">読み込み中…</p>
+        <div class="toolbar" style="margin-top:0.4rem; flex-wrap:wrap; gap:0.4rem">
+          <a class="btn primary compact" id="btn-open-account-research-sheet" href="https://docs.google.com/spreadsheets/d/1NzKgrJhHu_G2kQ7dXOnI9z434c3CbOhLu3j9IcFDkNo/edit" target="_blank" rel="noopener">Googleシートを開く</a>
+          <button type="button" class="btn ghost compact" id="btn-reload-account-research">一覧を更新</button>
+        </div>
+        <div class="account-research-table-wrap">
+          <table class="account-research-table" id="account-research-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ジャンル</th>
+                <th>アカウント</th>
+                <th>@</th>
+                <th>フォロワー</th>
+                <th>形式</th>
+                <th>IG</th>
+              </tr>
+            </thead>
+            <tbody id="account-research-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="cabinet-picker" id="jouhou-picker" role="tablist" aria-label="情報省のAIを選ぶ"></div>
       <div id="chat-mount-jouhou"></div>
     </section>

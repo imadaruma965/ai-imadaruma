@@ -6,6 +6,7 @@ const path = require("node:path");
 
 const DEFAULT_SPREADSHEET_ID = "1NzKgrJhHu_G2kQ7dXOnI9z434c3CbOhLu3j9IcFDkNo";
 const DEFAULT_SHEET_TITLE = "アカウントリサーチ";
+const DEFAULT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SPREADSHEET_ID}/edit#gid=0`;
 const COL_COUNT = 11;
 
 /** 簡易CSVパーサ（ダブルクォート対応） */
@@ -136,6 +137,7 @@ function filterNewRows(dataRows, existingUsernames) {
 module.exports = {
   DEFAULT_SPREADSHEET_ID,
   DEFAULT_SHEET_TITLE,
+  DEFAULT_SHEET_URL,
   COL_COUNT,
   parseCsv,
   normalizeUsername,

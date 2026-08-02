@@ -4,6 +4,8 @@
 
 対象シート例: [バズリール／アカウントリサーチ](https://docs.google.com/spreadsheets/d/1NzKgrJhHu_G2kQ7dXOnI9z434c3CbOhLu3j9IcFDkNo/edit)
 
+**Vault拾い口（Obsidian）**: `08_情報省/ダヴィンチ図書館/02_国家事業/Instagram/README.md`（投稿時は `03_投稿引き出し/`）
+
 ---
 
 ## 1回だけのセットアップ（推奨: サービスアカウント）
@@ -43,10 +45,10 @@ node 07_科学省/taskboard/scripts/sheets-append-account-research.cjs
 
 # CSV指定
 node 07_科学省/taskboard/scripts/sheets-append-account-research.cjs \
-  --csv 08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv
+  --csv 08_情報省/ダヴィンチ図書館/02_国家事業/Instagram/01_リサーチ原本/instagram_account_research_30_2026-07-29.csv
 ```
 
-既定CSV: `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/drafts/instagram_account_research_30_2026-07-29.csv`
+既定CSV: `08_情報省/ダヴィンチ図書館/02_国家事業/Instagram/01_リサーチ原本/instagram_account_research_30_2026-07-29.csv`
 
 ---
 

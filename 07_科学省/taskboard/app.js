@@ -2905,6 +2905,45 @@
     await loadCabinetMembers();
     renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
     ensureCabinetRoomMounted("chat-mount-jouhou", jouhouActiveMember);
+    loadAccountResearchPanel();
+  }
+
+  async function loadAccountResearchPanel() {
+    const meta = $("#account-research-meta");
+    const tbody = $("#account-research-tbody");
+    const sheetLink = $("#btn-open-account-research-sheet");
+    if (!meta || !tbody) return;
+    meta.textContent = "読み込み中…";
+    try {
+      const response = await fetch("/api/account-research", { cache: "no-store", headers: authHeaders() });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        meta.textContent = body.message || "読み込みに失敗しました。";
+        if (body.sheetUrl && sheetLink) sheetLink.href = body.sheetUrl;
+        return;
+      }
+      if (body.sheetUrl && sheetLink) sheetLink.href = body.sheetUrl;
+      meta.textContent = `${body.count || 0}件 · Vault: ${body.vaultNote || "—"}`;
+      tbody.innerHTML = (body.rows || [])
+        .map((row, i) => {
+          const ig = row.url
+            ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">開く</a>`
+            : "—";
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(row.genre || "")}</td>
+            <td>${escapeHtml(row.name || "")}</td>
+            <td>${escapeHtml(row.username ? `@${row.username}` : "")}</td>
+            <td>${escapeHtml(String(row.followers || ""))}</td>
+            <td>${escapeHtml(row.format || "")}</td>
+            <td>${ig}</td>
+          </tr>`;
+        })
+        .join("");
+    } catch (error) {
+      meta.textContent = "読み込みに失敗しました（オフラインまたはサーバー未起動）。";
+      tbody.innerHTML = "";
+    }
   }
 
   async function enterBunkaRoom() {
@@ -4121,6 +4160,8 @@
     renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
     remountCabinetRoom("chat-mount-jouhou", jouhouActiveMember);
   });
+  $("#btn-reload-account-research")?.addEventListener("click", () => loadAccountResearchPanel());
+  $("#btn-goto-account-research")?.addEventListener("click", () => setView("jouhou"));
   $("#bunka-picker")?.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".cabinet-chip");
     if (!btn || !btn.dataset.memberId || btn.dataset.memberId === bunkaActiveMember) return;
