@@ -7,7 +7,7 @@ const path = require("node:path");
 const DEFAULT_SPREADSHEET_ID = "1NzKgrJhHu_G2kQ7dXOnI9z434c3CbOhLu3j9IcFDkNo";
 const DEFAULT_SHEET_TITLE = "アカウントリサーチ";
 const DEFAULT_SHEET_URL = `https://docs.google.com/spreadsheets/d/${DEFAULT_SPREADSHEET_ID}/edit#gid=0`;
-const COL_COUNT = 11;
+const COL_COUNT = 13;
 
 /** 簡易CSVパーサ（ダブルクォート対応） */
 function parseCsv(text) {
@@ -85,7 +85,8 @@ function recomputeRatio(row) {
   const fol = Number(String(out[5]).replace(/,/g, ""));
   const posts = Number(String(out[6]).replace(/,/g, ""));
   if (Number.isFinite(fol) && Number.isFinite(posts) && posts > 0) {
-    out[7] = String(Math.round((fol / posts) * 10000) / 10000);
+    // シート見出し「フォロワー÷投稿×100」に合わせる
+    out[7] = String(Math.round((fol / posts) * 100 * 10000) / 10000);
   }
   return out;
 }
@@ -134,6 +135,17 @@ function filterNewRows(dataRows, existingUsernames) {
   return { toAppend, skipped, total: dataRows.length };
 }
 
+/** 見出し行を含む values から、次に書く行番号（1始まり）を返す */
+function nextSheetDataRow(existingValues) {
+  let nextRow = 2;
+  const rows = existingValues || [];
+  for (let i = 0; i < rows.length; i += 1) {
+    const a = rows[i]?.[0];
+    if (String(a || "").trim()) nextRow = i + 2;
+  }
+  return nextRow;
+}
+
 module.exports = {
   DEFAULT_SPREADSHEET_ID,
   DEFAULT_SHEET_TITLE,
@@ -148,4 +160,5 @@ module.exports = {
   loadAccountResearchCsv,
   usernamesFromSheetValues,
   filterNewRows,
+  nextSheetDataRow,
 };

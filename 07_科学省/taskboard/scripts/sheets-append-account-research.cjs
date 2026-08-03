@@ -49,7 +49,7 @@ async function main() {
   const { data, path: resolved } = loadAccountResearchCsv(csvPath);
   console.log(`CSV: ${resolved} (${data.length} 行)`);
 
-  const range = `${sheetTitle}!A:K`;
+  const range = `${sheetTitle}!A:M`;
   const existingValues = await gsheets.getValues(spreadsheetId, range);
   const existing = usernamesFromSheetValues(existingValues);
   console.log(`シート既存: ${existing.size} アカウント`);
@@ -71,7 +71,7 @@ async function main() {
     if (String(a || "").trim()) nextRow = i + 2;
   }
   const endRow = nextRow + toAppend.length - 1;
-  const writeRange = `${sheetTitle}!A${nextRow}:K${endRow}`;
+  const writeRange = `${sheetTitle}!A${nextRow}:M${endRow}`;
   console.log(`書込先: ${writeRange}`);
 
   if (dryRun) {

@@ -33,7 +33,7 @@ test("filterNewRows skips existing usernames", () => {
   assert.deepEqual(skipped, ["aaa"]);
   assert.equal(toAppend.length, 1);
   assert.equal(toAppend[0][3], "bbb");
-  assert.equal(toAppend[0][7], "5"); // 20/4*100
+  assert.equal(toAppend[0][7], "500"); // 20/4*100
 });
 
 test("usernamesFromSheetValues reads col D / URL (skips header)", () => {
@@ -45,8 +45,8 @@ test("usernamesFromSheetValues reads col D / URL (skips header)", () => {
   assert.ok(set.has("ren_works081"));
 });
 
-test("recomputeRatio pads to 11 cols", () => {
+test("recomputeRatio pads to 13 cols and uses x100", () => {
   const row = recomputeRatio(["g", "n", "p", "u", "url", "100", "4"]);
-  assert.equal(row.length, 11);
-  assert.equal(row[7], "25");
+  assert.equal(row.length, 13);
+  assert.equal(row[7], "2500");
 });
