@@ -155,34 +155,49 @@ body {
   font-weight: 600;
 }
 
-.tabs {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.45rem 0.55rem;
-  overflow-x: auto;
+.tabs,
+.ministry-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  overflow: visible;
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(243, 247, 251, 0.92);
+  background: rgba(243, 247, 251, 0.96);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(8px);
 }
 .tab {
-  flex: 0 0 auto;
-  border: 1px solid transparent;
-  background: transparent;
+  flex: none;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
   color: var(--muted);
-  padding: 0.4rem 0.72rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  padding: 0.55rem 0.35rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  line-height: 1.25;
   cursor: pointer;
+  text-align: center;
+  white-space: normal;
 }
 .tab.active {
   color: var(--ink);
-  background: var(--surface);
-  border-color: var(--line);
-  box-shadow: 0 2px 8px rgba(61, 126, 166, 0.08);
-  font-weight: 600;
+  background: #e8f3fa;
+  border-color: #8eb9d4;
+  box-shadow: 0 2px 8px rgba(61, 126, 166, 0.12);
+  font-weight: 700;
+}
+@media (max-width: 520px) {
+  .ministry-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tab {
+    font-size: 0.7rem;
+    padding: 0.6rem 0.3rem;
+  }
 }
 
 .view { display: none; padding: 1rem 0.95rem; }
@@ -507,24 +522,33 @@ body {
 }
 .sontoku-chip:disabled,
 .sontoku-form button:disabled,
-.sontoku-form input:disabled {
+.sontoku-form input:disabled,
+.sontoku-form textarea:disabled {
   cursor: wait;
   opacity: 0.6;
 }
 .sontoku-form {
   display: flex;
   gap: 0.4rem;
-  align-items: center;
+  align-items: flex-end;
 }
-.sontoku-form input {
+.sontoku-form input,
+.sontoku-form textarea.chat-input {
   flex: 1;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.45rem 0.6rem;
   font-size: 0.82rem;
+  font-family: inherit;
+  line-height: 1.4;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 2.4rem;
+  max-height: 40vh;
 }
-.sontoku-form input:focus {
+.sontoku-form input:focus,
+.sontoku-form textarea.chat-input:focus {
   outline: 2px solid var(--accent-soft);
   border-color: var(--accent);
 }
@@ -603,6 +627,30 @@ body {
   align-items: center;
   gap: 0.45rem;
   margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+.idea-memo-form {
+  margin: 0.75rem 0 1rem;
+}
+.idea-memo-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.idea-memo-body {
+  flex: 1;
+  min-width: 0;
+}
+.idea-memo-text {
+  margin: 0 0 0.25rem;
+  white-space: pre-wrap;
+}
+.idea-memo-row.archived {
+  opacity: 0.75;
+}
+.idea-memo-archived {
+  margin-top: 1.25rem;
 }
 .smartrabbit-speak-btn {
   font-size: 0.75rem;
@@ -773,26 +821,44 @@ body {
   color: var(--muted);
   margin: 0 0 0.5rem;
 }
-.smartrabbit-form {
+.smartrabbit-form,
+.sontoku-form {
   display: flex;
   gap: 0.4rem;
-  align-items: center;
+  align-items: flex-end;
 }
-.smartrabbit-form input {
+.smartrabbit-form input,
+.smartrabbit-form textarea.chat-input,
+.sontoku-form input,
+.sontoku-form textarea.chat-input {
   flex: 1;
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.45rem 0.6rem;
   font-size: 0.82rem;
+  font-family: inherit;
+  line-height: 1.4;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 2.4rem;
+  max-height: 40vh;
+  field-sizing: content;
 }
-.smartrabbit-form input:focus {
+.smartrabbit-form input:focus,
+.smartrabbit-form textarea.chat-input:focus,
+.sontoku-form input:focus,
+.sontoku-form textarea.chat-input:focus {
   outline: 2px solid var(--lilac);
   border-color: #8a6fd1;
 }
 .smartrabbit-mode:disabled,
 .smartrabbit-form button:disabled,
-.smartrabbit-form input:disabled {
+.smartrabbit-form input:disabled,
+.smartrabbit-form textarea:disabled,
+.sontoku-form button:disabled,
+.sontoku-form input:disabled,
+.sontoku-form textarea:disabled {
   cursor: wait;
   opacity: 0.6;
 }
@@ -2096,7 +2162,9 @@ button.calendar-event { cursor: pointer; }
    Smart Rabbit・尊徳チャット、ナビ、音声ボタンのタップ領域を広げる。 */
 @media (max-width: 560px) {
   .sontoku-form input,
+  .sontoku-form textarea.chat-input,
   .smartrabbit-form input,
+  .smartrabbit-form textarea.chat-input,
   .field input,
   .field textarea,
   .field select,
@@ -2116,7 +2184,9 @@ button.calendar-event { cursor: pointer; }
   }
 
   .sontoku-form input,
+  .sontoku-form textarea.chat-input,
   .smartrabbit-form input,
+  .smartrabbit-form textarea.chat-input,
   .sontoku-form button,
   .smartrabbit-form button,
   .voice-btn,

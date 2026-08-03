@@ -407,6 +407,15 @@
       salesPipeline: Array.isArray(data.salesPipeline)
         ? data.salesPipeline.map((r) => window.TaskboardSales.normalizeSalesRecord(r, { uid }))
         : [],
+      ideaMemos: (() => {
+        const fromRoot = Array.isArray(data.ideaMemos) ? data.ideaMemos : null;
+        const fromPlans =
+          data.plans && typeof data.plans === "object" && Array.isArray(data.plans._ideaMemosRegistry)
+            ? data.plans._ideaMemosRegistry
+            : null;
+        const raw = fromRoot && fromRoot.length ? fromRoot : fromPlans || [];
+        return raw.map((m) => window.TaskboardIdeaMemos.normalizeIdeaMemo(m, { uid }));
+      })(),
       fiscalMeta: normalizeFiscalMeta(data.fiscalMeta),
       business: normalizeBusiness(data.business),
     };
@@ -466,16 +475,21 @@
       appointments: [],
       liabilities: [],
       salesPipeline: [],
+      ideaMemos: [],
       fiscalMeta: emptyFiscalMeta(),
       business: emptyBusiness(),
     };
   }
 
   function snapshotState() {
+    const ideaMemos = state.ideaMemos || [];
+    const plans = { ...(state.plans || {}) };
+    // 旧サーバー（ideaMemos未対応）でも落ちないよう plans にもミラーする
+    plans._ideaMemosRegistry = ideaMemos;
     return {
       tasks: state.tasks,
       reviews: state.reviews,
-      plans: state.plans,
+      plans,
       kpis: state.kpis,
       board: state.board,
       categories: state.categories,
@@ -490,6 +504,7 @@
       appointments: state.appointments || [],
       liabilities: state.liabilities || [],
       salesPipeline: state.salesPipeline || [],
+      ideaMemos,
       fiscalMeta: normalizeFiscalMeta(state.fiscalMeta),
       business: normalizeBusiness(state.business),
     };
@@ -513,6 +528,7 @@
     state.appointments = next.appointments || [];
     state.liabilities = next.liabilities || [];
     state.salesPipeline = next.salesPipeline || [];
+    state.ideaMemos = next.ideaMemos || [];
     state.fiscalMeta = normalizeFiscalMeta(next.fiscalMeta);
     state.business = normalizeBusiness(next.business);
   }
@@ -2478,6 +2494,84 @@
     });
   }
 
+  function ensureIdeaMemos() {
+    if (!Array.isArray(state.ideaMemos)) state.ideaMemos = [];
+  }
+
+  function addIdeaMemo(text, opts = {}) {
+    if (!window.TaskboardIdeaMemos) return null;
+    const trimmed = String(text || "").trim();
+    if (!trimmed) return null;
+    ensureIdeaMemos();
+    const memo = window.TaskboardIdeaMemos.createIdeaMemo(trimmed, {
+      uid,
+      source: opts.source || "manual",
+      sourceMember: opts.sourceMember || "",
+    });
+    state.ideaMemos.unshift(memo);
+    save();
+    renderIdeaMemos();
+    return memo;
+  }
+
+  function renderIdeaMemos() {
+    const list = $("#list-idea-memos");
+    const archivedList = $("#list-idea-memos-archived");
+    const countEl = $("#idea-memo-count");
+    if (!list || !window.TaskboardIdeaMemos) return;
+    ensureIdeaMemos();
+    const open = window.TaskboardIdeaMemos.listOpenIdeaMemos(state.ideaMemos);
+    const archived = state.ideaMemos
+      .map((m) => window.TaskboardIdeaMemos.normalizeIdeaMemo(m, { uid }))
+      .filter((m) => m.status === "archived")
+      .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    if (countEl) countEl.textContent = open.length ? `未整理 ${open.length} 件` : "未整理なし";
+    const homeCount = $("#idea-memo-home-count");
+    if (homeCount) homeCount.textContent = open.length ? `未整理 ${open.length} 件` : "未整理なし";
+    list.innerHTML = open.length
+      ? open
+          .map((m) => {
+            const when = (m.createdAt || "").slice(0, 16).replace("T", " ");
+            const src =
+              m.source === "cabinet"
+                ? `内閣${m.sourceMember ? `/${escapeHtml(m.sourceMember)}` : ""}`
+                : m.source === "smart_rabbit"
+                  ? "総理相談"
+                  : m.source === "sontoku"
+                    ? "尊徳"
+                    : "手入力";
+            return `<li class="row idea-memo-row" data-id="${escapeHtml(m.id)}">
+              <div class="idea-memo-body">
+                <p class="idea-memo-text">${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>
+                <span class="muted">${escapeHtml(when)} · ${src}</span>
+              </div>
+              <div class="row-actions">
+                <button type="button" class="btn ghost compact" data-idea-task>タスク化</button>
+                <button type="button" class="btn ghost compact" data-idea-archive>アーカイブ</button>
+              </div>
+            </li>`;
+          })
+          .join("")
+      : `<li class="muted">メモはまだない。上の欄か、内閣チャットの「メモに残す」から追加できる。</li>`;
+    if (archivedList) {
+      archivedList.innerHTML = archived.length
+        ? archived
+            .map(
+              (m) =>
+                `<li class="row idea-memo-row archived" data-id="${escapeHtml(m.id)}">
+                  <div class="idea-memo-body">
+                    <p class="idea-memo-text">${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>
+                  </div>
+                  <div class="row-actions">
+                    <button type="button" class="btn ghost compact" data-idea-restore>戻す</button>
+                  </div>
+                </li>`
+            )
+            .join("")
+        : `<li class="muted">アーカイブなし</li>`;
+    }
+  }
+
   function formatApptWhen(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -2858,19 +2952,47 @@
   let smartRabbitActiveMode = "general";
   let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
   let smartRabbitSpeech = null;
-  let currentViewName = "home";
+  function autoGrowChatInput(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    const maxPx = Math.floor(window.innerHeight * 0.4);
+    el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`;
+  }
+
+  function bindChatInput(el) {
+    if (!el || el.dataset.chatBound === "1") return;
+    el.dataset.chatBound = "1";
+    const grow = () => autoGrowChatInput(el);
+    el.addEventListener("input", grow);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        el.form?.requestSubmit();
+      }
+    });
+    grow();
+  }
+
+  function clearChatInput(el) {
+    if (!el) return;
+    el.value = "";
+    autoGrowChatInput(el);
+  }
+
+  let currentViewName = "smartrabbit";
 
   // 省庁の部屋ナビゲーション: 主タブ(data-ministry)とその配下のview一覧・既定view。
   const MINISTRY_SUBVIEWS = {
     pmo: [
-      { view: "home", label: "全体" },
+      { view: "smartrabbit", label: "相談" },
       { view: "all", label: "一覧" },
       { view: "new", label: "新規" },
-      { view: "smartrabbit", label: "相談" },
+      { view: "home", label: "ダッシュボード" },
     ],
     naimu: [
       { view: "day", label: "今日" },
       { view: "week", label: "週" },
+      { view: "ideas", label: "アイデアメモ" },
     ],
   };
   const VIEW_TO_MINISTRY = { month: "keisansho", reflect: "kyouiku", sales: "gaimu" };
@@ -3056,7 +3178,7 @@
         </div>
         <div class="smartrabbit-messages" data-role="messages" aria-live="polite"></div>
         <form class="smartrabbit-form" data-role="form">
-          <input type="text" data-role="input" placeholder="相談したいことを書く…" autocomplete="off" />
+          <textarea data-role="input" class="chat-input" rows="1" placeholder="相談したいことを書く…" autocomplete="off"></textarea>
           <button type="submit" class="btn primary compact" data-role="send">送る</button>
         </form>
         <div class="smartrabbit-retry-row hidden" data-role="retry-row">
@@ -3101,12 +3223,32 @@
           .map((m) => {
             const cls = m.role === "user" ? "user" : m.role === "error" ? "error" : "assistant";
             const metaLine = m.status === "partial" ? '<span class="msg-meta">応答待ち・発言は保存済み</span>' : "";
-            return `<div class="smartrabbit-msg ${cls}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${metaLine}</div>`;
+            const canMemo = (m.role === "user" || m.role === "assistant") && m.status !== "partial";
+            const memoBtn = canMemo
+              ? `<div class="smartrabbit-msg-actions"><button type="button" class="btn ghost compact" data-save-idea>メモに残す</button></div>`
+              : "";
+            return `<div class="smartrabbit-msg ${cls}" data-message-id="${escapeHtml(m.id || "")}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${metaLine}${memoBtn}</div>`;
           })
           .join("");
         els.messages.scrollTop = els.messages.scrollHeight;
       }
       els.retryRow?.classList.toggle("hidden", !pendingRetry);
+    }
+
+    if (!mountEl.dataset.ideaMemoBound) {
+      mountEl.dataset.ideaMemoBound = "1";
+      mountEl.addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-save-idea]");
+        if (!btn || !mountEl.contains(btn)) return;
+        const bubble = btn.closest(".smartrabbit-msg");
+        const text = bubble?.querySelector("p")?.innerText || "";
+        const activeMember = mountEl.querySelector(".smartrabbit-chat")?.dataset.member || memberId;
+        const memo = addIdeaMemo(text, { source: "cabinet", sourceMember: activeMember });
+        if (memo) {
+          btn.textContent = "メモ済";
+          btn.disabled = true;
+        }
+      });
     }
 
     async function sendTurn(text, messageId) {
@@ -3140,9 +3282,10 @@
     els.form?.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = els.input?.value || "";
-      if (els.input) els.input.value = "";
+      clearChatInput(els.input);
       sendUserMessage(text);
     });
+    bindChatInput(els.input);
     els.retryBtn?.addEventListener("click", () => {
       if (!pendingRetry || busy) return;
       const { text, messageId } = pendingRetry;
@@ -3471,17 +3614,19 @@
         const meta = m.status === "partial" ? '<span class="msg-meta">応答待ち・発言は保存済み</span>' : "";
         const isAssistantOk = m.role === "assistant" && m.status !== "error" && m.status !== "partial";
         const speaking = Boolean(speakingId && m.id === speakingId);
-        const actions =
+        const canMemo = (m.role === "user" || m.role === "assistant") && m.status !== "partial" && m.role !== "error";
+        const speakBtn =
           isAssistantOk && canSpeak
-            ? `<div class="smartrabbit-msg-actions">
-                <button type="button" class="btn ghost compact smartrabbit-speak-btn" data-speak-id="${escapeHtml(
-                  m.id
-                )}" aria-pressed="${speaking ? "true" : "false"}">${
-                  speaking ? "⏹ 停止" : "🔊 読む"
-                }</button>
-                <span class="smartrabbit-speaking-label${speaking ? "" : " hidden"}">読み上げ中</span>
-              </div>`
+            ? `<button type="button" class="btn ghost compact smartrabbit-speak-btn" data-speak-id="${escapeHtml(
+                m.id
+              )}" aria-pressed="${speaking ? "true" : "false"}">${speaking ? "⏹ 停止" : "🔊 読む"}</button>
+                <span class="smartrabbit-speaking-label${speaking ? "" : " hidden"}">読み上げ中</span>`
             : "";
+        const memoBtn = canMemo
+          ? `<button type="button" class="btn ghost compact" data-save-idea>メモに残す</button>`
+          : "";
+        const actions =
+          speakBtn || memoBtn ? `<div class="smartrabbit-msg-actions">${speakBtn}${memoBtn}</div>` : "";
         return `<div class="smartrabbit-msg ${cls}${speaking ? " speaking" : ""}" data-message-id="${escapeHtml(
           m.id || ""
         )}"><p>${escapeHtml(m.text).replace(/\n/g, "<br>")}</p>${meta}${actions}</div>`;
@@ -3732,6 +3877,7 @@
     renderFinanceSnapshot();
     renderSalesPipeline();
     renderSalesHomeSummary();
+    renderIdeaMemos();
     renderAppointments();
     renderImadarumaProgress();
     renderDoneList();
@@ -4132,7 +4278,7 @@
     e.preventDefault();
     const input = $("#sontoku-input");
     const text = input?.value || "";
-    if (input) input.value = "";
+    clearChatInput(input);
     sendSontokuUserMessage(text);
   });
   $$(".sontoku-chip").forEach((btn) => {
@@ -4143,7 +4289,7 @@
     e.preventDefault();
     const input = $("#smartrabbit-input");
     const text = input?.value || "";
-    if (input) input.value = "";
+    clearChatInput(input);
     sendSmartRabbitUserMessage(text);
   });
   $$(".smartrabbit-mode").forEach((btn) => {
@@ -4180,6 +4326,17 @@
     updateSmartRabbitSpeechToggleUi();
   });
   $("#smartrabbit-messages")?.addEventListener("click", (e) => {
+    const memoBtn = e.target.closest?.("[data-save-idea]");
+    if (memoBtn) {
+      const bubble = memoBtn.closest(".smartrabbit-msg");
+      const text = bubble?.querySelector("p")?.innerText || "";
+      const memo = addIdeaMemo(text, { source: "smart_rabbit" });
+      if (memo) {
+        memoBtn.textContent = "メモ済";
+        memoBtn.disabled = true;
+      }
+      return;
+    }
     const btn = e.target.closest?.(".smartrabbit-speak-btn");
     if (!btn) return;
     const id = btn.dataset.speakId;
@@ -4193,6 +4350,68 @@
     const msg = (key ? getSmartRabbitMessages(key) : []).find((m) => m.id === id);
     if (msg) speech.speakMessage(msg, { auto: false });
   });
+
+  $("#idea-memo-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = $("#idea-memo-text")?.value.trim();
+    const memo = addIdeaMemo(text, { source: "manual" });
+    if (!memo) return;
+    $("#idea-memo-text").value = "";
+    const msg = $("#idea-memo-msg");
+    if (msg) msg.textContent = "追加した";
+  });
+
+  function onIdeaMemoListClick(e) {
+    const row = e.target.closest?.(".idea-memo-row");
+    if (!row) return;
+    const id = row.dataset.id;
+    ensureIdeaMemos();
+    const memo = state.ideaMemos.find((m) => m.id === id);
+    if (!memo) return;
+    if (e.target.closest("[data-idea-archive]")) {
+      memo.status = "archived";
+      memo.updatedAt = new Date().toISOString();
+      save();
+      renderIdeaMemos();
+      return;
+    }
+    if (e.target.closest("[data-idea-restore]")) {
+      memo.status = "open";
+      memo.updatedAt = new Date().toISOString();
+      save();
+      renderIdeaMemos();
+      return;
+    }
+    if (e.target.closest("[data-idea-task]")) {
+      const title = window.TaskboardIdeaMemos.titleFromMemoText(memo.text);
+      state.tasks.push(
+        normalizeTask({
+          id: uid(),
+          title,
+          dueDate: null,
+          category: "other",
+          horizon: "week",
+          recurrence: "none",
+          urgency: "low",
+          importance: "high",
+          status: "todo",
+          onToday: false,
+          notes: memo.text,
+          tags: ["from-idea-memo"],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+      );
+      memo.status = "archived";
+      memo.updatedAt = new Date().toISOString();
+      save();
+      renderIdeaMemos();
+      setView("all");
+    }
+  }
+  $("#list-idea-memos")?.addEventListener("click", onIdeaMemoListClick);
+  $("#list-idea-memos-archived")?.addEventListener("click", onIdeaMemoListClick);
+  $("#btn-goto-ideas")?.addEventListener("click", () => setView("ideas"));
 
   $("#form-list-new")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -4873,6 +5092,9 @@
 
   loadPlanFields();
   render();
+  bindChatInput($("#smartrabbit-input"));
+  bindChatInput($("#sontoku-input"));
+  setView("smartrabbit");
   refreshSontokuStatus();
   refreshSmartRabbitStatus();
 

@@ -234,6 +234,7 @@ function sanitizeStateData(raw) {
     appointments: Array.isArray(data.appointments) ? data.appointments : [],
     liabilities: Array.isArray(data.liabilities) ? data.liabilities : [],
     salesPipeline: Array.isArray(data.salesPipeline) ? data.salesPipeline : [],
+    ideaMemos: Array.isArray(data.ideaMemos) ? data.ideaMemos : [],
     fiscalMeta: sanitizeFiscalMeta(data.fiscalMeta),
     business: sanitizeBusiness(data.business),
   };

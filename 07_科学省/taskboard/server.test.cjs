@@ -110,6 +110,20 @@ test("sanitizeStateData normalizes missing salesPipeline (old state) to an empty
   assert.equal(data.salesPipeline.length, 0);
 });
 
+test("sanitizeStateData normalizes missing ideaMemos to an empty array", () => {
+  const data = sanitizeStateData({ tasks: [] });
+  assert.equal(Array.isArray(data.ideaMemos), true);
+  assert.equal(data.ideaMemos.length, 0);
+});
+
+test("sanitizeStateData preserves ideaMemos", () => {
+  const data = sanitizeStateData({
+    ideaMemos: [{ id: "im1", text: "Sound案", status: "open", source: "manual" }],
+  });
+  assert.equal(data.ideaMemos.length, 1);
+  assert.equal(data.ideaMemos[0].text, "Sound案");
+});
+
 test("sanitizeStateData preserves salesPipeline records and survives a JSON round trip", () => {
   const data = sanitizeStateData({
     salesPipeline: [

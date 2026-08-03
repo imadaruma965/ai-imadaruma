@@ -36,8 +36,8 @@
     </div>
   </header>
 
-  <nav class="tabs" role="tablist">
-    <button type="button" class="tab active" data-view="home" data-ministry="pmo">首相官邸</button>
+  <nav class="tabs ministry-grid" role="tablist" aria-label="省庁">
+    <button type="button" class="tab active" data-view="smartrabbit" data-ministry="pmo">首相官邸</button>
     <button type="button" class="tab" data-view="month" data-ministry="keisansho">経産省</button>
     <button type="button" class="tab" data-view="day" data-ministry="naimu">内務省</button>
     <button type="button" class="tab" data-view="reflect" data-ministry="kyouiku">教育省</button>
@@ -50,19 +50,20 @@
   </nav>
 
   <nav class="room-subtabs" id="room-subtabs-pmo" data-ministry="pmo" role="tablist">
-    <button type="button" class="room-subtab active" data-view="home">全体</button>
+    <button type="button" class="room-subtab active" data-view="smartrabbit">相談</button>
     <button type="button" class="room-subtab" data-view="all">一覧</button>
     <button type="button" class="room-subtab" data-view="new">新規</button>
-    <button type="button" class="room-subtab" data-view="smartrabbit">相談</button>
+    <button type="button" class="room-subtab" data-view="home">ダッシュボード</button>
   </nav>
   <nav class="room-subtabs hidden" id="room-subtabs-naimu" data-ministry="naimu" role="tablist">
     <button type="button" class="room-subtab" data-view="day">今日</button>
     <button type="button" class="room-subtab" data-view="week">週</button>
+    <button type="button" class="room-subtab" data-view="ideas">アイデアメモ</button>
   </nav>
 
   <main>
-    <!-- 全体 -->
-    <section id="view-home" class="view active">
+    <!-- 全体（ダッシュボード） -->
+    <section id="view-home" class="view">
       <p class="lead">未完了の件数だけ先に見る。タップで中身を開く。</p>
       <p id="pending-banner" class="warn hidden" role="status"></p>
       <div id="imadaruma-progress" class="imadaruma-progress" aria-hidden="true"></div>
@@ -70,6 +71,14 @@
       <div class="home-block">
         <h3 class="home-head">営業</h3>
         <div id="sales-home-summary" class="sales-home-summary"></div>
+      </div>
+
+      <div class="home-block">
+        <div class="home-head-row">
+          <h3 class="home-head">アイデアメモ</h3>
+          <button type="button" class="btn ghost compact" id="btn-goto-ideas">開く</button>
+        </div>
+        <p class="muted tight" id="idea-memo-home-count">未整理 —</p>
       </div>
 
       <div class="home-block">
@@ -185,7 +194,7 @@
             <button type="button" class="sontoku-chip" data-chip="今日の任務を教えて">今日の任務</button>
           </div>
           <form id="sontoku-form" class="sontoku-form">
-            <input type="text" id="sontoku-input" placeholder="進捗報告・相談・壁打ち…" autocomplete="off" />
+            <textarea id="sontoku-input" class="chat-input" rows="1" placeholder="進捗報告・相談・壁打ち…" autocomplete="off"></textarea>
             <button type="submit" id="sontoku-send" class="btn primary compact">送る</button>
           </form>
         </div>
@@ -245,7 +254,7 @@
     </section>
 
     <!-- 総理(スマートラビット)への相談 -->
-    <section id="view-smartrabbit" class="view">
+    <section id="view-smartrabbit" class="view active">
       <h2 class="section-title">総理への相談</h2>
       <p class="day-flow-hint">戦略相談・発想・営業/Instagram/リサーチ/商品設計/財政判断など。日々の進捗・タスク管理はAI尊徳(内務省・今日)へ。</p>
 
@@ -293,7 +302,7 @@
         <p class="smartrabbit-knowledge-note hidden" id="smartrabbit-knowledge-note"></p>
 
         <form id="smartrabbit-form" class="smartrabbit-form">
-          <input type="text" id="smartrabbit-input" placeholder="相談したいことを書く…" autocomplete="off" />
+          <textarea id="smartrabbit-input" class="chat-input" rows="1" placeholder="相談したいことを書く…" autocomplete="off"></textarea>
           <button type="submit" id="smartrabbit-send" class="btn primary compact">送る</button>
         </form>
         <div class="smartrabbit-retry-row hidden" id="smartrabbit-retry-row">
@@ -458,6 +467,27 @@
         <span><i class="legend-repeat"></i>定期</span>
         <span><i class="legend-media"></i>メディア</span>
       </div>
+    </section>
+
+    <!-- アイデアメモ（内務省） -->
+    <section id="view-ideas" class="view">
+      <h2 class="section-title">アイデアメモ</h2>
+      <p class="lead tight">日付のない思いつき置き場。タスクにしない／今やらないものをここに残す。内閣チャットの「メモに残す」もここへ入る。</p>
+      <form id="idea-memo-form" class="idea-memo-form">
+        <label class="field">新しいメモ
+          <textarea id="idea-memo-text" rows="3" placeholder="例: Soundの提案に○○を足す／週末に駐車場の棚卸し" required></textarea>
+        </label>
+        <div class="btn-row">
+          <button type="submit" class="btn primary compact">メモを追加</button>
+          <span id="idea-memo-msg" class="msg"></span>
+        </div>
+      </form>
+      <p class="muted" id="idea-memo-count"></p>
+      <ul class="rows compact" id="list-idea-memos"></ul>
+      <details class="idea-memo-archived">
+        <summary>アーカイブ</summary>
+        <ul class="rows compact" id="list-idea-memos-archived"></ul>
+      </details>
     </section>
 
     <!-- 週 -->
@@ -1117,6 +1147,7 @@
   <script src="seed-data.js"></script>
   <script src="governance.js"></script>
   <script src="sales-pipeline.js"></script>
+  <script src="idea-memos.js"></script>
   <script src="finance-board.js"></script>
   <script src="notification-service.js"></script>
   <script src="voice-service.js"></script>
