@@ -8,8 +8,12 @@
 | `ダヴィンチ図書館/` | Obsidian Vault（別Git）。知識の正本 |
 | `研究部/` | AIアショーカ — 自己統治論・繁栄衰退研究 |
 | `諜報部/` | AIルパン — 情報収集実務 |
+| `agent_growth_os.md` | エージェント知識成長OS（読む→候補→週次昇格） |
+
+関連: `.claude/skills/_shared/knowledge_growth.md`（全Skill共通）／`03_内務省/daily_governance/agent_growth_board.md`（昇格ボード）
 
 ## 図書館の中（抜粋）
+
 
 - `02_国家事業/Instagram/README.md` … **賢いウサギIGの拾い口**（投稿は `03_投稿引き出し/`、メソッドPDFは `00_メソッド/`）
 - `05_AI対話/` … Claude / Cursor / ChatGPT 等の原本ログ

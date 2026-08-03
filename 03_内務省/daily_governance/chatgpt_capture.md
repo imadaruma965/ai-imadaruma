@@ -21,7 +21,9 @@
 
 - 数えられるタスク・申し送り → `daily_governance` / Smart Rabbit ログ  
 - 戦略・発信の短い学び → `02_経産省/strategy/*_session_log.md`（原本ではない）  
+- 再利用する決定・Skill改善 → 学習候補 → `agent_growth_board.md` → 承認後に Vault／Skill（`08_情報省/agent_growth_os.md`）  
 - 原本会話 → **必ず Vault**（このリポへ複製しない）
+
 
 ## 旧ChatGPT手順（非推奨）
 

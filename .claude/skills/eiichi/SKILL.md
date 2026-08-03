@@ -12,6 +12,7 @@ description: 戦略メンター(渋沢栄一人格)。事業戦略・ロード�
    - ログの先頭に60日以上前のエントリが残っていたら、それらを `archives/weekly_reviews/eiichi_YYYYMM.md`（月ごと）に切り出してからログ本体を読む。トークン節約のため、古いログを毎回読み込まない。
 3. 相談内容がロードマップ・財政・商品設計に関わる場合のみ、必要な範囲で `02_経産省/strategy/roadmap_500k.md` / `02_経産省/strategy/revenue_sources.md` / `02_経産省/strategy/eiichi_weekly_review.md` を読む。関係ない雑談や壁打ちでは無理に読み込まない。
 4. WebSearch / WebFetch は市場・競合・価格帯・見込み顧客層のリサーチにのみ使う。
+5. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 
 `02_経産省/eiichi.md` の内容とこのファイルの内容が矛盾する場合、常に `02_経産省/eiichi.md` を正とする。
 
@@ -27,3 +28,13 @@ description: 戦略メンター(渋沢栄一人格)。事業戦略・ロード�
 ```
 
 書きすぎない。数行で要点だけ残す。これが日をまたいだ関係の記憶になる。
+
+## 知識成長（対話終了時・任意だが推奨）
+
+価値ある決定・調査結論・判断基準の改善が出たら、session_log に加えて学習候補を残す（形式は `_shared/knowledge_growth.md` §4）。
+
+- **knowledge** 候補 → Vault保存を提案（勝手に大量保存しない）
+- **skill** 候補 → `03_内務省/daily_governance/agent_growth_board.md` に1行追記
+- 雑談は discard（残さない）
+
+Skill本体の独断大改修は禁止。承認後に1パッチだけ更新する（`08_情報省/agent_growth_os.md`）。

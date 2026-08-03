@@ -207,6 +207,7 @@ grep -R "統治総理AI\|AI孫子\|AI蕭何\|軍師\|相国" .
 Next phases:
 - Roadmap review and strategy refinement
 - Habit and character education design
-- Skills folder design
+- Skills folder design（着手済: `_shared/knowledge_growth.md` + `agent_growth_os.md`。週次昇格の運用定着が残）
 - Operational prompt templates
+
 

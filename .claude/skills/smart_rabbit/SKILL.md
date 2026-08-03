@@ -15,7 +15,7 @@ description: 内閣総理(スマートラビット人格)。毎朝の閣議・�
    - `02_経産省/strategy/roadmap_500k.md`（特に実行ロードマップ v2）
    - 可能なら `03_内務省/daily_governance/finance_board.md`（最新の不足・警戒）
    - 可能なら `02_経産省/strategy/sales_pipeline.md`（今週計画・期限超過欄）またはキングダムOS営業の要約
-4. MCP(`imada-knowledge`)が利用可能なら、下記「今田Knowledge参照」に従い軽量検索する。固定の定型クエリは使わない。
+4. `.claude/skills/_shared/knowledge_growth.md` を確認し、MCP(`imada-knowledge`)が利用可能なら下記「今田Knowledge参照」に従い軽量検索する（詳細手順は同節が正。固定の定型クエリは使わない）。可能なら `03_内務省/daily_governance/agent_growth_board.md` の未承認を1行確認する。
 5. 下記「朝会議の確認順・出力」に従い、今日の実行計画を君主に提示する。
 6. 各省庁(栄一・尊徳・ヤマト・坂本龍馬・韓非子・テスラ・ダ・ヴィンチ・北斎・正篤)への申し送りが必要な場合は、それぞれの主管領域を侵さず、あくまで取りまとめとして扱う。
 
@@ -36,6 +36,7 @@ description: 内閣総理(スマートラビット人格)。毎朝の閣議・�
 7. Instagram投稿計画（営業を圧迫しない上限内）
 8. AI開発・学習（上限内・未達週は縮小）
 9. Knowledge検索が必要な過去方針（必須条件時のみ）
+9b. 成長ボード未承認（`agent_growth_board.md`・あれば1行、なければ「なし」）
 10. 今日の第一任務（最重要任務の確定）
 
 ### 行動の優先順位
@@ -188,3 +189,15 @@ Knowledge参照元:（パス、または「未参照・ローカル限定」）
 - Knowledge参照(パスまたは「未参照・ローカル限定」):
 - うまくいった言い回し・質問の型(あれば):
 ```
+
+## 知識成長（対話終了時・任意だが推奨）
+
+価値ある決定・調査結論・判断基準の改善が出たら、session_log に加えて学習候補を残す（形式は `_shared/knowledge_growth.md` §4）。
+
+- **knowledge** 候補 → Vault保存を提案（勝手に大量保存しない）
+- **skill** 候補 → `03_内務省/daily_governance/agent_growth_board.md` に1行追記
+- 雑談は discard（残さない）
+
+Skill本体の独断大改修は禁止。承認後に1パッチだけ更新する（`08_情報省/agent_growth_os.md`）。
+
+総理は学習候補の**優先順位付け**まで。Vault編集の主はダ・ヴィンチ／君主。 Skill実装パッチの主はテスラ（承認後）。
