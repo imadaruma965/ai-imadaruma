@@ -10,7 +10,7 @@
 |----|------|
 | Claude Code | SessionEnd 自動（継続）。手動追加は不要が原則 |
 | ChatGPT | 重要分のみコピー → Vault で `aistock chatgpt "題名"` または AIインポート＋`aipull` |
-| Cursor | 重要セッション終了時は**必ず**図書館へ（MCP `save_ai_log` または要約手動）。方針: 常時格納 |
+| Cursor | **重要壁打ちはすべて**図書館へ（原本は他に置かない）。MCP `save_ai_log` または要約手動。方針: 常時格納 |
 | Gemini | エクスポート／コピー → `aistock` / `aipull` |
 | Claude（ブラウザ） | エクスポート／コピー → `aiimport` / `aistock` |
 
