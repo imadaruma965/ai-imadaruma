@@ -10,7 +10,7 @@
 |----|------|
 | Claude Code | SessionEnd 自動（継続）。手動追加は不要が原則 |
 | ChatGPT | 重要分のみコピー → Vault で `aistock chatgpt "題名"` または AIインポート＋`aipull` |
-| Cursor | 重要セッション終了時のみ明示保存（`aistock cursor "..."` 等） |
+| Cursor | 重要セッション終了時は**必ず**図書館へ（MCP `save_ai_log` または要約手動）。方針: 常時格納 |
 | Gemini | エクスポート／コピー → `aistock` / `aipull` |
 | Claude（ブラウザ） | エクスポート／コピー → `aiimport` / `aistock` |
 
@@ -39,7 +39,7 @@
 
 | AI | 保存方法 | 自動／手動 | 保存先 | テスト結果 |
 |----|----------|------------|--------|------------|
-| Cursor | MCP `save_ai_log` | 手動（明示） | `05_AI対話/Cursor/2026/07/2026-07-28_045208_Kingdom_OS_v1_実運用開始.md` | OK。`search_knowledge`／`read_knowledge` 成功。`duplicate:false` |
+| Cursor | **常時格納**（重要セッションは必ず）。MCP `save_ai_log` 優先。未接続時は要約を `05_AI対話/Cursor/YYYY/MM/` へ手動 | 手動必須→常時 | `05_AI対話/Cursor/` | 2026-08-08方針更新。ポリシー: Vault `運用ルール/Cursor常時格納ポリシー_2026-08-08.md` |
 | Claude Code | SessionEnd 自動 | 自動 | `05_AI対話/Claude/` | 本スプリントでは新規セッションログ未発生。手順は正式継続 |
 | ChatGPT | `aistock chatgpt` または AIインポート＋`aipull` | 手動 | `05_AI対話/ChatGPT/` | 直接自動不可。上記手動を正式運用とする（スクレイピング禁止） |
 | Claudeチャット | エクスポート／コピー → `aiimport` / `aistock` | 手動 | `05_AI対話/Claude/` | 同上・手動正式 |

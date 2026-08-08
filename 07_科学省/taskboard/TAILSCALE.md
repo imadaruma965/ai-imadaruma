@@ -59,3 +59,9 @@ chmod +x disable-sleep-ac.sh
 - 画面消灯はそのまま（電気代・焼付き対策）
 - 本体スリープだけ OFF
 - 確認: `pmset -g` で `sleep 0` ならOK
+
+## デスクトップ丸ごと外から（推奨）
+
+統治手帳だけでなく、画面操作・SSH・Cursor まで含む手順は:
+
+→ **`REMOTE_ACCESS.md`**

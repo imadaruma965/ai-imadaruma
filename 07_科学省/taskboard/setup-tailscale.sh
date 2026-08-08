@@ -6,10 +6,13 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PORT="${GYOMU_TOCHI_PORT:-8765}"
 
 TAILSCALE_BIN=""
-if command -v tailscale >/dev/null 2>&1; then
-  TAILSCALE_BIN="tailscale"
-elif [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]]; then
+# Prefer app binary (capital T). /usr/local/bin/tailscale often points to broken lowercase path.
+if [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]]; then
   TAILSCALE_BIN="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+elif [[ -x "$HOME/bin/tailscale" ]]; then
+  TAILSCALE_BIN="$HOME/bin/tailscale"
+elif command -v tailscale >/dev/null 2>&1; then
+  TAILSCALE_BIN="$(command -v tailscale)"
 fi
 
 echo "キングダムOS · Tailscale セットアップ"
