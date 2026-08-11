@@ -73,7 +73,7 @@ chmod 600 04_貿産省/taskboard/.env.local
 | **文化省** | 相談（上部チップで北斎／正篤を切替） | 北斎・正篤 |
 | **財務省** | 財政スナップ・負債台帳・請求書・個人財務 | ルカ |
 
-各AIは対応する人格正本（例: `05_財政省/luca.md`）とSkill、`01_内閣府/ai_jurisdiction.md` の主管境界を踏まえて応答し、自分の主管を超える相談は担当する省への申し送りとして案内する（越権判断はしない）。
+各AIは対応する人格正本（例: `05_理財省/luca.md`）とSkill、`01_内閣府/ai_jurisdiction.md` の主管境界を踏まえて応答し、自分の主管を超える相談は担当する省への申し送りとして案内する（越権判断はしない）。
 
 接続方式・トークン・Cursor APIキーは上記「AI尊徳を接続する」と共通（追加設定不要）。
 ログは `03_修身省/daily_governance/chat_logs/cabinet-<メンバーID>-YYYY-MM-DD.md`（省庁の部屋）／`sontoku-YYYY-MM-DD.md`（内務省・今日）／`smart-rabbit-YYYY-MM-DD.md`（首相官邸・相談）に自動保存される。
