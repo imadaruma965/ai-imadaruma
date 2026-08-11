@@ -138,20 +138,20 @@ ai-imadaruma/
 │   ├── mission.md                         # 国家目標（更新予定）
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
-├── 01_首相官邸/                           # 執務室（総理・主管正本・君主）
-├── 02_経産省/                         # 栄一 ＋ strategy/
-├── 03_内務省/                         # 尊徳 ＋ daily_governance/
-├── 04_教育省/ … 09_文化省/         # 各省庁（人格正本）
-├── 07_科学省/                               # 統治手帳（taskboard）・scripts
+├── 01_内閣府/                           # 執務室（総理・主管正本・君主）
+├── 02_律政省/                         # 栄一 ＋ strategy/
+├── 03_修身省/                         # 尊徳 ＋ daily_governance/
+├── 03_修身省/ … 04_貿産省/         # 各省庁（人格正本）
+├── 04_貿産省/                               # 統治手帳（taskboard）・scripts
 ├── 08_情報省/
 │   ├── ダヴィンチ図書館/                 # Obsidian Vault（別Git）
 │   ├── 研究部/                          # アショーカ
 │   └── 諜報部/                          # ルパン
-├── 02_経産省/strategy/                # 戦略（AI栄一管轄）
+├── 02_律政省/strategy/                # 戦略（AI栄一管轄）
 │   ├── README.md
 │   ├── roadmap_500k.md
 │   └── …
-├── 03_内務省/daily_governance/        # 日次統治（毎日使う）
+├── 03_修身省/daily_governance/        # 日次統治（毎日使う）
 │   ├── morning_cabinet.md
 │   ├── today.md
 │   └── …
@@ -181,11 +181,11 @@ AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.cl
 
 ### `/sontoku`（日次実行）
 
-呼び出すと、`03_内務省/sontoku.md` の人格を採用し、`03_内務省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`03_修身省/sontoku.md` の人格を採用し、`03_修身省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ### `/eiichi`（戦略・ロードマップ）
 
-呼び出すと、`02_経産省/eiichi.md` の人格を採用し、`02_経産省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`02_律政省/eiichi.md` の人格を採用し、`02_律政省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 

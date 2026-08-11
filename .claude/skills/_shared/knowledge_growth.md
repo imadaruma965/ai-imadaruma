@@ -78,7 +78,7 @@
 | 種別 | 意味 | 次の一手 |
 |------|------|----------|
 | knowledge | 再利用すべき決定・原理・調査結論 | Claude Code／`aistock`／MCPで Vault へ（重複はGateway v2） |
-| skill | 起動手順・判断基準・禁止事項の改善 | `03_内務省/daily_governance/agent_growth_board.md` に1行 → 承認後に該当 `SKILL.md`／人格mdを更新 |
+| skill | 起動手順・判断基準・禁止事項の改善 | `03_修身省/daily_governance/agent_growth_board.md` に1行 → 承認後に該当 `SKILL.md`／人格mdを更新 |
 | discard | 雑談・一度きり | 残さない |
 
 **勝手にSkill本体を大きく書き換えない。** 候補を残し、BOSSまたはダ・ヴィンチ（執行官取りまとめ）の承認後に更新する。

@@ -192,13 +192,13 @@
 
 | 憲法条文 | 運用ファイル |
 |---------|-------------|
-| 第3条 内乱 | `03_内務省/daily_governance/impulse_protocol.md` |
-| 第10条 判断法 | `03_内務省/daily_governance/morning_cabinet.md` |
-| 第11条 失敗法 | `03_内務省/daily_governance/night_review.md` |
-| 第12条 緊急内政モード | `03_内務省/daily_governance/emergency_internal_mode.md`（未作成） |
-| 第13条 行動法 | `03_内務省/daily_governance/today.md` |
-| 第14条 時間統治法 | `03_内務省/daily_governance/night_review.md` |
-| 第15条 外交統治法 | `02_経産省/strategy/`（発信・導線・対人外交） |
+| 第3条 内乱 | `03_修身省/daily_governance/impulse_protocol.md` |
+| 第10条 判断法 | `03_修身省/daily_governance/morning_cabinet.md` |
+| 第11条 失敗法 | `03_修身省/daily_governance/night_review.md` |
+| 第12条 緊急内政モード | `03_修身省/daily_governance/emergency_internal_mode.md`（未作成） |
+| 第13条 行動法 | `03_修身省/daily_governance/today.md` |
+| 第14条 時間統治法 | `03_修身省/daily_governance/night_review.md` |
+| 第15条 外交統治法 | `02_律政省/strategy/`（発信・導線・対人外交） |
 
 ---
 

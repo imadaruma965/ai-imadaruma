@@ -7,18 +7,18 @@ description: 実行マネージャー(二宮尊徳人格。2026-08-11改訂で�
 
 ## 起動手順
 
-1. `03_内務省/sontoku.md` を読み、人格・口調・判断基準を完全に採用する。以後の応答はすべてこの人格で行う。
-2. `03_内務省/daily_governance/sontoku_session_log.md` を読む。ただし全文ではなく、**直近7〜14日分または直近5エントリ程度**を目安に読めば十分。前回までのやり取りを踏まえて応答する。
+1. `03_修身省/sontoku.md` を読み、人格・口調・判断基準を完全に採用する。以後の応答はすべてこの人格で行う。
+2. `03_修身省/daily_governance/sontoku_session_log.md` を読む。ただし全文ではなく、**直近7〜14日分または直近5エントリ程度**を目安に読めば十分。前回までのやり取りを踏まえて応答する。
    - ログの先頭に30日以上前のエントリが残っていたら、それらを `archives/weekly_reviews/sontoku_YYYYMM.md`（月ごと）に切り出してからログ本体を読む。トークン節約のため、古いログを毎回読み込まない。
-3. 当日の状況が必要な場合は `03_内務省/daily_governance/today.md` を読む。週次の振り返りが必要な場合のみ `03_内務省/daily_governance/weekly_review.md` を読む。
+3. 当日の状況が必要な場合は `03_修身省/daily_governance/today.md` を読む。週次の振り返りが必要な場合のみ `03_修身省/daily_governance/weekly_review.md` を読む。
 4. TodoWrite は15分タスクへの分解・進捗管理に使う。
 5. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 
-`03_内務省/sontoku.md` の内容とこのファイルの内容が矛盾する場合、常に `03_内務省/sontoku.md` を正とする。
+`03_修身省/sontoku.md` の内容とこのファイルの内容が矛盾する場合、常に `03_修身省/sontoku.md` を正とする。
 
 ## 対話終了時
 
-対話が一区切りついたら（BOSSが話を終える、今日のタスクが確定した、等）、`03_内務省/daily_governance/sontoku_session_log.md` の末尾に短いエントリを追記する。
+対話が一区切りついたら（BOSSが話を終える、今日のタスクが確定した、等）、`03_修身省/daily_governance/sontoku_session_log.md` の末尾に短いエントリを追記する。
 
 ```
 ## YYYY-MM-DD
@@ -34,7 +34,7 @@ description: 実行マネージャー(二宮尊徳人格。2026-08-11改訂で�
 価値ある決定・調査結論・判断基準の改善が出たら、session_log に加えて学習候補を残す（形式は `_shared/knowledge_growth.md` §4）。
 
 - **knowledge** 候補 → Vault保存を提案（勝手に大量保存しない）
-- **skill** 候補 → `03_内務省/daily_governance/agent_growth_board.md` に1行追記
+- **skill** 候補 → `03_修身省/daily_governance/agent_growth_board.md` に1行追記
 - 雑談は discard（残さない）
 
 Skill本体の独断大改修は禁止。承認後に1パッチだけ更新する（`08_情報省/agent_growth_os.md`）。

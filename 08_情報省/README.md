@@ -10,7 +10,7 @@
 | `諜報部/` | AIルパン — 情報収集実務 |
 | `agent_growth_os.md` | エージェント知識成長OS（読む→候補→週次昇格） |
 
-関連: `.claude/skills/_shared/knowledge_growth.md`（全Skill共通）／`03_内務省/daily_governance/agent_growth_board.md`（昇格ボード）
+関連: `.claude/skills/_shared/knowledge_growth.md`（全Skill共通）／`03_修身省/daily_governance/agent_growth_board.md`（昇格ボード）
 
 ## 図書館の中（抜粋）
 

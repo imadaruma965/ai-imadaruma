@@ -4,7 +4,7 @@
 >
 > **上位規範**: `00_憲法府/constitution/four_pillars.md`（四柱統治フレームワーク）
 >
-> **関連**: `00_憲法府/constitution/mission.md`（第一国家目標）、`01_首相官邸/ai_jurisdiction.md`（AI主管定義）、`08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md`（六省）
+> **関連**: `00_憲法府/constitution/mission.md`（第一国家目標）、`01_内閣府/ai_jurisdiction.md`（AI主管定義）、`08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/domain_ministries.md`（六省）
 
 ---
 
@@ -127,7 +127,7 @@
 | 層 | 確認内容 | 参照 |
 |----|---------|------|
 | **四柱** | 人格・内政・外交・財政の最低行動 | `four_pillars.md` |
-| **6領域** | 各領域の状態・主戦場・15分タスク | `03_内務省/daily_governance/` |
+| **6領域** | 各領域の状態・主戦場・15分タスク | `03_修身省/daily_governance/` |
 
 ```
 朝閣議
@@ -143,7 +143,7 @@
 
 ## AI主管との接続
 
-> 四柱・6領域の定義はAI名称に依存しない。AI主管は `01_首相官邸/ai_jurisdiction.md` に分離して定義する。
+> 四柱・6領域の定義はAI名称に依存しない。AI主管は `01_内閣府/ai_jurisdiction.md` に分離して定義する。
 
 | 担当 | AI | 管轄範囲 |
 |------|-----|---------|
@@ -158,9 +158,9 @@
 |---------|------|
 | `00_憲法府/constitution/four_pillars.md` | 四柱の原典（AI主管定義は含まない） |
 | `00_憲法府/constitution/mission.md` | 第一国家目標の詳細 |
-| `01_首相官邸/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
-| `02_経産省/eiichi.md` | 戦略メンター AI栄一 |
-| `03_内務省/sontoku.md` | 実行マネージャー AI尊徳 |
+| `01_内閣府/ai_jurisdiction.md` | AI栄一・AI尊徳の主管定義 |
+| `02_律政省/eiichi.md` | 戦略メンター AI栄一 |
+| `03_修身省/sontoku.md` | 実行マネージャー AI尊徳 |
 | `cabinet/chief_statecraft_minister.md` | 旧：統治総理AI（移行予定）→ AI尊徳（実行マネージャー） |
 
 ---

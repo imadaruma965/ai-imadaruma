@@ -85,7 +85,7 @@
 
 - 典拠: 孫子の寵姫訓練、「将在外、君命有所不受」
 - 繁栄への役割: 理念を現実に変換する唯一の回路
-- 運用接続: `03_内務省/daily_governance/impulse_protocol.md`（脱線・衝動の律）
+- 運用接続: `03_修身省/daily_governance/impulse_protocol.md`（脱線・衝動の律）
 
 ### 6. 明察（明）— Clarity
 
