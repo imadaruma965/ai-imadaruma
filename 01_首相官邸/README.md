@@ -1,7 +1,7 @@
 # 首相官邸（執務室）
 
-- **AI**: スマートラビット（内閣総理）
-- **君主関連**: `monarch.md` / `monarch_profile_chatgpt.md`
+- **AI**: スマートラビット（執行官）
+- **BOSS関連**: `monarch.md` / `monarch_profile_chatgpt.md`
 - **対外プロフィール**（Wantedly・ランサーズ等）: [`対外プロフィール/00_索引.md`](対外プロフィール/00_索引.md)
 - **内閣の使い方**（組織図・指示・格納）: [`内閣運用図_組織と指示フロー.md`](内閣運用図_組織と指示フロー.md)
 - **内閣主管の正本**: `ai_jurisdiction.md`
