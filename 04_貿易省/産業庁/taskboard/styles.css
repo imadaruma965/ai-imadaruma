@@ -24,11 +24,11 @@
    */
   --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Hiragino Kaku Gothic Pro", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", Meiryo, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --sans: var(--font);
-  --text-xs: 0.75rem;
-  --text-sm: 0.84rem;
-  --text-md: 0.95rem;
-  --text-lg: 1.1rem;
-  --text-xl: 1.35rem;
+  --text-xs: 0.78rem;
+  --text-sm: 0.88rem;
+  --text-md: 1rem;
+  --text-lg: 1.15rem;
+  --text-xl: 1.4rem;
   --weight-normal: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -49,7 +49,7 @@ body {
     radial-gradient(600px 300px at 50% 100%, var(--mint) 0%, transparent 45%),
     var(--bg);
   color: var(--ink);
-  line-height: 1.55;
+  line-height: 1.65;
   letter-spacing: 0.01em;
   padding-bottom: 4.5rem;
   -webkit-font-smoothing: antialiased;
@@ -158,8 +158,8 @@ body {
 .tabs,
 .ministry-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.35rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
   padding: 0.55rem 0.65rem;
   overflow: visible;
   position: sticky;
@@ -175,19 +175,20 @@ body {
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--muted);
-  padding: 0.55rem 0.35rem;
-  border-radius: 10px;
-  font-size: 0.72rem;
-  line-height: 1.25;
+  padding: 0.65rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
   cursor: pointer;
   text-align: center;
   white-space: normal;
 }
 .tab.active {
-  color: var(--ink);
-  background: #e8f3fa;
-  border-color: #8eb9d4;
-  box-shadow: 0 2px 8px rgba(61, 126, 166, 0.12);
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 3px 10px rgba(61, 126, 166, 0.25);
   font-weight: 700;
 }
 @media (max-width: 520px) {
@@ -585,7 +586,7 @@ body {
   font-weight: var(--weight-medium);
 }
 
-/* —— AIスマートラビット(総理)相談チャット —— */
+/* —— AI賢いうさぎ(執行官)相談チャット —— */
 .smartrabbit-chat {
   background: linear-gradient(165deg, #faf9ff 0%, var(--surface) 55%);
   border: 1px solid #d6cdf0;
@@ -997,6 +998,49 @@ body {
   color: var(--muted);
   font-size: var(--text-sm);
   font-weight: var(--weight-normal);
+}
+
+/* 憲法タブ: ビジョン・ミッション・バリュー／じぶん憲法 */
+.board-block.credo { background: linear-gradient(180deg, var(--lilac), var(--surface) 55%); }
+.credo-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.credo-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+}
+.credo-card h4 {
+  margin: 0 0 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--accent);
+}
+.credo-card p { margin: 0; font-size: var(--text-sm); line-height: 1.6; }
+.credo-chapter {
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.credo-chapter summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1a5570;
+}
+.credo-chapter p { font-size: var(--text-sm); line-height: 1.65; margin: 0.5rem 0; }
+.credo-chapter blockquote {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  font-size: var(--text-sm);
+  line-height: 1.7;
 }
 
 /* 国家状態（五領域診断）・未統治警報 */

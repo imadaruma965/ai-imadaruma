@@ -160,7 +160,7 @@
       </div>
 
       <h2 class="section-title">今日の計画</h2>
-      <p class="day-flow-hint">Mac: 左で尊徳、右で任務。下が余れば本日の予定。下に朝〜夜の記録。</p>
+      <p class="day-flow-hint">左でAI尊徳と話す。右で今日の任務を確認。下に今日の予定と、朝・夜の記録。</p>
 
       <div class="day-workbench">
         <div class="sontoku-chat" id="sontoku-chat">
@@ -260,7 +260,7 @@
     <!-- 賢いうさぎ（執行官）への相談 -->
     <section id="view-smartrabbit" class="view active">
       <h2 class="section-title">賢いうさぎへの相談</h2>
-      <p class="day-flow-hint">戦略相談・発想・営業/Instagram/リサーチ/商品設計/財政判断など。日々の進捗・タスク管理はAI尊徳(内政・今日)へ。</p>
+      <p class="day-flow-hint">相談ごとはなんでもここへ。営業・Instagram・リサーチ・商品づくり・お金の判断など。日々の進捗やタスク管理はAI尊徳(内政・今日)へ。</p>
 
       <div class="smartrabbit-chat" id="smartrabbit-chat">
         <div class="smartrabbit-chat-head">
@@ -319,7 +319,7 @@
     <!-- 内省（朝晩の記録） -->
     <section id="view-reflect" class="view">
       <h2 class="section-title">人格</h2>
-      <p class="day-flow-hint">明君七徳の教育・検証を担うAI仁子。朝晩のジャーナリング・行動KPI・国難ログをここに記録する。</p>
+      <p class="day-flow-hint">AI仁子と一緒に、七つの徳を育てる。朝晩の振り返りや、その日の行動・衝動の記録もここに残す。</p>
       <div id="chat-mount-jinshi"></div>
 
       <div class="journal-panel am">
@@ -531,7 +531,7 @@
     <!-- 月 -->
     <section id="view-month" class="view">
       <h2 class="section-title">財政 · KPI/目標</h2>
-      <p class="day-flow-hint">戦略メンターAI栄一。今月の目標・KPI進捗確認の場。財務の実数（負債・請求書・個人財務）は同じ財政タブの「財務」サブタブへ。</p>
+      <p class="day-flow-hint">AI栄一と、今月の目標や数字の進み具合を確認する場所。実際のお金の出入り（負債・請求書・個人のお金）は同じ財政タブの「財務」サブタブへ。</p>
       <div id="chat-mount-eiichi"></div>
 
       <h3 class="subhead">今月の計画</h3>
@@ -581,7 +581,7 @@
     <!-- 財政・財務 -->
     <section id="view-zaimu" class="view">
       <h2 class="section-title">財政 · 財務</h2>
-      <p class="day-flow-hint">収入・支出・売上漏れ・請求漏れをリアルに追うAIルカ。目標・KPIは同じ財政タブの「KPI・目標」サブタブへ。</p>
+      <p class="day-flow-hint">AIルカと、収入・支出・払い忘れ・請求漏れを見ていく。今月の目標は同じ財政タブの「KPI・目標」サブタブへ。</p>
       <div id="chat-mount-luca"></div>
 
       <div class="board-block finance-gov">
@@ -681,15 +681,90 @@
     <!-- 憲法（律令府：韓非子・栄一） -->
     <section id="view-kenpou" class="view">
       <h2 class="section-title">憲法</h2>
-      <p class="day-flow-hint">律政省。事前の法的リスク点検はAI韓非子、事後の義利監査はAI栄一。規約・契約・自動化構想の点検はここへ。</p>
+      <p class="day-flow-hint">決めごとやお金の使い方が正しいかを確認する場所。契約・規約・新しい仕組みは始める前にAI韓非子へ、あとからの振り返りはAI栄一へ。じぶん憲法の確認もここから。</p>
       <div class="cabinet-picker" id="kenpou-picker" role="tablist" aria-label="憲法タブのAIを選ぶ"></div>
       <div id="chat-mount-kenpou"></div>
+
+      <div class="board-block credo">
+        <p class="board-head">大事にしていること（ビジョン・ミッション・バリュー）</p>
+        <p class="lead tight">じぶん憲法から抜き出した、いちばん大事な3つ。迷ったらここに戻る。</p>
+        <div class="credo-cards">
+          <div class="credo-card">
+            <h4>ビジョン（目指す姿）</h4>
+            <p>葦なる刃は、静かに尖れる。<br />人生は選択である。選択が国家を定める。</p>
+          </div>
+          <div class="credo-card">
+            <h4>ミッション（何のために）</h4>
+            <p>人類の未来を、より良い明日へと静かにつなぐこと。この目的に反する選択はしない。</p>
+          </div>
+          <div class="credo-card">
+            <h4>バリュー（大事にする価値）</h4>
+            <p>自由・繁栄・知恵・貢献・静けさ。すべての選択を「これは未来をつなぐか」で評価する。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="board-block credo">
+        <p class="board-head">じぶん憲法（全文）</p>
+        <p class="lead tight">正本: <code>00_律令府/constitution/jibun_constitution.md</code></p>
+
+        <details class="credo-chapter">
+          <summary>標語・前文</summary>
+          <blockquote>葦なる刃は、静かに尖れる。<br />The reed blade sharpens in silence.<br /><br />人生は選択である。選択が国家を定める。</blockquote>
+          <p>私、いまだ唯仁は、かつて自らの宿命に怒り、抗い、そして傷ついた。しかし、抗えない事実を受け入れた日、稲妻が走った。怒りは感謝に変わり、感謝は使命に変わった。</p>
+          <p>私という国家は、自分のために存在するのではない。人類の未来を、より良い明日へと静かにつなぐために存在する。若い世代が、自分の人生の主権者として繁栄できる世界を創るために、この国家は今日も統治され、今日も尖り続ける。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第一章　国家の基本原則</summary>
+          <p><strong>第1条（国家の目的）</strong> いまだ唯仁国家の存在目的は、人類の未来をより良い明日へと静かにつなぐことである。</p>
+          <p><strong>第2条（統治の形態）</strong> 立憲君主制を採用する。君主は憲法の下位に位置する。感情・疲弊・モチベーションの高低にかかわらず、憲法が最終判断を下す。</p>
+          <p><strong>第3条（最大の敵＝内乱）</strong> 国家の最大の敵は外部ではなく内部にある。疲弊による判断力の低下、習慣の途絶、モチベーションへの依存を「内乱」と定義する。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第二章　五大国家価値</summary>
+          <p><strong>第4条 自由</strong> 魂の主権を譲渡しない。</p>
+          <p><strong>第5条 繁栄</strong> 繁栄は目的ではなく貢献の手段。</p>
+          <p><strong>第6条 知恵</strong> 永遠に学び続ける。継続はモチベーションではなく憲法によって保証される。</p>
+          <p><strong>第7条 貢献</strong> 全ての選択は「これは人類の未来をつなぐか」で評価する。</p>
+          <p><strong>第8条 静けさ</strong> 静けさは弱さではない。騒がしい承認を求めない。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第三章　統治の基本法</summary>
+          <p><strong>第9条 習慣法</strong> 習慣はモチベーションに依存せず、天候・感情・体調に関係なく実行される。</p>
+          <p><strong>第10条 判断法</strong> 重要な判断の前に「疲弊していないか」「感情に支配されていないか」「貢献基準を満たすか」の三問を確認する。すべてYESでなければ24時間延期できる。</p>
+          <p><strong>第11条 失敗法</strong> 失敗は違憲ではない。失敗から学ぶことを選ばないことが違憲である。</p>
+          <p><strong>第12条 回復法（緊急内政モード）</strong> 睡眠5時間以下が2日続く、怒りを3回以上抑えた、習慣が2日以上途絶えた——このとき外交・経済活動を縮小し、内政（睡眠・食事・休息）を最優先する。</p>
+          <p><strong>第13条 行動法</strong> 「気分が乗らない」は言い訳にしない。問われるのは行動を選んだか否か。</p>
+          <p><strong>第14条 時間統治法</strong> 回復に寄与しない消費、成長につながらない停滞、収益を生まない浪費を「時間の違憲的使途」と定める。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第四章　外交統治法</summary>
+          <p><strong>第15条</strong> 外交とは人間関係・市場・発信・食事の総体。対人外交は与えることを先に、承認を求めるのを後にする。発信は承認の要求ではなく使命の体現。食事は身体という国土への輸入政策として、長期戦略に基づいて選ぶ。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第五章　経済統治法</summary>
+          <p><strong>第16条 投資原則法</strong> 損切り・利確ラインは事前に決め、機械的に実行する。「いつか戻る」は最大の違憲行為。</p>
+          <p><strong>第17条 複利法</strong> 目的は短期の利益ではなく複利による長期の国力増強。生き残ることを選ぶ。</p>
+        </details>
+
+        <details class="credo-chapter">
+          <summary>第六章　憲法改正と立ち返りの儀式</summary>
+          <p><strong>第18条 改正法</strong> 憲法は経験・学習・成長によって改正できる。感情ではなく学習が理由であること、十分な睡眠の翌朝に行うこと。</p>
+          <p><strong>第19条 立ち返りの儀式</strong></p>
+          <blockquote>葦なる刃は、静かに尖れる。<br />私はいまだ唯仁という国家の君主である。<br />感情は情報であり、選択は法に従う。<br />今日も、静かに、前へ。</blockquote>
+        </details>
+      </div>
     </section>
 
     <!-- 外政・技術/研究（テスラ・アショーカ） -->
     <section id="view-kagaku" class="view">
       <h2 class="section-title">外政 · 技術/研究</h2>
-      <p class="day-flow-hint">技術・自動化の実現可能性を検討するAIテスラ（統治手帳自体もここの管轄）、自己統治論を研究するAIアショーカ。</p>
+      <p class="day-flow-hint">「作れるか・どう作るか」を一緒に考えるAIテスラ（この手帳自体もテスラ担当）。自分を育てる考え方を研究するAIアショーカ。</p>
       <div class="cabinet-picker" id="kagaku-picker" role="tablist" aria-label="技術・研究のAIを選ぶ"></div>
       <div id="chat-mount-kagaku"></div>
     </section>
@@ -697,7 +772,7 @@
     <!-- 外政・発信（北斎・正篤） -->
     <section id="view-bunka" class="view">
       <h2 class="section-title">外政 · 発信</h2>
-      <p class="day-flow-hint">ビジュアルの北斎、文筆の正篤を切り替えて相談できる。</p>
+      <p class="day-flow-hint">見た目づくりはAI北斎、文章づくりはAI正篤。切り替えて相談できる。</p>
       <div class="cabinet-picker" id="bunka-picker" role="tablist" aria-label="発信のAIを選ぶ"></div>
       <div id="chat-mount-bunka"></div>
     </section>
@@ -705,7 +780,7 @@
     <!-- 外政・営業（案件パイプライン） -->
     <section id="view-sales" class="view">
       <h2 class="section-title">外政 · 営業</h2>
-      <p class="day-flow-hint">渉外・交渉を担うAI坂本龍馬。営業・案件パイプライン(応募・返信・面談・見積・受注・失注)を1件ずつ記録する。正本は state.json。</p>
+      <p class="day-flow-hint">外とのやり取りを担うAI坂本龍馬。応募から受注・失注まで、案件を1件ずつ記録していく。</p>
       <div id="chat-mount-sakamoto_ryoma"></div>
 
       <div class="board-block sales">
