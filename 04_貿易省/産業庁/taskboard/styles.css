@@ -1033,6 +1033,14 @@ body {
   color: #1a5570;
 }
 .credo-chapter p { font-size: var(--text-sm); line-height: 1.65; margin: 0.5rem 0; }
+.credo-chapter ul,
+.credo-chapter ol {
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  margin: 0.35rem 0 0.6rem;
+  padding-left: 1.3rem;
+}
+.credo-chapter li { margin: 0.15rem 0; }
 .credo-chapter blockquote {
   margin: 0.5rem 0;
   padding: 0.5rem 0.75rem;
