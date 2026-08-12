@@ -13,7 +13,7 @@
 - 材料補足: `sales_pipeline.md`、手元の家計・フォロワー数（**週1目視で可**）  
 - 週次整理: `weekly_review.md` の前か直後に本ボードを埋める  
 - 発信: `08_情報省/ダヴィンチ図書館/90_国家OS保管/domain_ministries/communications/newsletter_writing_rules.md`  
-- 方針: `02_律政省/strategy/metrics_capture_note.md`
+- 方針: `00_律令府/strategy/metrics_capture_note.md`
 
 **金曜の埋め方**: 今週の `archives/daily_logs/` を開き、§8b相当の行から「ネタになりそうな実践」をA欄へ2〜3個ピックする。毎日のフォロワー転記は不要。  
 **途中保存**: 表の真ん中列「今週」に測れた分だけ直打ち → ファイル保存。
@@ -37,7 +37,7 @@
 
 
 > **目標値の出典**: NL第6号の統治状況「（12/9）」右側。2026-07-14にボードへ固定。週次で変えない（変えるなら栄一判断）。  
-> **今週の数字ソース**: キングダムOS `04_貿産省/taskboard/data/state.json` → `board`（2026-07-17 08:50 UTC更新）。
+> **今週の数字ソース**: キングダムOS `04_貿易省/産業庁/taskboard/data/state.json` → `board`（2026-07-17 08:50 UTC更新）。
 
 ---
 
@@ -148,4 +148,4 @@
 | **その先（2）** | 月50万が安定してから、手入力が苦しい欄だけ連携を検討                      | 売上前のツール開発戦     |
 
 
-詳説は `02_律政省/strategy/metrics_capture_note.md`。
+詳説は `00_律令府/strategy/metrics_capture_note.md`。

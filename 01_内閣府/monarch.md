@@ -2,7 +2,7 @@
 
 > **位置づけ**: ai-imadaruma 実行レイヤーの最上位。最終意思決定者であり、実行者である。
 >
-> **関連**: `01_内閣府/ai_jurisdiction.md`（AI主管定義）、`02_律政省/eiichi.md`（戦略メンター）、`03_修身省/sontoku.md`（実行マネージャー）
+> **関連**: `01_内閣府/ai_jurisdiction.md`（AI主管定義）、`00_律令府/eiichi.md`（戦略メンター）、`03_修身省/sontoku.md`（実行マネージャー）
 
 ---
 
@@ -45,10 +45,10 @@ BOSS（いまだ唯仁）— 最終決定者・実行者
 BOSSは判断に迷ったとき、以下の順で立ち返る。
 
 ```
-1. いまだライフ理念体系（00_憲法府/philosophy/imada_life_philosophy.md）
-2. じぶん憲法（00_憲法府/constitution/jibun_constitution.md）
-3. 四柱統治フレームワーク（00_憲法府/constitution/four_pillars.md）
-4. 明君七徳（00_憲法府/constitution/meikun_shichitoku.md）
+1. いまだライフ理念体系（00_律令府/philosophy/imada_life_philosophy.md）
+2. じぶん憲法（00_律令府/constitution/jibun_constitution.md）
+3. 四柱統治フレームワーク（00_律令府/constitution/four_pillars.md）
+4. 明君七徳（00_律令府/constitution/meikun_shichitoku.md）
 ```
 
 **憲法優先の原則:**
@@ -73,7 +73,7 @@ BOSSは、以下の目標の**最終責任者**である。
 | **売上に含まない** | サッカー事業売上、投資運用益（imadaruma.capital） |
 | **統治上は継続** | サッカー運営・投資は現実の責務として管理する |
 
-詳細は `00_憲法府/constitution/domain_mapping.md` を参照。
+詳細は `00_律令府/constitution/domain_mapping.md` を参照。
 
 ---
 
@@ -132,12 +132,12 @@ AIは提案・整理・分解を担うが、**実行の主体は常にBOSS**で�
 
 | ファイル | 役割 |
 |---------|------|
-| `00_憲法府/philosophy/imada_life_philosophy.md` | 最上位規範（Purpose / Vision / Mission / Values） |
-| `00_憲法府/constitution/jibun_constitution.md` | じぶん憲法 |
-| `00_憲法府/constitution/four_pillars.md` | 四柱統治フレームワーク |
-| `00_憲法府/constitution/meikun_shichitoku.md` | 明君七徳 |
-| `00_憲法府/constitution/domain_mapping.md` | 四柱と6領域の接続 |
-| `00_憲法府/constitution/mission.md` | 第一国家目標の詳細 |
+| `00_律令府/philosophy/imada_life_philosophy.md` | 最上位規範（Purpose / Vision / Mission / Values） |
+| `00_律令府/constitution/jibun_constitution.md` | じぶん憲法 |
+| `00_律令府/constitution/four_pillars.md` | 四柱統治フレームワーク |
+| `00_律令府/constitution/meikun_shichitoku.md` | 明君七徳 |
+| `00_律令府/constitution/domain_mapping.md` | 四柱と6領域の接続 |
+| `00_律令府/constitution/mission.md` | 第一国家目標の詳細 |
 | `01_内閣府/ai_jurisdiction.md` | AI主管定義 |
 
 ---

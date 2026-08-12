@@ -18,7 +18,7 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 | 層 | 場所 | 役割 |
 |----|------|------|
 | **DOCX正本** | `08_情報省/ダヴィンチ図書館/91_原資料/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
-| **Markdown実装版** | `00_憲法府/philosophy/` `00_憲法府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
+| **Markdown実装版** | `00_律令府/philosophy/` `00_律令府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
 
 **ルール:**
 
@@ -31,10 +31,10 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 正本ファイル | Markdown実装版 | 備考 |
 |------------|---------------|------|
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` | `00_憲法府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx` | `00_憲法府/philosophy/imada_life_philosophy.md` | |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_憲法府/constitution/four_pillars.md` | |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_明君七徳_v02.docx` | `00_憲法府/constitution/meikun_shichitoku.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` | `00_律令府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx` | `00_律令府/philosophy/imada_life_philosophy.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_律令府/constitution/four_pillars.md` | |
+| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_明君七徳_v02.docx` | `00_律令府/constitution/meikun_shichitoku.md` | |
 
 **旧版（参照用・履歴用）:**
 
@@ -45,7 +45,7 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 ### じぶん憲法（最高法規）
 
 - **正本DOCX**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx`
-- **Markdown実装版**: `00_憲法府/constitution/jibun_constitution.md`
+- **Markdown実装版**: `00_律令府/constitution/jibun_constitution.md`
 - **標語**: 葦なる刃は、静かに尖れる。
 - **中核文**: 人生は選択である。選択が国家を定める。
 
@@ -128,9 +128,9 @@ ai-imadaruma/
 │       ├── imada_life_philosophy_v02.docx
 │       ├── imadaruma_四柱統治フレームワーク_v1.docx
 │       └── imadaruma_明君七徳_v02.docx
-├── 00_憲法府/philosophy/                            # 最上位規範（実装版）
+├── 00_律令府/philosophy/                            # 最上位規範（実装版）
 │   └── imada_life_philosophy.md           # いまだライフ理念体系
-├── 00_憲法府/constitution/                          # 統治法・実行構造（実装版）
+├── 00_律令府/constitution/                          # 統治法・実行構造（実装版）
 │   ├── jibun_constitution.md              # じぶん憲法 v3 実装版
 │   ├── four_pillars.md                    # 四柱統治フレームワーク ★新
 │   ├── meikun_shichitoku.md               # 明君七徳 ★新
@@ -139,15 +139,15 @@ ai-imadaruma/
 │   ├── principles.md                      # 旧：統治原則（移行予定）
 │   └── rules_of_governance.md             # 統治ルール（更新予定）
 ├── 01_内閣府/                           # 執務室（総理・主管正本・君主）
-├── 02_律政省/                         # 栄一 ＋ strategy/
+├── 00_律令府/                         # 栄一 ＋ strategy/
 ├── 03_修身省/                         # 尊徳 ＋ daily_governance/
-├── 03_修身省/ … 04_貿産省/         # 各省庁（人格正本）
-├── 04_貿産省/                               # 統治手帳（taskboard）・scripts
+├── 03_修身省/ … 04_貿易省/         # 各省庁（人格正本）
+├── 04_貿易省/                               # 統治手帳（taskboard）・scripts
 ├── 08_情報省/
 │   ├── ダヴィンチ図書館/                 # Obsidian Vault（別Git）
 │   ├── 研究部/                          # アショーカ
 │   └── 諜報部/                          # ルパン
-├── 02_律政省/strategy/                # 戦略（AI栄一管轄）
+├── 00_律令府/strategy/                # 戦略（AI栄一管轄）
 │   ├── README.md
 │   ├── roadmap_500k.md
 │   └── …
@@ -185,7 +185,7 @@ AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.cl
 
 ### `/eiichi`（戦略・ロードマップ）
 
-呼び出すと、`02_律政省/eiichi.md` の人格を採用し、`02_律政省/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`00_律令府/eiichi.md` の人格を採用し、`00_律令府/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 

@@ -2,7 +2,7 @@
 
 > 迷ったらこのファイルだけ見る。  
 > 日報を癖にする段階設計 → `daily_journal_roadmap.md`  
-> 方針の長い話 → `02_律政省/strategy/metrics_capture_note.md`
+> 方針の長い話 → `00_律令府/strategy/metrics_capture_note.md`
 
 ---
 

@@ -13,10 +13,10 @@
 | **実施タイミング** | 君主の1日の最初の統治行為 |
 | **担当** | AI尊徳が提案、君主が最終決定 |
 | **前提** | 前日の `night_review.md` を確認してから始める |
-| **戦略接続** | `02_律政省/strategy/roadmap_500k.md` の実行ロードマップ v2 を参照 |
+| **戦略接続** | `00_律令府/strategy/roadmap_500k.md` の実行ロードマップ v2 を参照 |
 | **財政** | `03_修身省/daily_governance/finance_board.md` |
-| **営業** | キングダムOS営業タブ ＋ `02_律政省/strategy/sales_pipeline.md` |
-| **Instagram** | `02_律政省/strategy/instagram_growth_plan.md`（売上優先・制作上限） |
+| **営業** | キングダムOS営業タブ ＋ `00_律令府/strategy/sales_pipeline.md` |
+| **Instagram** | `00_律令府/strategy/instagram_growth_plan.md`（売上優先・制作上限） |
 | **総理** | Smart Rabbit Skill（出力形式は Skill 正本） |
 
 ---
@@ -215,7 +215,7 @@ Knowledge参照元:
 
 ```
 あなたは AI尊徳 です。朝の閣議を開始してください。
-night_review.md と 02_律政省/strategy/roadmap_500k.md（v2）と finance_board.md を踏まえ、
+night_review.md と 00_律令府/strategy/roadmap_500k.md（v2）と finance_board.md を踏まえ、
 今日の統治計画を提案してください。
 最後に、君主への短い実行命令を出してください。
 ```

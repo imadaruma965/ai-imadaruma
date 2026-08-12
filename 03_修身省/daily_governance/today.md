@@ -2,7 +2,7 @@
 
 > 朝の閣議で決定した今日の実行計画。日中はこのファイルだけを見る。
 > 脱線したら `impulse_protocol.md` を開く。
-> 運用リズム: `02_律政省/strategy/ops_rhythm_2026h2.md`
+> 運用リズム: `00_律令府/strategy/ops_rhythm_2026h2.md`
 > **総理起動**: Smart Rabbit Skill → 出力を本ファイルへ転記（`morning_cabinet.md` §5b）
 > **接続**: `roadmap_500k.md` v2／`finance_board.md`／営業タブ／`instagram_growth_plan.md`
 
@@ -54,10 +54,10 @@ Instagram実行（または「下限のみ／休む」）:
 
 Knowledge参照元:
   05_AI対話/Cursor/2026/07/2026-07-28_045208_Kingdom_OS_v1_実運用開始.md
-  02_律政省/strategy/roadmap_500k.md（v2）
+  00_律令府/strategy/roadmap_500k.md（v2）
   03_修身省/daily_governance/finance_board.md
-  02_律政省/strategy/sales_pipeline.md
-  02_律政省/strategy/instagram_growth_plan.md
+  00_律令府/strategy/sales_pipeline.md
+  00_律令府/strategy/instagram_growth_plan.md
 ```
 
 ---

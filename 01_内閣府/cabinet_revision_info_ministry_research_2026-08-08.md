@@ -3,7 +3,7 @@
 > **日付**: 2026-08-08  
 > **発議**: BOSS意図の壁打ち＋Claude対話（Remote Control／輸出外交／商品階段）  
 > **状態**: **正本反映済み**（同日）  
-> **正本**: `01_内閣府/ai_jurisdiction.md`／`08_情報省/davinci.md`／`04_貿産省/諜報部/lupin.md`／`04_貿産省/sakamoto_ryoma.md`／`03_修身省/sontoku.md`  
+> **正本**: `01_内閣府/ai_jurisdiction.md`／`08_情報省/davinci.md`／`04_貿易省/諜報部/lupin.md`／`04_貿易省/sakamoto_ryoma.md`／`03_修身省/sontoku.md`  
 > **対話蔵書**: `08_情報省/ダヴィンチ図書館/05_AI対話/Claude/2026/08/2026-08-08_Remote_Control一本化と輸出外交.md`
 
 ---

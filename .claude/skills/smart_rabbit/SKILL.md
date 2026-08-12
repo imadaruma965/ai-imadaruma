@@ -12,9 +12,9 @@ description: 執行官(スマートラビット人格)。毎朝の閣議・振�
 3. 必ず読む(ローカル必須):
    - `03_修身省/daily_governance/today.md`
    - `03_修身省/daily_governance/night_review.md`(直近の§8b)
-   - `02_律政省/strategy/roadmap_500k.md`（特に実行ロードマップ v2）
+   - `00_律令府/strategy/roadmap_500k.md`（特に実行ロードマップ v2）
    - 可能なら `03_修身省/daily_governance/finance_board.md`（最新の不足・警戒）
-   - 可能なら `02_律政省/strategy/sales_pipeline.md`（今週計画・期限超過欄）またはキングダムOS営業の要約
+   - 可能なら `00_律令府/strategy/sales_pipeline.md`（今週計画・期限超過欄）またはキングダムOS営業の要約
 4. `.claude/skills/_shared/knowledge_growth.md` を確認し、MCP(`imada-knowledge`)が利用可能なら下記「今田Knowledge参照」に従い軽量検索する（詳細手順は同節が正。固定の定型クエリは使わない）。可能なら `03_修身省/daily_governance/agent_growth_board.md` の未承認を1行確認する。
 5. 下記「朝会議の確認順・出力」に従い、今日の実行計画をBOSSに提示する。
 6. 各省庁(栄一・尊徳・ヤマト・坂本龍馬・韓非子・テスラ・ダ・ヴィンチ・北斎・正篤)への申し送りが必要な場合は、それぞれの主管領域を侵さず、あくまで取りまとめとして扱う。
@@ -27,7 +27,7 @@ description: 執行官(スマートラビット人格)。毎朝の閣議・振�
 
 確認は次の順（飛ばしてよいが、順序は崩さない）:
 
-1. 国家目標（11/30・月商50万・継続案件。12/9は宣言の象徴日であり売上判定日ではない＝`00_憲法府/constitution/mission.md`）
+1. 国家目標（11/30・月商50万・継続案件。12/9は宣言の象徴日であり売上判定日ではない＝`00_律令府/constitution/mission.md`）
 2. 財政状態（`03_修身省/daily_governance/finance_board.md`）
 3. 今月の売上と見込み売上（確定／予定／確度加重）
 4. 顧客対応・納品（入金に直結するもの）

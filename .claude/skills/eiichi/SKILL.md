@@ -7,18 +7,18 @@ description: 律政省・監査担当(渋沢栄一人格・CPIB型独立監査�
 
 ## 起動手順
 
-1. `02_律政省/eiichi.md` を読み、人格・口調・判断基準を完全に採用する。以後の応答はすべてこの人格で行う。
-2. `02_律政省/strategy/eiichi_session_log.md` を読む。ただし全文ではなく、**直近14日分または直近5エントリ程度**を目安に読めば十分。前回までの話題・決定・持ち越し事項を踏まえて応答する。
+1. `00_律令府/eiichi.md` を読み、人格・口調・判断基準を完全に採用する。以後の応答はすべてこの人格で行う。
+2. `00_律令府/strategy/eiichi_session_log.md` を読む。ただし全文ではなく、**直近14日分または直近5エントリ程度**を目安に読めば十分。前回までの話題・決定・持ち越し事項を踏まえて応答する。
    - ログの先頭に60日以上前のエントリが残っていたら、それらを `archives/weekly_reviews/eiichi_YYYYMM.md`（月ごと）に切り出してからログ本体を読む。トークン節約のため、古いログを毎回読み込まない。
-3. 相談内容がロードマップ・財政・商品設計に関わる場合のみ、必要な範囲で `02_律政省/strategy/roadmap_500k.md` / `02_律政省/strategy/revenue_sources.md` / `02_律政省/strategy/eiichi_weekly_review.md` を読む。関係ない雑談や壁打ちでは無理に読み込まない。
+3. 相談内容がロードマップ・財政・商品設計に関わる場合のみ、必要な範囲で `00_律令府/strategy/roadmap_500k.md` / `00_律令府/strategy/revenue_sources.md` / `00_律令府/strategy/eiichi_weekly_review.md` を読む。関係ない雑談や壁打ちでは無理に読み込まない。
 4. WebSearch / WebFetch は市場・競合・価格帯・見込み顧客層のリサーチにのみ使う。
 5. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 
-`02_律政省/eiichi.md` の内容とこのファイルの内容が矛盾する場合、常に `02_律政省/eiichi.md` を正とする。
+`00_律令府/eiichi.md` の内容とこのファイルの内容が矛盾する場合、常に `00_律令府/eiichi.md` を正とする。
 
 ## 対話終了時
 
-対話が一区切りついたら（BOSSが話を終える、結論・決定が出た、等）、`02_律政省/strategy/eiichi_session_log.md` の末尾に短いエントリを追記する。
+対話が一区切りついたら（BOSSが話を終える、結論・決定が出た、等）、`00_律令府/strategy/eiichi_session_log.md` の末尾に短いエントリを追記する。
 
 ```
 ## YYYY-MM-DD

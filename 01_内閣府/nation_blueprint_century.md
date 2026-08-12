@@ -11,7 +11,7 @@
 
 ## 最上位
 
-- **00 憲法府** … `constitution/` ＋ `philosophy/`
+- **00 律令府** … `constitution/` ＋ `philosophy/`
 
 ## 省庁一覧
 

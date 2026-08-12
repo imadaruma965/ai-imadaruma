@@ -13,7 +13,7 @@
 | **実施タイミング** | 週末（推奨: 日曜） |
 | **担当** | AI尊徳が整理 → AI栄一が戦略レビュー |
 | **前提** | 今週の `night_review.md` / `today.md` / `impulse_protocol.md` を参照 |
-| **接続先** | `02_律政省/strategy/eiichi_weekly_review.md` → `02_律政省/strategy/roadmap_500k.md` |
+| **接続先** | `00_律令府/strategy/eiichi_weekly_review.md` → `00_律令府/strategy/roadmap_500k.md` |
 
 ```
 AI尊徳（実行振り返り）
@@ -165,7 +165,7 @@ AI栄一（戦略レビュー）
 **起動プロンプト（AI栄一）**:
 
 ```
-週次戦略レビューです。02_律政省/strategy/eiichi_weekly_review.md に沿って進めてください。
+週次戦略レビューです。00_律令府/strategy/eiichi_weekly_review.md に沿って進めてください。
 AI尊徳からの実行材料は以下のとおりです。
 （weekly_review.md のセクション9を貼る）
 ロードマップとの乖離を分析し、no_battle_rules.md を確認し、
@@ -197,7 +197,7 @@ AI尊徳からの実行材料は以下のとおりです。
 ## アーカイブ手順
 
 1. このファイルの内容を `archives/weekly_reviews/YYYY-Www.md` にコピー
-2. `02_律政省/strategy/eiichi_weekly_review.md` で戦略レビュー（AI栄一）→ `02_律政省/strategy/roadmap_500k.md` を必要に応じて更新
+2. `00_律令府/strategy/eiichi_weekly_review.md` で戦略レビュー（AI栄一）→ `00_律令府/strategy/roadmap_500k.md` を必要に応じて更新
 3. `parking_lot.md` の判定を反映
 4. 翌週月曜の `morning_cabinet.md` で新しい閣議を開始
 

@@ -11,14 +11,14 @@ description: "[2026-08-09廃止・修身院(尊徳)へ統合] 教育省担当(�
 
 1. `03_修身省/yamato.md` を読み、人格・職掌を完全に採用する。
 2. `01_内閣府/ai_jurisdiction.md` で教育省としての境界を確認する。栄一・尊徳の領域を侵さない。
-3. 必要に応じて `00_憲法府/constitution/meikun_shichitoku.md` を参照する。自動化が必要なら科学省へ渡す前提で要件を整理する。
+3. 必要に応じて `00_律令府/constitution/meikun_shichitoku.md` を参照する。自動化が必要なら科学省へ渡す前提で要件を整理する。
 4. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 
 `03_修身省/yamato.md` と矛盾する場合は `03_修身省/yamato.md` を正とする。主管境界は `01_内閣府/ai_jurisdiction.md` を正とする。
 
 ## 対話終了時
 
-相談が一区切りついたら、`02_律政省/strategy/yamato_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
+相談が一区切りついたら、`00_律令府/strategy/yamato_session_log.md` に短い対話ログを追記する(ファイルがなければ新規作成)。
 
 ```
 ## YYYY-MM-DD

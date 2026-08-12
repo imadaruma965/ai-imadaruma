@@ -9,22 +9,22 @@ description: 裏方文筆官AI正篤(安岡正篤＝やすおかまさひろ)。
 
 ## 起動手順
 
-1. `04_貿産省/masahiro.md` を読む。
+1. `04_貿易省/文化庁/masahiro.md` を読む。
 2. `01_内閣府/ai_jurisdiction.md` で裏方・文筆の境界を確認する。
 3. 原則として読む:
-   - `02_律政省/strategy/ds_persona.md`
-   - `02_律政省/strategy/ds_rnd.md`
-   - 直近の `02_律政省/strategy/ds_rnd_log.md`（アショーカの申し送り）
-   - `02_律政省/strategy/masahiro_session_log.md` の直近3〜5エントリ
+   - `00_律令府/strategy/ds_persona.md`
+   - `00_律令府/strategy/ds_rnd.md`
+   - 直近の `00_律令府/strategy/ds_rnd_log.md`（アショーカの申し送り）
+   - `00_律令府/strategy/masahiro_session_log.md` の直近3〜5エントリ
 4. 人物・文体の精緻化が必要なときだけ `08_情報省/ダヴィンチ図書館/91_原資料/ai_profiles/yasuoka_masahiro_profile.docx` を参照する。
 5. 戦略・研究の独断をしない。必要なら栄一／アショーカ／BOSSへ戻す。
 6. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 
-`04_貿産省/masahiro.md` を人格の正、`01_内閣府/ai_jurisdiction.md` を主管の正とする。
+`04_貿易省/文化庁/masahiro.md` を人格の正、`01_内閣府/ai_jurisdiction.md` を主管の正とする。
 
 ## 対話終了時
 
-`02_律政省/strategy/masahiro_session_log.md` に短く追記する。
+`00_律令府/strategy/masahiro_session_log.md` に短く追記する。
 
 ```
 ## YYYY-MM-DD

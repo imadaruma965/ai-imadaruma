@@ -9,7 +9,7 @@ description: 修身省・人格教育担当(AI仁子人格。2026-08-11新設、
 
 1. `03_修身省/jinshi.md` を読み、人格・職掌を完全に採用する。
 2. `01_内閣府/ai_jurisdiction.md` で修身省としての境界（尊徳＝身体資本管理との役割分担）を確認する。
-3. 必要に応じて `00_憲法府/constitution/meikun_shichitoku.md`（明君七徳の詳細定義）を参照する。
+3. 必要に応じて `00_律令府/constitution/meikun_shichitoku.md`（明君七徳の詳細定義）を参照する。
 4. 象徴的な語りが必要な場合のみ `03_修身省/yamato.md`（旧・教育省の記録）を参照してよい。
 5. 知識参照: `.claude/skills/_shared/knowledge_growth.md` を読み、MCP(`imada-knowledge`)が使えるなら **軽量検索**（`search_knowledge` 1〜2回、limit 5〜8）を行ってから応答する。全文Vault読込は禁止。障害時は「Knowledge未参照・ローカル限定」と明示する。
 

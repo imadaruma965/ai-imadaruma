@@ -16,7 +16,7 @@
 営業が鈍い主因は「売り方不足」より、整理されていない緊急業務の下に止まっていること。
 
 開発は Claude Code / Codex で簡易自社開発してよい。  
-仕様の正本: `02_律政省/strategy/taskboard_mvp_spec.md`（MVP以外は作らない）。
+仕様の正本: `00_律令府/strategy/taskboard_mvp_spec.md`（MVP以外は作らない）。
 
 ---
 
@@ -126,7 +126,7 @@ Markdownの表（`ops_commitments.md` など）は、アプリが決まるまで
 
 ## 今夜やること
 
-1. Claude Code / Codex に `02_律政省/strategy/taskboard_mvp_spec.md` の発注文を渡してMVPを作る  
+1. Claude Code / Codex に `00_律令府/strategy/taskboard_mvp_spec.md` の発注文を渡してMVPを作る  
    （動くまで応急で Microsoft To Do に期限だけ入れても可）  
 2. 動き始めたら手帳・古いタスクを全部投入  
 3. 明日の朝からその「今日」と四象限だけを見る  

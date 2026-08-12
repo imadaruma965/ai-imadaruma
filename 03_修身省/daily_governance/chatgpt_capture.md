@@ -20,7 +20,7 @@
 ## 国家OS側に残すもの
 
 - 数えられるタスク・申し送り → `daily_governance` / Smart Rabbit ログ  
-- 戦略・発信の短い学び → `02_律政省/strategy/*_session_log.md`（原本ではない）  
+- 戦略・発信の短い学び → `00_律令府/strategy/*_session_log.md`（原本ではない）  
 - 再利用する決定・Skill改善 → 学習候補 → `agent_growth_board.md` → 承認後に Vault／Skill（`08_情報省/agent_growth_os.md`）  
 - 原本会話 → **必ず Vault**（このリポへ複製しない）
 
