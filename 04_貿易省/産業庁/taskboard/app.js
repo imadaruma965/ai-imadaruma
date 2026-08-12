@@ -15,7 +15,7 @@
     { id: "other", label: "その他" },
   ];
 
-  // カテゴリ→四柱＋憲法の割り当て（今さん決定・2026-07-26）。フィット感より、5府すべてに
+  // カテゴリ→四柱＋憲法の割り当て（BOSS決定・2026-07-26）。フィット感より、5府すべてに
   // タスク一覧を持たせる統一感を優先する。
   const CATEGORY_DOMAIN = {
     fres: "diplomacy",
@@ -2536,7 +2536,7 @@
               m.source === "cabinet"
                 ? `内閣${m.sourceMember ? `/${escapeHtml(m.sourceMember)}` : ""}`
                 : m.source === "smart_rabbit"
-                  ? "総理相談"
+                  ? "賢いうさぎに相談"
                   : m.source === "sontoku"
                     ? "尊徳"
                     : "手入力";
@@ -2947,7 +2947,7 @@
     }
   }
 
-  /* —— AIスマートラビット(総理)相談チャット —— */
+  /* —— 賢いうさぎ(執行官)相談チャット —— */
   let smartRabbitBusy = false;
   let smartRabbitActiveMode = "general";
   let smartRabbitPendingRetry = null; // { sessionKey, mode, text, messageId }
@@ -3055,7 +3055,7 @@
   let cabinetMembers = [];
   const cabinetOpeningAttempted = new Set();
   const CABINET_MEMBER_FALLBACK = {
-    smart_rabbit: { name: "スマートラビット", title: "執行官・内閣統括", avatar: "🐇" },
+    smart_rabbit: { name: "賢いうさぎ", title: "執行官・内閣統括", avatar: "🐇" },
     kanpishi: { name: "韓非子", title: "律政省・法/事前点検", avatar: "⚖️" },
     eiichi: { name: "栄一", title: "律政省・独立監査", avatar: "💴" },
     jinshi: { name: "仁子", title: "修身省・人格/七徳", avatar: "🌸" },
@@ -3536,7 +3536,7 @@
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.message || "スマートラビットとの接続に失敗しました。");
+      throw new Error(data.message || "賢いうさぎとの接続に失敗しました。");
     }
     return data;
   }
@@ -3550,7 +3550,7 @@
         data.connected ? "connected" : "error"
       );
     } catch {
-      setSmartRabbitStatus("スマートラビット未接続", "error");
+      setSmartRabbitStatus("賢いうさぎ未接続", "error");
     }
   }
 
@@ -3764,7 +3764,7 @@
     return `sr-open-${todayISO()}`;
   }
 
-  // 「総理」タブを開いた最初の一回だけ、スマートラビットから挨拶→今日の予定→至急対応の順で話しかける。
+  // 「スマラビ」タブを開いた最初の一回だけ、賢いうさぎから挨拶→今日の予定→至急対応の順で話しかける。
   async function ensureSmartRabbitOpening() {
     const key = smartRabbitOpeningKey();
     ensureSmartRabbitSession(key, "today");

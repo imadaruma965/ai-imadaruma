@@ -340,7 +340,7 @@ test("cabinetTurnPrompt embeds member name and message, and names the responder"
     firstTurn: true,
   });
   assert.match(prompt, /今月の請求漏れを確認したい/);
-  assert.match(prompt, /ルカとして、今さんに直接返答すること/);
+  assert.match(prompt, /ルカとして、BOSSに直接返答すること/);
   assert.match(prompt, /財政スナップショット/);
 });
 

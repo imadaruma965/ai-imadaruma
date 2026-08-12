@@ -8,7 +8,7 @@
 const MEMBERS = [
   {
     id: "smart_rabbit",
-    name: "スマートラビット",
+    name: "賢いうさぎ",
     title: "執行官・内閣統括",
     ministry: "スマラビ",
     avatar: "🐇",

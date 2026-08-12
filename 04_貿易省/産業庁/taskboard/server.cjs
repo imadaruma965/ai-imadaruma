@@ -13,7 +13,7 @@ const smartRabbitContext = require("./lib/smart-rabbit-context.cjs");
 const cabinetRegistry = require("./lib/cabinet-registry.cjs");
 const accountResearchSheet = require("./lib/account-research-sheet.cjs");
 
-// cwd や起動シェルに依存せず、07_科学省/taskboard/.env.local を読む（既存envは上書きしない）
+// cwd や起動シェルに依存せず、04_貿易省/産業庁/taskboard/.env.local を読む（既存envは上書きしない）
 loadLocalEnv();
 
 const APP_DIR = __dirname;
@@ -33,7 +33,7 @@ const SONTOKU_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const SMART_RABBIT_RATE_LIMIT_PER_MINUTE = 10;
 const SMART_RABBIT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 // リサーチ系(ルパン・ダ・ヴィンチ・アショーカ等)はWebSearch/WebFetchを伴い55秒では
-// 打ち切られやすいため、スマートラビット・内閣共通でここを底上げする。
+// 打ち切られやすいため、賢いうさぎ・内閣共通でここを底上げする。
 const SMART_RABBIT_AGENT_TIMEOUT_MS = 180 * 1000;
 const SMART_RABBIT_REQUEST_CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -171,7 +171,7 @@ async function writeSessions(sessions) {
   await fsp.rename(temporary, SESSION_FILE);
 }
 
-// スマートラビットのセッションストアは sessionId -> Cursor agentId の対応表のみを持つ。
+// 賢いうさぎのセッションストアは sessionId -> Cursor agentId の対応表のみを持つ。
 // 会話本文はクライアント側 state.smartRabbitChat が正本(既存state.json同期の仕組みに乗せる)。
 async function readSmartRabbitSessions() {
   try {
@@ -191,7 +191,7 @@ async function writeSmartRabbitSessions(sessions) {
 }
 
 // 内閣メンバーのセッションストアは memberId -> Cursor agentId の対応表のみを持つ。
-// メンバーごとに1本の継続対話とし(スマートラビットのような複数セッションUIは持たない)、
+// メンバーごとに1本の継続対話とし(賢いうさぎのような複数セッションUIは持たない)、
 // 会話本文はクライアント側 state.cabinetChat[memberId] が正本。
 async function readCabinetSessions() {
   try {
@@ -437,7 +437,7 @@ async function basePrompt(date) {
   ]);
   const track = computeTrackRecord(stateRecord.data, date);
 
-  return `あなたはキングダムOSのAI尊徳である。以下の正本と運用規則を採用し、今さんの実行マネージャーとして対話する。
+  return `あなたはキングダムOSのAI尊徳である。以下の正本と運用規則を採用し、BOSSの実行マネージャーとして対話する。
 
 重要な境界:
 - 戦略を変更しない。戦略判断はAI栄一の領分である。
@@ -445,7 +445,7 @@ async function basePrompt(date) {
 - キングダムOSから渡された最新の任務・進捗を事実として扱う。
 - 予定・約束は Googleカレンダー連携の情報を事実として扱う。時間が重なる予定（バッティング）があれば、任務の話より先に短く警告する。
 - 応答は日本語で簡潔にし、冒頭は必ず「尊徳:」とする。
-- 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
+- 定型文ではなく、BOSSの発言と現在情報を踏まえて自然に応答する。
 - 分からないことを推測で断定せず、実行に必要な問いを一つずつ返す。
 - 本日は ${date}。
 
@@ -471,8 +471,8 @@ ${today}`;
 function turnPrompt({ date, message, event, context, firstTurn }) {
   const request =
     event === "open"
-      ? "今さんが今日の計画を開いた。時刻・任務・進捗に合わせ、挨拶と必要な確認を一つ伝える。"
-      : `今さんの発言:\n${clip(message, 4000)}`;
+      ? "BOSSが今日の計画を開いた。時刻・任務・進捗に合わせ、挨拶と必要な確認を一つ伝える。"
+      : `BOSSの発言:\n${clip(message, 4000)}`;
   return `${firstTurn ? "ここからキングダムOSでの継続対話を開始する。\n\n" : ""}【現在時刻・キングダムOSの最新情報】
 日付: ${date}
 ${JSON.stringify(context, null, 2)}
@@ -480,7 +480,7 @@ ${JSON.stringify(context, null, 2)}
 【今回の入力】
 ${request}
 
-AI尊徳として、今さんに直接返答すること。`;
+AI尊徳として、BOSSに直接返答すること。`;
 }
 
 function normalizeSmartRabbitContext(raw) {
@@ -555,7 +555,7 @@ function findOverdueExternalTasks(stateData, todayStr) {
   );
 }
 
-// スマートラビットの「総理」タブを開いた直後の一言用。今日の実データ(Google予定・請求書・対外期限)だけを渡し、
+// 賢いうさぎの「スマラビ」タブを開いた直後の一言用。今日の実データ(Google予定・請求書・対外期限)だけを渡し、
 // AIが数字や予定を作文しないよう素材として渡す(本文組み立てはプロンプト側の指示に委ねる)。
 async function buildOpeningBriefing(date, stateData) {
   const lines = [];
@@ -604,13 +604,13 @@ async function smartRabbitBasePrompt(date, mode) {
     readOptional(path.join(REPO_ROOT, "03_内務省", "daily_governance", "today.md"), 8000),
   ]);
 
-  return `あなたはキングダムOSのAIスマートラビット(内閣総理)である。以下の人格正本を採用し、今さんの戦略相談・発想・問題解決の相手として対話する。
+  return `あなたはキングダムOSのAI賢いうさぎ(執行官)である。以下の人格正本を採用し、BOSSの戦略相談・発想・問題解決の相手として対話する。
 
 重要な境界:
 - これは日次実行チャット(AI尊徳)とは別の相談チャットである。進捗確認・日次タスク管理はAI尊徳の領分なので深入りしない。
 - この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
 - 単なる肯定・雑談はしない。目的の理解、情報整理、優先順位付け、実行可能な案への変換、必要な反論、過剰な開発・寄り道の制止を行う。
-- 売上・実行・健康・時間の観点を常に持つ。最終判断は今さんに委ねる。
+- 売上・実行・健康・時間の観点を常に持つ。最終判断はBOSSに委ねる。
 - 本日は ${date}。今回の相談モードは「${cfg.label}」。
 
 【今回のモードで優先する観点】
@@ -624,7 +624,7 @@ ${cfg.focus.length ? cfg.focus.join(" / ") : "特になし(総合相談)"}
 【業務コンテキストとKnowledgeの扱い】
 プロンプト内の「業務コンテキスト」節はstate.json由来の事実(タスク・営業・財政・KPIなど)、「Knowledge検索結果」節はVault検索由来の知識である。両者を混同せず、回答の「参照したKnowledge」にはKnowledge節のパスのみを書く。業務コンテキストにない事実を作らない。「未登録」は0や「なし」と解釈しない。更新日時が古い可能性がある節は断定的に扱わない。情報が不足していても、質問を返すだけで終わらず、現時点で可能な判断は示す。
 
-応答の冒頭は必ず「**スマートラビット**:」とする。
+応答の冒頭は必ず「**賢いうさぎ**:」とする。
 
 【人格正本 01_首相官邸/smart_rabbit.md】
 ${persona}
@@ -632,7 +632,7 @@ ${persona}
 【運用規則(検索方針など) .claude/skills/smart_rabbit/SKILL.md より抜粋採用】
 ${skill}
 
-【直近のスマートラビット・セッション記録】
+【直近の賢いうさぎ・セッション記録】
 ${recentLog || "(まだ記録なし)"}
 
 【日次統治の現況 03_内務省/daily_governance/today.md】
@@ -644,13 +644,13 @@ function smartRabbitTurnPrompt({ date, mode, message, context, knowledge, busine
   const localTime = context && context.localTime ? context.localTime : date;
   const request =
     event === "open"
-      ? `今さんが「総理」タブを開いた。まず短く挨拶し、次の順で必ず伝える:
+      ? `BOSSが「スマラビ」タブを開いた。まず短く挨拶し、次の順で必ず伝える:
 1) 【今日の予定(Googleカレンダー)】の内容を、時刻→予定名の順でそのまま簡潔に伝える(予定が無ければ「今日の予定はなし」と伝える。未接続/取得エラーならその旨だけ伝える)
 2) 【至急:支払い期限が来ている請求書(受取分)】【至急:期限超過中の対外タスク】がある場合、そこにあるものだけを使い、支払い等を先に済ませるよう一言で促す(無ければこの項目は触れない)
 3) 通常の優先タスクや相談を促す一言で締める
 下に無い予定・金額・件名を作文しないこと。`
-      : `今さんの相談:\n${clip(message, 4000)}`;
-  return `${firstTurn ? "ここからキングダムOSでのスマートラビット相談セッションを開始する。\n\n" : ""}【現在時刻】
+      : `BOSSの相談:\n${clip(message, 4000)}`;
+  return `${firstTurn ? "ここからキングダムOSでの賢いうさぎ相談セッションを開始する。\n\n" : ""}【現在時刻】
 ${localTime} / 日付: ${date} / モード: ${cfg.label}
 
 ${opening ? `${opening}\n\n` : ""}${businessContextText || "【業務コンテキスト】\n(利用不可)"}
@@ -660,14 +660,14 @@ ${knowledgeBlock(knowledge)}
 【今回の入力】
 ${request}
 
-スマートラビットとして、今さんに直接返答すること。`;
+賢いうさぎとして、BOSSに直接返答すること。`;
 }
 
 async function openSmartRabbitAgent(sessionId, existingId) {
   const options = {
     apiKey: getCursorApiKey(),
     model: { id: MODEL },
-    name: `スマートラビット・キングダムOS ${sessionId}`,
+    name: `賢いうさぎ・キングダムOS ${sessionId}`,
     mode: "plan",
     local: {
       cwd: REPO_ROOT,
@@ -717,8 +717,8 @@ async function appendSmartRabbitChatLog({ date, sessionId, mode, message, respon
   }).format(new Date());
   const header = exists
     ? ""
-    : `# AIスマートラビット・キングダムOS 相談ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。原本会話であり正式Knowledgeではない(承認後に別途Knowledge化を検討)。\n\n`;
-  const entry = `## ${time} [${mode}] (session: ${sessionId})\n\n**今さん**\n\n${markdownQuote(message)}\n\n**スマートラビット**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
+    : `# AI賢いうさぎ・キングダムOS 相談ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。原本会話であり正式Knowledgeではない(承認後に別途Knowledge化を検討)。\n\n`;
+  const entry = `## ${time} [${mode}] (session: ${sessionId})\n\n**BOSS**\n\n${markdownQuote(message)}\n\n**賢いうさぎ**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
   await fsp.appendFile(file, `${header}${entry}`, "utf8");
 }
 
@@ -779,7 +779,7 @@ async function runSmartRabbitTurn(payload) {
       date,
       sessionId,
       mode,
-      message: event === "open" ? "(「総理」タブを開いた)" : message,
+      message: event === "open" ? "(「スマラビ」タブを開いた)" : message,
       response: result.result,
       agentId: agent.agentId,
       runId: result.id,
@@ -823,12 +823,12 @@ async function cabinetBasePrompt(member, date) {
     member.sessionLogFile ? readOptional(path.join(REPO_ROOT, member.sessionLogFile), 6000) : Promise.resolve(""),
   ]);
 
-  return `あなたはキングダムOSのAI${member.name}(${member.title})である。以下の主管境界・人格正本・運用規則を採用し、今さんと対話する。
+  return `あなたはキングダムOSのAI${member.name}(${member.title})である。以下の主管境界・人格正本・運用規則を採用し、BOSSと対話する。
 
 重要な境界:
 - この対話ではファイル編集、シェル実行、コミットなどのツール操作を行わない。
 - 自分の主管領域(下記境界参照)を超える相談は、断定して答えず、担当する省・AIへの申し送りとして案内してよい。
-- 定型文ではなく、今さんの発言と現在情報を踏まえて自然に応答する。
+- 定型文ではなく、BOSSの発言と現在情報を踏まえて自然に応答する。
 - 応答の冒頭は必ず「**${member.name}**:」とする。
 - 本日は ${date}。
 
@@ -848,8 +848,8 @@ ${recentLog || "(まだ記録なし)"}`;
 function cabinetTurnPrompt({ date, member, message, event, businessContextText, firstTurn }) {
   const request =
     event === "open"
-      ? `今さんが内閣で${member.name}を呼び出した。短く名乗り、担当領域で今支援できることを一言添える。`
-      : `今さんの発言:\n${clip(message, 4000)}`;
+      ? `BOSSが内閣で${member.name}を呼び出した。短く名乗り、担当領域で今支援できることを一言添える。`
+      : `BOSSの発言:\n${clip(message, 4000)}`;
   return `${firstTurn ? `ここからキングダムOSでの${member.name}との継続対話を開始する。\n\n` : ""}【現在時刻・日付】
 ${date}
 
@@ -858,7 +858,7 @@ ${businessContextText || "【業務コンテキスト】\n(利用不可)"}
 【今回の入力】
 ${request}
 
-${member.name}として、今さんに直接返答すること。`;
+${member.name}として、BOSSに直接返答すること。`;
 }
 
 async function openCabinetAgent(member, existingId) {
@@ -902,7 +902,7 @@ async function appendCabinetChatLog({ date, member, message, response, agentId, 
   const header = exists
     ? ""
     : `# 内閣・AI${member.name}(${member.title}) 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。原本会話であり正式Knowledgeではない。\n\n`;
-  const entry = `## ${time} (内閣)\n\n**今さん**\n\n${markdownQuote(message)}\n\n**${member.name}**\n\n${markdownQuote(
+  const entry = `## ${time} (内閣)\n\n**BOSS**\n\n${markdownQuote(message)}\n\n**${member.name}**\n\n${markdownQuote(
     response
   )}\n\n<!-- run: ${runId} -->\n\n`;
   await fsp.appendFile(file, `${header}${entry}`, "utf8");
@@ -1049,7 +1049,7 @@ async function appendChatLog({ date, message, event, response, agentId, runId })
     ? ""
     : `# AI尊徳・キングダムOS 対話ログ — ${date}\n\n> Cursor SDK agent: ${agentId}\n> キングダムOSから自動記録。要約は \`03_内務省/daily_governance/sontoku_session_log.md\` に残す。\n\n`;
   const userText = event === "open" ? "今日の計画を開いた" : message;
-  const entry = `## ${time}\n\n**今さん**\n\n${markdownQuote(userText)}\n\n**尊徳**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
+  const entry = `## ${time}\n\n**BOSS**\n\n${markdownQuote(userText)}\n\n**尊徳**\n\n${markdownQuote(response)}\n\n<!-- run: ${runId} -->\n\n`;
   await fsp.appendFile(file, `${header}${entry}`, "utf8");
 }
 
@@ -1117,7 +1117,7 @@ async function runSontokuTurn(payload) {
       model: result.model?.id || MODEL,
     };
   } catch (error) {
-    // 内閣・スマートラビットと同様、壊れたセッション対応をそのまま残さない(自己修復)。
+    // 内閣・賢いうさぎと同様、壊れたセッション対応をそのまま残さない(自己修復)。
     if (hadExistingSession && sessions[date]) {
       delete sessions[date];
       await writeSessions(sessions).catch(() => {});
@@ -1362,7 +1362,7 @@ function createServer() {
         cacheSmartRabbitResult(messageId, result);
         json(res, 200, result);
       } catch (error) {
-        console.error("[スマートラビット]", error);
+        console.error("[賢いうさぎ]", error);
         const authError =
           error instanceof AuthenticationError ||
           (error instanceof CursorAgentError && /auth|api.?key|unauthorized/i.test(error.message));
@@ -1373,7 +1373,7 @@ function createServer() {
             ? "Cursor APIキーを確認してください。"
             : timeoutError
               ? "応答がタイムアウトしました。もう一度お試しください。"
-              : "スマートラビットとの接続に失敗しました。ターミナルのエラーを確認してください。",
+              : "賢いうさぎとの接続に失敗しました。ターミナルのエラーを確認してください。",
         });
       }
       return;
@@ -1709,8 +1709,8 @@ if (require.main === module) {
     );
     console.log(
       hasCursorApiKey()
-        ? `AI尊徳 / スマートラビット: Cursor SDK接続準備済み（model: ${MODEL}）`
-        : "AI尊徳 / スマートラビット: 未接続（07_科学省/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
+        ? `AI尊徳 / 賢いうさぎ: Cursor SDK接続準備済み（model: ${MODEL}）`
+        : "AI尊徳 / 賢いうさぎ: 未接続（04_貿易省/産業庁/taskboard/.env.local に CURSOR_API_KEY を設定してください）"
     );
   });
 }

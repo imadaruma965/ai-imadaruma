@@ -91,7 +91,7 @@ test("smartRabbitTurnPrompt embeds mode, message, and knowledge block", () => {
   });
   assert.match(prompt, /営業/);
   assert.match(prompt, /新規案件の営業文面を考えて/);
-  assert.match(prompt, /スマートラビットとして/);
+  assert.match(prompt, /賢いうさぎとして/);
 });
 
 test("checkSmartRabbitRateLimit blocks once the per-minute limit is exceeded", () => {
