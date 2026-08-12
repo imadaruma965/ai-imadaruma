@@ -356,7 +356,7 @@ body {
 .pomo-phase {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #8a5a00;
+  color: var(--butter);
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
@@ -401,8 +401,8 @@ body {
   border-color: #f0e2b8;
 }
 .journal-panel.pm {
-  background: linear-gradient(180deg, #f4fbff 0%, var(--surface) 70%);
-  border-color: #c9dff0;
+  background: linear-gradient(180deg, #1c2c38 0%, var(--surface) 70%);
+  border-color: #35506b;
 }
 .journal-panel h3,
 .journal-panel .panel-title {
@@ -947,7 +947,9 @@ body {
 .row-item.forced {
   border-color: #9ec9e0;
   background: var(--sky);
+  color: var(--sky-ink);
 }
+.row-item.forced .row-meta { color: #2a4a5a; }
 .row-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1055,7 +1057,7 @@ body {
 .credo-chapter summary {
   cursor: pointer;
   font-weight: 600;
-  color: #1a5570;
+  color: var(--accent);
 }
 .credo-chapter p { font-size: var(--text-sm); line-height: 1.65; margin: 0.5rem 0; }
 .credo-chapter ul,
@@ -1133,11 +1135,23 @@ body {
   font-weight: var(--weight-bold, 600);
 }
 .governance-domain.status-stable { border-color: var(--ok); background: var(--mint); }
-.governance-domain.status-stable .governance-domain-summary { color: var(--ok-ink); }
+.governance-domain.status-stable .governance-domain-summary,
+.governance-domain.status-stable .governance-domain-name,
+.governance-domain.status-stable .governance-domain-score,
+.governance-domain.status-stable .governance-domain-reasons,
+.governance-domain.status-stable .governance-domain-action { color: var(--ok-ink); }
 .governance-domain.status-caution { border-color: var(--warn); background: var(--peach); }
-.governance-domain.status-caution .governance-domain-summary { color: var(--warn-ink); }
+.governance-domain.status-caution .governance-domain-summary,
+.governance-domain.status-caution .governance-domain-name,
+.governance-domain.status-caution .governance-domain-score,
+.governance-domain.status-caution .governance-domain-reasons,
+.governance-domain.status-caution .governance-domain-action { color: var(--warn-ink); }
 .governance-domain.status-danger { border-color: var(--danger); background: var(--rose); }
-.governance-domain.status-danger .governance-domain-summary { color: var(--danger-ink); }
+.governance-domain.status-danger .governance-domain-summary,
+.governance-domain.status-danger .governance-domain-name,
+.governance-domain.status-danger .governance-domain-score,
+.governance-domain.status-danger .governance-domain-reasons,
+.governance-domain.status-danger .governance-domain-action { color: var(--danger-ink); }
 .governance-alerts { margin-top: 0.6rem; }
 .governance-alert-list {
   list-style: none;
@@ -1249,8 +1263,8 @@ body {
   }
 }
 .kpi-box.day-kpi {
-  border: 2px solid #7eb6d4;
-  background: linear-gradient(180deg, #e8f4fb 0%, var(--surface) 55%);
+  border: 2px solid #3a5a70;
+  background: linear-gradient(180deg, #17242e 0%, var(--surface) 55%);
   padding: 0.9rem 0.85rem;
 }
 .kpi-why {
@@ -1469,7 +1483,7 @@ label.field {
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1a5570;
+  color: var(--accent);
 }
 .board-block.finance { background: linear-gradient(180deg, #332c18, var(--surface) 55%); }
 .board-block.diplomacy { background: linear-gradient(180deg, #1d2b33, var(--surface) 55%); }
@@ -1843,8 +1857,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
 .calendar-weekdays span {
   padding: 0.3rem 0;
 }
-.calendar-weekdays span:first-child { color: #b4235a; }
-.calendar-weekdays span:last-child { color: #2e6b9a; }
+.calendar-weekdays span:first-child { color: var(--danger); }
+.calendar-weekdays span:last-child { color: var(--sky); }
 .calendar-grid {
   overflow: hidden;
   border-top: 1px solid var(--line);
