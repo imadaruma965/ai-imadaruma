@@ -4,10 +4,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { MEMBERS, listMembers, getMember, contextModeFor, DEFAULT_CONTEXT_MODE } = require("./cabinet-registry.cjs");
 
-const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
+const REPO_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
 
-test("cabinet registry has exactly 13 members with unique ids", () => {
-  assert.equal(MEMBERS.length, 13);
+test("cabinet registry has exactly 11 members with unique ids", () => {
+  assert.equal(MEMBERS.length, 11);
   const ids = MEMBERS.map((m) => m.id);
   assert.equal(new Set(ids).size, ids.length);
 });
@@ -23,7 +23,7 @@ test("every member's persona and skill files exist in the repo", () => {
 
 test("listMembers exposes only safe display fields", () => {
   const members = listMembers();
-  assert.equal(members.length, 13);
+  assert.equal(members.length, 11);
   members.forEach((m) => {
     assert.equal(Object.keys(m).sort().join(","), "avatar,id,ministry,name,title");
   });

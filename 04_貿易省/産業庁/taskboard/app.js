@@ -2982,6 +2982,7 @@
   let currentViewName = "smartrabbit";
 
   // 省庁の部屋ナビゲーション: 主タブ(data-ministry)とその配下のview一覧・既定view。
+  // 2026-08-12改訂: スマラビ／憲法／人格／内政／外政／財政の6タブへ再編。情報省（ダヴィンチ・ルパン）は統治手帳から除外。
   const MINISTRY_SUBVIEWS = {
     pmo: [
       { view: "smartrabbit", label: "相談" },
@@ -2989,25 +2990,33 @@
       { view: "new", label: "新規" },
       { view: "home", label: "ダッシュボード" },
     ],
-    naimu: [
+    naisei: [
       { view: "day", label: "今日" },
       { view: "week", label: "週" },
       { view: "ideas", label: "アイデアメモ" },
     ],
+    gaisei: [
+      { view: "sales", label: "営業" },
+      { view: "kagaku", label: "技術・研究" },
+      { view: "bunka", label: "発信" },
+    ],
+    zaisei: [
+      { view: "zaimu", label: "財務" },
+      { view: "month", label: "KPI・目標" },
+    ],
   };
-  const VIEW_TO_MINISTRY = { month: "keisansho", reflect: "kyouiku", sales: "gaimu" };
+  const VIEW_TO_MINISTRY = { reflect: "jinkaku", kenpou: "kenpou" };
   Object.entries(MINISTRY_SUBVIEWS).forEach(([ministry, subviews]) => {
     subviews.forEach((sv) => {
       VIEW_TO_MINISTRY[sv.view] = ministry;
     });
   });
-  ["houmu", "kagaku", "jouhou", "bunka", "zaimu"].forEach((m) => {
-    VIEW_TO_MINISTRY[m] = m;
-  });
 
-  const JOUHOU_MEMBERS = ["davinci", "lupin", "ashoka"];
+  const KENPOU_MEMBERS = ["kanpishi", "eiichi"];
+  const KAGAKU_MEMBERS = ["tesla", "ashoka"];
   const BUNKA_MEMBERS = ["hokusai", "masahiro"];
-  let jouhouActiveMember = "davinci";
+  let kenpouActiveMember = "kanpishi";
+  let kagakuActiveMember = "tesla";
   let bunkaActiveMember = "hokusai";
 
   function renderMinistrySubPicker(pickerId, memberIds, activeId) {
@@ -3023,49 +3032,16 @@
       .join("");
   }
 
-  async function enterJouhouRoom() {
+  async function enterKenpouRoom() {
     await loadCabinetMembers();
-    renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
-    ensureCabinetRoomMounted("chat-mount-jouhou", jouhouActiveMember);
-    loadAccountResearchPanel();
+    renderMinistrySubPicker("kenpou-picker", KENPOU_MEMBERS, kenpouActiveMember);
+    ensureCabinetRoomMounted("chat-mount-kenpou", kenpouActiveMember);
   }
 
-  async function loadAccountResearchPanel() {
-    const meta = $("#account-research-meta");
-    const tbody = $("#account-research-tbody");
-    const sheetLink = $("#btn-open-account-research-sheet");
-    if (!meta || !tbody) return;
-    meta.textContent = "読み込み中…";
-    try {
-      const response = await fetch("/api/account-research", { cache: "no-store", headers: authHeaders() });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        meta.textContent = body.message || "読み込みに失敗しました。";
-        if (body.sheetUrl && sheetLink) sheetLink.href = body.sheetUrl;
-        return;
-      }
-      if (body.sheetUrl && sheetLink) sheetLink.href = body.sheetUrl;
-      meta.textContent = `${body.count || 0}件 · Vault: ${body.vaultNote || "—"}`;
-      tbody.innerHTML = (body.rows || [])
-        .map((row, i) => {
-          const ig = row.url
-            ? `<a href="${escapeHtml(row.url)}" target="_blank" rel="noopener">開く</a>`
-            : "—";
-          return `<tr>
-            <td>${i + 1}</td>
-            <td>${escapeHtml(row.genre || "")}</td>
-            <td>${escapeHtml(row.name || "")}</td>
-            <td>${escapeHtml(row.username ? `@${row.username}` : "")}</td>
-            <td>${escapeHtml(String(row.followers || ""))}</td>
-            <td>${escapeHtml(row.format || "")}</td>
-            <td>${ig}</td>
-          </tr>`;
-        })
-        .join("");
-    } catch (error) {
-      meta.textContent = "読み込みに失敗しました（オフラインまたはサーバー未起動）。";
-      tbody.innerHTML = "";
-    }
+  async function enterKagakuRoom() {
+    await loadCabinetMembers();
+    renderMinistrySubPicker("kagaku-picker", KAGAKU_MEMBERS, kagakuActiveMember);
+    ensureCabinetRoomMounted("chat-mount-kagaku", kagakuActiveMember);
   }
 
   async function enterBunkaRoom() {
@@ -3079,19 +3055,17 @@
   let cabinetMembers = [];
   const cabinetOpeningAttempted = new Set();
   const CABINET_MEMBER_FALLBACK = {
-    smart_rabbit: { name: "スマートラビット", title: "総理・内閣統括", avatar: "🐇" },
-    eiichi: { name: "栄一", title: "経産省・戦略メンター", avatar: "💴" },
-    sontoku: { name: "尊徳", title: "内務省・実行マネージャー", avatar: "🌾" },
-    yamato: { name: "ヤマト", title: "教育省・教育/精神性", avatar: "⛩️" },
-    sakamoto_ryoma: { name: "坂本龍馬", title: "外務省・渉外/外交", avatar: "⚔️" },
-    kanpishi: { name: "韓非子", title: "法務省・法/規律/リスク管理", avatar: "⚖️" },
-    tesla: { name: "テスラ", title: "科学省・技術/科学研究", avatar: "⚡" },
-    davinci: { name: "ダ・ヴィンチ", title: "情報省・館長/編集長", avatar: "📖" },
-    lupin: { name: "ルパン", title: "情報省・諜報部/情報収集", avatar: "🗝️" },
-    ashoka: { name: "アショーカ", title: "情報省・研究部/思想研究", avatar: "🦁" },
-    hokusai: { name: "北斎", title: "文化省・ビジュアル制作", avatar: "🎨" },
-    masahiro: { name: "正篤", title: "文化省・文筆", avatar: "🖋️" },
-    luca: { name: "ルカ", title: "財務省・収入/支出/漏れ検知", avatar: "🧮" },
+    smart_rabbit: { name: "スマートラビット", title: "執行官・内閣統括", avatar: "🐇" },
+    kanpishi: { name: "韓非子", title: "律政省・法/事前点検", avatar: "⚖️" },
+    eiichi: { name: "栄一", title: "律政省・独立監査", avatar: "💴" },
+    jinshi: { name: "仁子", title: "修身省・人格/七徳", avatar: "🌸" },
+    sontoku: { name: "尊徳", title: "修身省・身体資本管理", avatar: "🌾" },
+    sakamoto_ryoma: { name: "坂本龍馬", title: "貿易省・統括", avatar: "⚔️" },
+    ashoka: { name: "アショーカ", title: "貿易省・研究部/思想研究", avatar: "🦁" },
+    tesla: { name: "テスラ", title: "貿易省・産業庁/技術", avatar: "⚡" },
+    hokusai: { name: "北斎", title: "貿易省・文化庁/ビジュアル制作", avatar: "🎨" },
+    masahiro: { name: "正篤", title: "貿易省・文化庁/文筆", avatar: "🖋️" },
+    luca: { name: "ルカ", title: "理財省・収入/支出/漏れ検知", avatar: "🧮" },
   };
 
   function getCabinetMemberMeta(memberId) {
@@ -3908,12 +3882,11 @@
       ensureSmartRabbitOpening();
     }
     if (name === "month") ensureCabinetRoomMounted("chat-mount-eiichi", "eiichi");
-    if (name === "reflect") ensureCabinetRoomMounted("chat-mount-yamato", "yamato");
+    if (name === "reflect") ensureCabinetRoomMounted("chat-mount-jinshi", "jinshi");
     if (name === "sales") ensureCabinetRoomMounted("chat-mount-sakamoto_ryoma", "sakamoto_ryoma");
     if (name === "zaimu") ensureCabinetRoomMounted("chat-mount-luca", "luca");
-    if (name === "houmu") ensureCabinetRoomMounted("chat-mount-houmu", "kanpishi");
-    if (name === "kagaku") ensureCabinetRoomMounted("chat-mount-kagaku", "tesla");
-    if (name === "jouhou") enterJouhouRoom();
+    if (name === "kenpou") enterKenpouRoom();
+    if (name === "kagaku") enterKagakuRoom();
     if (name === "bunka") enterBunkaRoom();
     render();
   }
@@ -4299,15 +4272,20 @@
   $("#smartrabbit-session-select")?.addEventListener("change", (e) => setActiveSmartRabbitSession(e.target.value));
   $("#smartrabbit-retry")?.addEventListener("click", () => retrySmartRabbit());
   $$(".room-subtab").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view)));
-  $("#jouhou-picker")?.addEventListener("click", (e) => {
+  $("#kenpou-picker")?.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".cabinet-chip");
-    if (!btn || !btn.dataset.memberId || btn.dataset.memberId === jouhouActiveMember) return;
-    jouhouActiveMember = btn.dataset.memberId;
-    renderMinistrySubPicker("jouhou-picker", JOUHOU_MEMBERS, jouhouActiveMember);
-    remountCabinetRoom("chat-mount-jouhou", jouhouActiveMember);
+    if (!btn || !btn.dataset.memberId || btn.dataset.memberId === kenpouActiveMember) return;
+    kenpouActiveMember = btn.dataset.memberId;
+    renderMinistrySubPicker("kenpou-picker", KENPOU_MEMBERS, kenpouActiveMember);
+    remountCabinetRoom("chat-mount-kenpou", kenpouActiveMember);
   });
-  $("#btn-reload-account-research")?.addEventListener("click", () => loadAccountResearchPanel());
-  $("#btn-goto-account-research")?.addEventListener("click", () => setView("jouhou"));
+  $("#kagaku-picker")?.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".cabinet-chip");
+    if (!btn || !btn.dataset.memberId || btn.dataset.memberId === kagakuActiveMember) return;
+    kagakuActiveMember = btn.dataset.memberId;
+    renderMinistrySubPicker("kagaku-picker", KAGAKU_MEMBERS, kagakuActiveMember);
+    remountCabinetRoom("chat-mount-kagaku", kagakuActiveMember);
+  });
   $("#bunka-picker")?.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".cabinet-chip");
     if (!btn || !btn.dataset.memberId || btn.dataset.memberId === bunkaActiveMember) return;

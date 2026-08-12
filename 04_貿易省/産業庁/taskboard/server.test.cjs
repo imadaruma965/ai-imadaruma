@@ -375,7 +375,7 @@ test("cabinet endpoints reject requests without a valid token", async (t) => {
   assert.equal(authorized.status, 200);
 });
 
-test("cabinet members endpoint lists all 13 personas without secrets", async (t) => {
+test("cabinet members endpoint lists all 11 personas without secrets", async (t) => {
   const originalKey = process.env.CURSOR_API_KEY;
   delete process.env.CURSOR_API_KEY;
   const server = createServer();
@@ -390,7 +390,7 @@ test("cabinet members endpoint lists all 13 personas without secrets", async (t)
   });
   const body = await response.json();
   assert.equal(response.status, 200);
-  assert.equal(body.members.length, 13);
+  assert.equal(body.members.length, 11);
   assert.ok(body.members.some((m) => m.id === "smart_rabbit"));
   assert.ok(body.members.some((m) => m.id === "luca"));
   assert.equal(JSON.stringify(body).includes("cursor_"), false);
