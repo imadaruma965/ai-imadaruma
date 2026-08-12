@@ -1,22 +1,29 @@
-/* キングダムOS — bright pastel · universal */
+/* 賢いウサギの統治手帳 — FÖRNE風・墨×焼き茶ダークトーン */
 :root {
-  --bg: #f3f7fb;
-  --bg-wash: #e8f4f8;
-  --surface: #ffffff;
-  --ink: #243447;
-  --muted: #5a6b7d;
-  --line: #d5e3ef;
-  --accent: #3d7ea6;
-  --accent-soft: #d9eef7;
-  --mint: #d8f0e6;
-  --peach: #ffe8d9;
-  --lilac: #e8e4f7;
-  --butter: #fff3cc;
-  --rose: #fde2ea;
-  --sky: #d6ebfa;
-  --warn: #b45309;
-  --ok: #2f7a4f;
-  --danger: #b4235a;
+  --bg: #1c1a17;
+  --bg-wash: #201d19;
+  --surface: #26231f;
+  --surface-2: #2f2b26;
+  --ink: #ede7dd;
+  --muted: #a89e8f;
+  --line: #3a352e;
+  --accent: #c9a876;
+  --accent-soft: #3a3128;
+  --mint: #a9c9b3;
+  --peach: #d9ac86;
+  --lilac: #b7aed4;
+  --butter: #d6c179;
+  --rose: #d3a3b6;
+  --sky: #9dc0d1;
+  --warn: #d59a4a;
+  --ok: #6fae7f;
+  --danger: #d9738a;
+  /* バッジ（peach/mint/rose/sky等の淡色背景）に載せる濃色文字。--warn/--ok/--danger自体は
+     暗い画面上に直接置く文字用（明るめ）のため、淡色バッジの上では別途この濃色系を使う。 */
+  --warn-ink: #7a4510;
+  --ok-ink: #1f5f45;
+  --danger-ink: #8d2945;
+  --sky-ink: #1a5570;
   --radius: 12px;
   /*
    * iOS: Helvetica / Latin-first stacks fall back Japanese to Mincho.
@@ -38,15 +45,33 @@
 * { box-sizing: border-box; }
 html {
   font-family: var(--font);
+  color-scheme: dark;
+}
+input,
+textarea,
+select {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  font-family: inherit;
+  color-scheme: dark;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+option {
+  background: var(--surface);
+  color: var(--ink);
 }
 body {
   margin: 0;
   font-size: var(--text-md);
   font-weight: var(--weight-normal);
   background:
-    radial-gradient(900px 420px at 85% -5%, var(--lilac) 0%, transparent 55%),
-    radial-gradient(700px 380px at 0% 20%, var(--sky) 0%, transparent 50%),
-    radial-gradient(600px 300px at 50% 100%, var(--mint) 0%, transparent 45%),
+    radial-gradient(900px 420px at 85% -5%, rgba(201, 168, 118, 0.10) 0%, transparent 55%),
+    radial-gradient(700px 380px at 0% 20%, rgba(201, 168, 118, 0.06) 0%, transparent 50%),
     var(--bg);
   color: var(--ink);
   line-height: 1.65;
@@ -63,7 +88,7 @@ body {
   gap: 0.75rem;
   padding: 1.25rem 1.1rem 0.85rem;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(28, 26, 23, 0.86);
   backdrop-filter: blur(10px);
 }
 .top-main { min-width: 0; flex: 1 1 auto; }
@@ -105,7 +130,7 @@ body {
   padding: 0.75rem 0.85rem;
   border: 1px solid var(--line, #d5dee6);
   border-radius: 10px;
-  background: #f3f8fb;
+  background: var(--surface);
 }
 .schedule-banner p { margin: 0 0 0.35rem; font-size: 0.88rem; }
 .schedule-banner .toolbar { margin-top: 0.45rem; gap: 0.4rem; }
@@ -165,7 +190,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(243, 247, 251, 0.96);
+  background: rgba(28, 26, 23, 0.96);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(8px);
 }
@@ -185,10 +210,10 @@ body {
   white-space: normal;
 }
 .tab.active {
-  color: #fff;
+  color: #1c1a17;
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 3px 10px rgba(61, 126, 166, 0.25);
+  box-shadow: 0 3px 10px rgba(201, 168, 118, 0.25);
   font-weight: 700;
 }
 @media (max-width: 520px) {
@@ -301,10 +326,10 @@ body {
   color: var(--muted);
 }
 .quad-card.accent {
-  background: linear-gradient(180deg, var(--mint), var(--surface));
-  border-color: #b7dfc9;
+  background: linear-gradient(180deg, #1f2b23, var(--surface));
+  border-color: #3a4a3e;
 }
-.quad-card.accent .name { color: #1f5f45; font-weight: 600; }
+.quad-card.accent .name { color: #8fc7a3; font-weight: 600; }
 
 .pomodoro-bar {
   flex: 0 0 auto;
@@ -315,7 +340,7 @@ body {
   padding: 0.4rem 0.6rem;
   border: 1px solid #e4bd54;
   border-radius: 12px;
-  background: linear-gradient(180deg, #fff8e8, #fff);
+  background: linear-gradient(180deg, #3a2f1c, var(--surface));
   box-shadow: 0 4px 12px rgba(228, 189, 84, 0.18);
 }
 .pomodoro-bar.hidden { display: none; }
@@ -372,7 +397,7 @@ body {
   margin-bottom: 0.75rem;
 }
 .journal-panel.am {
-  background: linear-gradient(180deg, #fffdf5 0%, var(--surface) 70%);
+  background: linear-gradient(180deg, #332c1c 0%, var(--surface) 70%);
   border-color: #f0e2b8;
 }
 .journal-panel.pm {
@@ -395,7 +420,7 @@ body {
 }
 
 .sontoku-chat {
-  background: linear-gradient(165deg, #f8fcfa 0%, var(--surface) 55%);
+  background: linear-gradient(165deg, #1f2a22 0%, var(--surface) 55%);
   border: 1px solid #c5dfd0;
   border-radius: var(--radius);
   padding: 0.85rem;
@@ -450,11 +475,11 @@ body {
 }
 .sontoku-status[data-state="connected"] {
   background: var(--mint);
-  color: var(--ok);
+  color: var(--ok-ink);
 }
 .sontoku-status[data-state="busy"] {
   background: var(--butter);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 .sontoku-status[data-state="error"] {
   background: var(--rose);
@@ -482,8 +507,8 @@ body {
 }
 .sontoku-msg.sontoku {
   align-self: flex-start;
-  background: #eef8f1;
-  border: 1px solid #c8e6d4;
+  background: #1f2a22;
+  border: 1px solid #3a4a3e;
   color: var(--ink);
   font-size: var(--text-sm);
   font-weight: var(--weight-normal);
@@ -588,7 +613,7 @@ body {
 
 /* —— AI賢いうさぎ(執行官)相談チャット —— */
 .smartrabbit-chat {
-  background: linear-gradient(165deg, #faf9ff 0%, var(--surface) 55%);
+  background: linear-gradient(165deg, #262233 0%, var(--surface) 55%);
   border: 1px solid #d6cdf0;
   border-radius: var(--radius);
   padding: 0.85rem;
@@ -694,7 +719,7 @@ body {
 }
 .smartrabbit-status[data-state="busy"] {
   background: var(--butter);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 .smartrabbit-status[data-state="error"] {
   background: var(--rose);
@@ -791,8 +816,8 @@ body {
 }
 .smartrabbit-msg.assistant {
   align-self: flex-start;
-  background: #f3effc;
-  border: 1px solid #ddd0f5;
+  background: #26222f;
+  border: 1px solid #3d3650;
   color: var(--ink);
   font-size: var(--text-sm);
   font-weight: var(--weight-normal);
@@ -880,7 +905,7 @@ body {
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .dot {
@@ -910,7 +935,7 @@ body {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 0.4rem;
   align-items: center;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(38, 35, 31, 0.9);
   border: 1px solid var(--line);
   border-left-width: 3px;
   border-radius: 8px;
@@ -937,7 +962,7 @@ body {
 .row-actions { display: flex; gap: 0.15rem; }
 .row-actions button {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--surface);
   border-radius: 6px;
   font-size: 0.65rem;
   padding: 0.12rem 0.32rem;
@@ -972,7 +997,7 @@ body {
   padding: 0.42rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
 }
 .row {
@@ -1001,7 +1026,7 @@ body {
 }
 
 /* 憲法タブ: ビジョン・ミッション・バリュー／じぶん憲法 */
-.board-block.credo { background: linear-gradient(180deg, var(--lilac), var(--surface) 55%); }
+.board-block.credo { background: linear-gradient(180deg, #2e2740, var(--surface) 55%); }
 .credo-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1108,11 +1133,11 @@ body {
   font-weight: var(--weight-bold, 600);
 }
 .governance-domain.status-stable { border-color: var(--ok); background: var(--mint); }
-.governance-domain.status-stable .governance-domain-summary { color: var(--ok); }
+.governance-domain.status-stable .governance-domain-summary { color: var(--ok-ink); }
 .governance-domain.status-caution { border-color: var(--warn); background: var(--peach); }
-.governance-domain.status-caution .governance-domain-summary { color: var(--warn); }
+.governance-domain.status-caution .governance-domain-summary { color: var(--warn-ink); }
 .governance-domain.status-danger { border-color: var(--danger); background: var(--rose); }
-.governance-domain.status-danger .governance-domain-summary { color: var(--danger); }
+.governance-domain.status-danger .governance-domain-summary { color: var(--danger-ink); }
 .governance-alerts { margin-top: 0.6rem; }
 .governance-alert-list {
   list-style: none;
@@ -1127,9 +1152,9 @@ body {
   padding: 0.35rem 0.55rem;
   font-size: var(--text-sm);
   background: var(--peach);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
-.governance-alert.severity-urgent { background: var(--rose); color: var(--danger); }
+.governance-alert.severity-urgent { background: var(--rose); color: var(--danger-ink); }
 .governance-alert.severity-info { background: var(--bg); color: var(--muted); }
 .governance-alert-btn {
   display: block;
@@ -1250,14 +1275,14 @@ body {
 .kpi-split-col {
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   padding: 0.55rem 0.55rem 0.65rem;
 }
 .kpi-split-col.target {
-  background: #f7fbf8;
+  background: #21261f;
 }
 .kpi-split-col.actual {
-  background: #fff;
+  background: var(--surface);
 }
 .kpi-split-title {
   margin: 0 0 0.5rem;
@@ -1365,7 +1390,7 @@ body {
   padding: 0.35rem 0.45rem;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
 }
 .kpi-why {
   font-size: var(--text-sm);
@@ -1406,7 +1431,7 @@ label.field {
   padding: 0.45rem 0.5rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   font-size: 0.78rem;
 }
 .day-kpi-grid .kpi-label {
@@ -1446,9 +1471,9 @@ label.field {
   font-weight: 600;
   color: #1a5570;
 }
-.board-block.finance { background: linear-gradient(180deg, var(--butter), var(--surface) 55%); }
-.board-block.diplomacy { background: linear-gradient(180deg, var(--sky), var(--surface) 55%); }
-.board-block.naisei { background: linear-gradient(180deg, var(--mint), var(--surface) 55%); }
+.board-block.finance { background: linear-gradient(180deg, #332c18, var(--surface) 55%); }
+.board-block.diplomacy { background: linear-gradient(180deg, #1d2b33, var(--surface) 55%); }
+.board-block.naisei { background: linear-gradient(180deg, #1f2b23, var(--surface) 55%); }
 .kpi-head,
 .board-head {
   margin: 0 0 0.5rem;
@@ -1498,7 +1523,7 @@ label.field {
 .progress {
   grid-column: 1 / -1;
   height: 6px;
-  background: #e8eef5;
+  background: var(--line);
   border-radius: 99px;
   overflow: hidden;
   margin-top: -0.15rem;
@@ -1513,7 +1538,7 @@ label.field {
 
 .btn {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--surface);
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
   font: inherit;
@@ -1521,7 +1546,7 @@ label.field {
 }
 .btn.primary {
   background: var(--accent);
-  color: #fff;
+  color: #1c1a17;
   border-color: var(--accent);
 }
 .btn.primary.compact,
@@ -1561,7 +1586,7 @@ label.field {
 }
 .warn {
   background: var(--peach);
-  color: var(--warn);
+  color: var(--warn-ink);
   border: 1px solid #f0c9a8;
   padding: 0.35rem 0.55rem;
   border-radius: 8px;
@@ -1579,7 +1604,7 @@ dialog {
   width: calc(100% - 2rem);
   background: var(--surface);
 }
-dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
 
 .foot {
   position: fixed;
@@ -1590,7 +1615,7 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
   justify-content: space-between;
   align-items: center;
   padding: 0.4rem 0.75rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(38, 35, 31, 0.92);
   border-top: 1px solid var(--line);
   font-size: 0.72rem;
 }
@@ -1604,11 +1629,11 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
 }
 .sync-status[data-state="connected"] {
   background: var(--mint);
-  color: var(--ok);
+  color: var(--ok-ink);
 }
 .sync-status[data-state="busy"] {
   background: var(--butter);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 .sync-status[data-state="error"] {
   background: var(--rose);
@@ -1617,7 +1642,7 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
 .force-tag {
   font-size: 0.58rem;
   letter-spacing: 0.06em;
-  color: var(--accent);
+  color: var(--sky-ink);
   border: 1px solid #b7d7ea;
   border-radius: 99px;
   padding: 0 0.28rem;
@@ -1729,7 +1754,7 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
-  background: #eef2f6;
+  background: var(--surface-2);
   color: var(--ink);
   line-height: 1.2;
   text-align: center;
@@ -1750,7 +1775,7 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
 .cat-tag.tag-invest { background: #dff0c9; color: #355520; }
 .cat-tag.tag-personal { background: #e2e8f0; color: #3d4a5c; }
 .cat-tag.tag-other { background: #eef1f5; color: #5a6575; }
-.cat-tag.tag-all { background: #fff; border-color: var(--line); color: var(--muted); }
+.cat-tag.tag-all { background: var(--surface); border-color: var(--line); color: var(--muted); }
 
 .row-cat {
   display: inline-flex;
@@ -1833,11 +1858,11 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
   overflow: hidden;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(38, 35, 31, 0.92);
 }
-.calendar-cell.blank { background: rgba(232, 238, 245, 0.45); }
+.calendar-cell.blank { background: rgba(0, 0, 0, 0.25); }
 .calendar-cell.today {
-  background: linear-gradient(180deg, var(--butter), #fff 65%);
+  background: linear-gradient(180deg, #332c18, var(--surface) 65%);
   box-shadow: inset 0 0 0 2px #e4bd54;
 }
 .calendar-day {
@@ -1864,7 +1889,7 @@ dialog::backdrop { background: rgba(61, 126, 166, 0.28); }
   overflow: hidden;
   border: 0;
   border-radius: 5px;
-  background: #edf3f8;
+  background: var(--surface-2);
   color: var(--ink);
   font: inherit;
   font-size: 0.62rem;
@@ -1877,7 +1902,7 @@ button.calendar-event { cursor: pointer; }
   height: 0.38rem;
   margin-top: 0.18rem;
 }
-.calendar-event.repeat { background: var(--lilac); }
+.calendar-event.repeat { background: var(--lilac); color: #3a2f5c; }
 .calendar-event.media { background: var(--sky); color: #1a5570; }
 .calendar-legend {
   display: flex;
@@ -1963,7 +1988,7 @@ button.calendar-event { cursor: pointer; }
   padding: 0.32rem 0.45rem;
   border: 1px solid var(--line, #d5dee6);
   border-radius: 8px;
-  background: #f7fafc;
+  background: var(--surface-2);
   font-size: 0.82rem;
   line-height: 1.3;
 }
@@ -2004,13 +2029,13 @@ button.calendar-event { cursor: pointer; }
 }
 .board-block.liabilities {
   border: 2px solid #e0a070;
-  background: linear-gradient(180deg, #fff4e8 0%, var(--surface) 55%);
+  background: linear-gradient(180deg, #3a2a1e 0%, var(--surface) 55%);
 }
 .liab-summary {
   margin: 0.4rem 0 0.65rem;
   padding: 0.55rem 0.65rem;
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid #f0d2b0;
 }
 .liab-sum-grid {
@@ -2042,8 +2067,8 @@ button.calendar-event { cursor: pointer; }
   margin-bottom: 0.5rem;
 }
 .liab-row.status-overdue {
-  border-color: #efbdca;
-  background: #fff7f9;
+  border-color: #6b3d48;
+  background: #3a2228;
 }
 .liab-row.status-done {
   opacity: 0.65;
@@ -2061,7 +2086,7 @@ button.calendar-event { cursor: pointer; }
   padding: 0.65rem 0.7rem;
   border: 1px dashed var(--line);
   border-radius: 10px;
-  background: #fafcff;
+  background: #1f242b;
 }
 .liab-pay-row {
   display: grid;
@@ -2090,7 +2115,7 @@ button.calendar-event { cursor: pointer; }
   margin: 0.4rem 0 0;
   padding: 0.55rem 0.65rem;
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
 }
 .sales-sum-grid {
@@ -2129,8 +2154,8 @@ button.calendar-event { cursor: pointer; }
   font-size: 0.72rem;
 }
 .sales-row.sales-row-overdue {
-  border-color: #efbdca;
-  background: #fff7f9;
+  border-color: #6b3d48;
+  background: #3a2228;
 }
 .sales-row.sales-row-today {
   border-color: #f0c9a8;
@@ -2141,7 +2166,7 @@ button.calendar-event { cursor: pointer; }
   padding: 0.65rem 0.7rem;
   border: 1px dashed var(--line);
   border-radius: 10px;
-  background: #fafcff;
+  background: #1f242b;
 }
 .sales-home-summary {
   display: grid;
@@ -2178,7 +2203,7 @@ button.calendar-event { cursor: pointer; }
   background: var(--peach);
 }
 .sales-home-card.overdue .num {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .title-with-voice {

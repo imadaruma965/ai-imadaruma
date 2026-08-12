@@ -4,8 +4,8 @@
   "description": "今日・予定・タスク・振り返り",
   "start_url": "/?source=homescreen",
   "display": "standalone",
-  "background_color": "#f3f7fb",
-  "theme_color": "#3d7ea6",
+  "background_color": "#1c1a17",
+  "theme_color": "#1c1a17",
   "lang": "ja",
   "icons": [
     {
