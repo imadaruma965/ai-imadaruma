@@ -11,6 +11,8 @@
 
 | 日付 | エージェント | 種別 | 要約 | 推奨先 | 承認 |
 |------|--------------|------|------|--------|------|
+| 2026-08-15 | テスラ | knowledge | Supabase RLSはポリシーとテーブルGRANTの両方が必要。書込ポリシーはorganization_id一致検証を明示しないと越境書込を許す | Vault（Supabase技術知見） | 未 |
+| 2026-08-15 | テスラ | skill | 本番のみでステージングがないDB案件では、ローカルPostgresにBaaS環境をスタブして適用前検証する手順を標準化する | `.claude/skills/tesla/` | 未 |
 | | | knowledge / skill / discard | | | 未 |
 
 ---
