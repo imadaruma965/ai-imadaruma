@@ -56,6 +56,7 @@ function main() {
   ensureDirectories();
   const dryRun = process.argv.includes("--dry-run");
   const skipResearch = process.argv.includes("--skip-research");
+  const researchOnly = process.argv.includes("--research-only");
   const force = process.argv.includes("--force");
   const runLog = [];
   const log = (message) => {
@@ -70,6 +71,11 @@ function main() {
       if (!dryRun) {
         runLog.push(run(process.execPath, [RADAR, "--output-json", LATEST_RESEARCH]));
       }
+    }
+
+    if (researchOnly) {
+      log("research-onlyのため、下書き生成はクラウド・ルーティンへ委任します");
+      return;
     }
 
     const inventory = markdownFiles(DRAFT_DIR).length + markdownFiles(REVIEW_DIR).length;

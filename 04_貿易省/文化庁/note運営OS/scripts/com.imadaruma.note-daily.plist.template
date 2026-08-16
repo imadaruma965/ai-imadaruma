@@ -8,6 +8,7 @@
   <array>
     <string>__NODE_BIN__</string>
     <string>__RUNNER__</string>
+    <string>--research-only</string>
   </array>
   <key>WorkingDirectory</key>
   <string>__ROOT__</string>
@@ -25,8 +26,6 @@
     <key>Minute</key>
     <integer>0</integer>
   </dict>
-  <key>RunAtLoad</key>
-  <true/>
   <key>StandardOutPath</key>
   <string>__LAUNCH_LOG__</string>
   <key>StandardErrorPath</key>

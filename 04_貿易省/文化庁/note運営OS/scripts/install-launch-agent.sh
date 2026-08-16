@@ -24,4 +24,4 @@ launchctl bootout "gui/$(id -u)/com.imadaruma.note-daily" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$TARGET"
 launchctl enable "gui/$(id -u)/com.imadaruma.note-daily"
 echo "Installed: $TARGET"
-echo "Schedule: every day at 06:00 (and once when loaded)"
+echo "Schedule: research only, every day at 06:00"
