@@ -59,6 +59,7 @@ node 04_貿易省/産業庁/商品開発/note伸び記事レーダー/note-radar
 --no-sheets
 --dry-run
 --spreadsheet-id ID
+--output-json /保存先/latest.json
 --service-account /安全な場所/credentials.json
 ```
 

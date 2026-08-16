@@ -1,0 +1,11 @@
+{
+  "account": "https://note.com/dailystatecraft",
+  "brandName": "賢いうさぎ｜AIで自分と仕事を再設計する",
+  "theme": "AI × 自己統治 × ひとり事業の実践記",
+  "audience": "AIを収入や仕事の改善につなげたいが、何から始めるか迷っている人",
+  "inventoryTarget": 7,
+  "maxDraftsPerRun": 1,
+  "publishingDays": ["月", "水", "金"],
+  "scheduledHour": 6,
+  "scheduledMinute": 0
+}

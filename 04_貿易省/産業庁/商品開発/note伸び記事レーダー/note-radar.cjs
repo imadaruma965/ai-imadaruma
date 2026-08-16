@@ -99,6 +99,14 @@ async function main() {
     console.log(`${String(index + 1).padStart(2)}. ${article.title} | スキ${article.likes} | ${article.author}`);
   });
 
+  const outputJson = option("--output-json", null);
+  if (outputJson) {
+    const outputPath = path.resolve(outputJson);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, `${JSON.stringify({ observedAt, labels, articles: ranked }, null, 2)}\n`, "utf8");
+    console.log(`分析JSONを書き出しました: ${outputPath}`);
+  }
+
   if (process.argv.includes("--dry-run") || process.argv.includes("--no-sheets")) {
     console.log("Sheetsへの書き込みはスキップしました。");
   } else {
