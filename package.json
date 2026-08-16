@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣である。",
   "scripts": {
+    "note:radar": "node 04_貿易省/産業庁/商品開発/note伸び記事レーダー/note-radar.cjs",
+    "test:note-radar": "node --test 04_貿易省/産業庁/商品開発/note伸び記事レーダー/test/core.test.cjs",
     "taskboard": "node 04_貿易省/産業庁/taskboard/server.cjs",
     "test:taskboard": "node --test 04_貿易省/産業庁/taskboard/server.test.cjs 04_貿易省/産業庁/taskboard/governance.test.cjs 04_貿易省/産業庁/taskboard/notification-service.test.cjs 04_貿易省/産業庁/taskboard/voice-service.test.cjs 04_貿易省/産業庁/taskboard/governance-monitor.test.cjs 04_貿易省/産業庁/taskboard/sales-pipeline.test.cjs 04_貿易省/産業庁/taskboard/finance-board.test.cjs 04_貿易省/産業庁/taskboard/smart-rabbit.test.cjs 04_貿易省/産業庁/taskboard/lib/knowledge-search.test.cjs 04_貿易省/産業庁/taskboard/lib/smart-rabbit-context.test.cjs 04_貿易省/産業庁/taskboard/lib/load-local-env.test.cjs 04_貿易省/産業庁/taskboard/lib/smart-rabbit-speech.test.cjs 04_貿易省/産業庁/taskboard/lib/account-research-sheet.test.cjs 04_貿易省/産業庁/taskboard/google-oauth.test.cjs"
   },

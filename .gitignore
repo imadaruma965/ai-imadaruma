@@ -1,4 +1,7 @@
 node_modules/
+**/.venv/
+**/__pycache__/
+04_貿易省/産業庁/商品開発/note伸び記事レーダー/data/
 04_貿易省/産業庁/taskboard/.env.local
 04_貿易省/産業庁/taskboard/.env.local.save
 04_貿易省/産業庁/taskboard/data/.sontoku-sessions.json
