@@ -56,6 +56,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="PDF作成後もページ画像を保持（異常終了時は常に保持）",
     )
+    parser.add_argument(
+        "--skip-focus-click",
+        action="store_true",
+        help="開始時の本文中央クリックを省略（ページフリップ誤作動時に使用）",
+    )
     return parser.parse_args()
 
 
@@ -178,7 +183,8 @@ def main() -> int:
     activate(app_name)
     # Kindleを前面にしただけでは、キー入力のフォーカスが本文へ移らない
     # バージョンがある。本文中央をクリックしてから撮影を開始する。
-    pyautogui.click(region[0] + region[2] // 2, region[1] + region[3] // 2)
+    if not args.skip_focus_click:
+        pyautogui.click(region[0] + region[2] // 2, region[1] + region[3] // 2)
     time.sleep(args.start_delay)
 
     paths: list[Path] = []
