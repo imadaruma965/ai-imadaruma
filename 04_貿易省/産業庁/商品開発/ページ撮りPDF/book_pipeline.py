@@ -305,7 +305,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--same-checks", type=int, default=3)
     parser.add_argument("--threshold", type=float, default=1.5)
     parser.add_argument("--max-pages", type=int, default=2000)
-    parser.add_argument("--page-key", default="right")
+    parser.add_argument(
+        "--page-key",
+        choices=("left", "right", "auto"),
+        default="auto",
+        help="ページを進める矢印キー。autoなら撮影開始前に自動判定する（既定）",
+    )
     return parser.parse_args()
 
 

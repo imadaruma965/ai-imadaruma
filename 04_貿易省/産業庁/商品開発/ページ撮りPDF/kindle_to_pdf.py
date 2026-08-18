@@ -47,9 +47,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-pages", type=int, default=5000, help="安全のための最大ページ数")
     parser.add_argument(
         "--page-key",
-        choices=("left", "right"),
-        default="right",
-        help="ページを進める矢印キー。縦書き・右開きの本はleft",
+        choices=("left", "right", "auto"),
+        default="auto",
+        help="ページを進める矢印キー。autoなら開始前に両方向へ試し送りして自動判定する（既定）",
     )
     parser.add_argument(
         "--keep-images",
@@ -149,6 +149,41 @@ def wait_for_page(
     return candidate, difference(previous, candidate) > threshold
 
 
+def other_key(page_key: str) -> str:
+    return "left" if page_key == "right" else "right"
+
+
+def detect_page_direction(
+    first_page: Image.Image,
+    region: tuple[int, int, int, int],
+    minimum_delay: float,
+    timeout: float,
+    threshold: float,
+) -> tuple[str, Image.Image, bool]:
+    """開始ページに対して左右へ試し送りし、実際に画面が動いた方向を採用する。
+
+    右綴じ本はrightキーで、左綴じ本（右開き・縦書き等）はleftキーで
+    ページが進む。既存の`difference()`による同一画面判定をそのまま流用し、
+    新規の判定ロジックは持ち込まない。
+    戻り値は (採用したキー, 試し送り後の画面, 実際に変化したか)。
+    変化しなかった場合は right を既定とし、渡された画面をそのまま返す
+    （呼び出し側で「試し送り前の1ページ目」を別途保存できるようにするため）。
+    """
+    for candidate_key in ("right", "left"):
+        pyautogui.press(candidate_key)
+        result, changed = wait_for_page(first_page, region, minimum_delay, timeout, threshold)
+        if changed:
+            print(f"綴じ方向を自動判定: {candidate_key}キーでページが進みました。", flush=True)
+            return candidate_key, result, True
+        # 画面が動いていないので、次の候補をそのまま試せる（打ち消し操作は不要）。
+
+    print(
+        "警告: 開始ページで方向判定ができませんでした。right固定で撮影を続けます。",
+        file=sys.stderr,
+    )
+    return "right", first_page, False
+
+
 def make_pdf(image_paths: list[Path], output: Path) -> None:
     if not image_paths:
         raise RuntimeError("PDFにする画像がありません。")
@@ -188,17 +223,40 @@ def main() -> int:
     time.sleep(args.start_delay)
 
     paths: list[Path] = []
-    current = screenshot(region)
+    first_page = screenshot(region)
+    page_key = args.page_key
     interrupted = False
     try:
-        for page_number in range(1, args.max_pages + 1):
-            page_path = image_dir / f"page_{page_number:05d}.png"
-            current.save(page_path, "PNG")
-            paths.append(page_path)
-            print(f"撮影: {page_number}ページ", flush=True)
+        if page_key == "auto":
+            page_key, moved_image, moved = detect_page_direction(
+                first_page, region, args.page_delay, args.change_timeout, args.threshold
+            )
+        else:
+            moved_image, moved = first_page, False
+
+        # 方向判定の試し送りで消費される前の1ページ目を、必ずそのまま保存する。
+        first_path = image_dir / "page_00001.png"
+        first_page.save(first_path, "PNG")
+        paths.append(first_path)
+        print("撮影: 1ページ", flush=True)
+
+        if moved:
+            # 試し送りで既に2ページ目相当まで進んでいるので、その画面を引き継ぐ。
+            current = moved_image
+            start_page_number = 2
+        else:
+            current = first_page
+            start_page_number = 1
+
+        for page_number in range(start_page_number, args.max_pages + 1):
+            if page_number > 1:
+                page_path = image_dir / f"page_{page_number:05d}.png"
+                current.save(page_path, "PNG")
+                paths.append(page_path)
+                print(f"撮影: {page_number}ページ", flush=True)
 
             for unchanged in range(1, args.same_checks + 1):
-                pyautogui.press(args.page_key)
+                pyautogui.press(page_key)
                 candidate, changed = wait_for_page(
                     current, region, args.page_delay, args.change_timeout, args.threshold
                 )
@@ -207,6 +265,22 @@ def main() -> int:
                     break
                 print(f"画面変化なし ({unchanged}/{args.same_checks})", flush=True)
             else:
+                # same-checks回連続で変化なし。逆方向を1回だけ試す救済策。
+                # 判定ミスや、本の途中で操作方法が切り替わる異常事態への保険。
+                fallback_key = other_key(page_key)
+                pyautogui.press(fallback_key)
+                candidate, changed = wait_for_page(
+                    current, region, args.page_delay, args.change_timeout, args.threshold
+                )
+                if changed:
+                    print(
+                        f"逆方向（{fallback_key}）でページが進みました。"
+                        "以降はこちらのキーを使用します。",
+                        flush=True,
+                    )
+                    page_key = fallback_key
+                    current = candidate
+                    continue
                 break
         else:
             print(f"警告: 最大ページ数 {args.max_pages} に到達しました。", file=sys.stderr)
