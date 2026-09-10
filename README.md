@@ -17,8 +17,8 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 層 | 場所 | 役割 |
 |----|------|------|
-| **DOCX正本** | `08_情報省/ダヴィンチ図書館/91_原資料/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
-| **Markdown実装版** | `00_律令府/philosophy/` `00_律令府/constitution/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
+| **DOCX正本** | `05_情報省/ダヴィンチ図書館/91_原資料/originals/` | 国王が制定した原文。改訂・典拠・全文の唯一の正本 |
+| **Markdown実装版** | `00_律令府/理念/` `00_律令府/憲法/` 等 | 日次運用しやすい要約・実装版。AIが毎回読む対象 |
 
 **ルール:**
 
@@ -31,21 +31,21 @@ ai-imadarumaは、いまだ唯仁という個人国家を統治するAI内閣で
 
 | 正本ファイル | Markdown実装版 | 備考 |
 |------------|---------------|------|
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` | `00_律令府/constitution/jibun_constitution.md` | **現行正本**（第三版 / 2026年4月改訂） |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx` | `00_律令府/philosophy/imada_life_philosophy.md` | |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_律令府/constitution/four_pillars.md` | |
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_明君七徳_v02.docx` | `00_律令府/constitution/meikun_shichitoku.md` | |
+| `05_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx` | `00_律令府/憲法/じぶん憲法.md` | **現行正本**（第三版 / 2026年4月改訂） |
+| `05_情報省/ダヴィンチ図書館/91_原資料/originals/imada_life_philosophy_v02.docx` | `00_律令府/理念/いまだライフ理念.md` | |
+| `05_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_四柱統治フレームワーク_v1.docx` | `00_律令府/憲法/四柱統治フレームワーク.md` | |
+| `05_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_明君七徳_v02.docx` | `00_律令府/憲法/明君七徳.md` | |
 
 **旧版（参照用・履歴用）:**
 
 | 旧版ファイル | 備考 |
 |------------|------|
-| `08_情報省/ダヴィンチ図書館/91_原資料/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
+| `05_情報省/ダヴィンチ図書館/91_原資料/originals/imada_constitution_v2.docx` | 第二版。削除せず保持。運用上は v3 を優先 |
 
 ### じぶん憲法（最高法規）
 
-- **正本DOCX**: `08_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx`
-- **Markdown実装版**: `00_律令府/constitution/jibun_constitution.md`
+- **正本DOCX**: `05_情報省/ダヴィンチ図書館/91_原資料/originals/imadaruma_じぶん憲法_v3.docx`
+- **Markdown実装版**: `00_律令府/憲法/じぶん憲法.md`
 - **標語**: 葦なる刃は、静かに尖れる。
 - **中核文**: 人生は選択である。選択が国家を定める。
 
@@ -128,51 +128,39 @@ ai-imadaruma/
 │       ├── imada_life_philosophy_v02.docx
 │       ├── imadaruma_四柱統治フレームワーク_v1.docx
 │       └── imadaruma_明君七徳_v02.docx
-├── 00_律令府/philosophy/                            # 最上位規範（実装版）
-│   └── imada_life_philosophy.md           # いまだライフ理念体系
-├── 00_律令府/constitution/                          # 統治法・実行構造（実装版）
-│   ├── jibun_constitution.md              # じぶん憲法 v3 実装版
-│   ├── four_pillars.md                    # 四柱統治フレームワーク ★新
-│   ├── meikun_shichitoku.md               # 明君七徳 ★新
-│   ├── doctrine.md                        # 旧：統治思想（移行予定）
-│   ├── mission.md                         # 国家目標（更新予定）
-│   ├── principles.md                      # 旧：統治原則（移行予定）
-│   └── rules_of_governance.md             # 統治ルール（更新予定）
-├── 01_内閣府/                           # 執務室（総理・主管正本・君主）
-├── 00_律令府/                         # 栄一 ＋ strategy/
-├── 03_修身省/                         # 尊徳 ＋ daily_governance/
-├── 03_修身省/ … 04_貿易省/         # 各省庁（人格正本）
-├── 04_貿易省/                               # 統治手帳（taskboard）・scripts
-├── 08_情報省/
-│   ├── ダヴィンチ図書館/                 # Obsidian Vault（別Git）
-│   ├── 研究部/                          # アショーカ
-│   └── 諜報部/                          # ルパン
-├── 00_律令府/strategy/                # 戦略（AI栄一管轄）
-│   ├── README.md
-│   ├── roadmap_500k.md
+├── 00_律令府/                               # 法の系統（索引: README.md）
+│   ├── 律政省/                             # 韓非子・栄一・新設チェックリスト
+│   ├── 憲法/                               # じぶん憲法・四柱・七徳・国家目標
+│   ├── 理念/                               # いまだライフ理念
+│   └── 戦略/                               # 売上・商品・発信（00_索引.md）
+├── 01_内閣府/                               # 執務室（執行官・主管正本）
+├── 02_修身省/                               # 仁子・尊徳 ＋ 日次運用
+├── 03_貿易省/                               # 龍馬統括・産業庁（任務盤）・文化庁
+├── 04_理財省/                               # ルカ
+├── 05_情報省/
+│   ├── ダヴィンチ.md
+│   └── ダヴィンチ図書館/                   # Obsidian Vault（別Git）
+├── 02_修身省/日次運用/                      # 毎日使う
+│   ├── 朝の閣議.md
+│   ├── 今日.md
 │   └── …
-├── 03_修身省/daily_governance/        # 日次統治（毎日使う）
-│   ├── morning_cabinet.md
-│   ├── today.md
-│   └── …
-└── 08_情報省/ダヴィンチ図書館/90_国家OS保管/  # 旧制度・降格ドメイン等
+└── 05_情報省/ダヴィンチ図書館/90_国家OS保管/  # 旧制度・降格ドメイン等
 ```
 
-★新 = Phase 1で作成済み。旧ファイルは Phase 2以降で移行・アーカイブ予定。
-旧 `cabinet/` は各省庁フォルダへ再配置済み。
+★新 = 作成済み。旧 `cabinet/` は各省庁フォルダへ再配置済み。
 
 ## 毎日の運用フロー
 
 ```
-朝 → morning_cabinet.md で閣議
+朝 → 朝の閣議.md で閣議
   ↓
-日中 → today.md で統治実行
-  ↓ 衝動・脱線時 → impulse_protocol.md
-  ↓ 後回し → parking_lot.md
+日中 → 今日.md で統治実行
+  ↓ 衝動・脱線時 → 衝動プロトコル.md
+  ↓ 後回し → 駐車帯.md
   ↓
-夕 → evening_review.md で振り返り
+夕 → 夕の振り返り.md で振り返り
   ↓
-完了 → `08_情報省/ダヴィンチ図書館/90_国家OS保管/` に必要分のみ保管（日常は daily_governance）
+完了 → `05_情報省/ダヴィンチ図書館/90_国家OS保管/` に必要分のみ保管（日常は 日次運用）
 ```
 
 ## AI内閣の起動方法
@@ -181,11 +169,11 @@ AI栄一・AI尊徳は Claude Code の **Skill**（`.claude/skills/eiichi/` `.cl
 
 ### `/sontoku`（日次実行）
 
-呼び出すと、`03_修身省/sontoku.md` の人格を採用し、`03_修身省/daily_governance/sontoku_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`02_修身省/人格正本/尊徳.md` の人格を採用し、`02_修身省/日次運用/対話ログ/尊徳.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ### `/eiichi`（戦略・ロードマップ）
 
-呼び出すと、`00_律令府/eiichi.md` の人格を採用し、`00_律令府/strategy/eiichi_session_log.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
+呼び出すと、`00_律令府/律政省/栄一.md` の人格を採用し、`00_律令府/戦略/対話ログ/栄一.md` の直近ログを踏まえて応答する。対話の区切りで同ログに追記する。
 
 ## 現段階のスコープ
 
