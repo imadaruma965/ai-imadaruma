@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "oogami-renewal",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8791", "--directory", "/private/tmp/claude-501/-Users-imadatadahito-Desktop-ai-imadaruma/f782620c-329e-4f7e-b5cf-8560d711a655/scratchpad/oogami-renewal"],
+      "port": 8791
+    }
+  ]
+}
