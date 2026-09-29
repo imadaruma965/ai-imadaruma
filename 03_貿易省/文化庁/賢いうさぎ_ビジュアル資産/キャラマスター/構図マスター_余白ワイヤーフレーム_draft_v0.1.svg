@@ -1,0 +1,166 @@
+<svg viewBox="0 0 1200 960" xmlns="http://www.w3.org/2000/svg" font-family="'Hiragino Mincho ProN','Yu Mincho',serif">
+  <defs>
+    <style>
+      .paper { fill:#f3ecda; }
+      .frame { fill:none; stroke:#3a332a; stroke-width:1.6; }
+      .zone  { fill:#c9992c; fill-opacity:0.10; }
+      .zoneAlt { fill:#2b3a55; fill-opacity:0.08; }
+      .guide { stroke:#3a332a; stroke-width:1; stroke-dasharray:4 5; opacity:0.55; }
+      .horizon { stroke:#3a332a; stroke-width:1.4; opacity:0.85; }
+      .gaze  { stroke:#a13d2c; stroke-width:1.2; stroke-dasharray:2 4; fill:none; opacity:0.8; marker-end:url(#arrow); }
+      .fig   { fill:none; stroke:#3a332a; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+      .figFill { fill:#f7f2e6; stroke:#3a332a; stroke-width:1.6; }
+      .accent-mustard { fill:#c9992c; }
+      .accent-indigo  { fill:#2b3a55; }
+      .accent-red     { fill:#a13d2c; }
+      .label { fill:#3a332a; font-size:15px; }
+      .labelSm { fill:#5a5142; font-size:12px; }
+      .cap   { fill:#5a5142; font-size:14px; font-style:italic; }
+      .h1    { fill:#3a332a; font-size:30px; }
+      .h2    { fill:#5a5142; font-size:15px; }
+      .panelTitle { fill:#3a332a; font-size:17px; font-weight:bold; }
+      .brace { fill:none; stroke:#3a332a; stroke-width:1; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a13d2c"/>
+    </marker>
+  </defs>
+
+  <rect class="paper" x="0" y="0" width="1200" height="960"/>
+
+  <!-- Header -->
+  <text x="60" y="55" class="h1">賢いうさぎ｜構図マスター（余白正本）draft v0.1</text>
+  <text x="60" y="82" class="h2">星の王子様インスパイア — 「小さな存在が、広大な余白の中で、何かを見つめている」画面</text>
+  <line x1="60" y1="98" x2="1140" y2="98" stroke="#3a332a" stroke-width="1" opacity="0.4"/>
+
+  <!-- ===================== Panel A: 丘の上の一人 ===================== -->
+  <g transform="translate(60,130)">
+    <text class="panelTitle" x="0" y="-14">A. 丘の上の一人 型</text>
+    <rect class="frame paper" x="0" y="0" width="510" height="360"/>
+    <!-- negative space zone (sky) -->
+    <rect class="zone" x="0" y="0" width="510" height="270"/>
+    <!-- thirds guides -->
+    <line class="guide" x1="0" y1="120" x2="510" y2="120"/>
+    <line class="guide" x1="0" y1="240" x2="510" y2="240"/>
+    <!-- horizon low, lower third -->
+    <path class="horizon" d="M0,282 Q120,266 260,278 T510,270"/>
+    <!-- hill -->
+    <path d="M0,282 Q120,266 260,278 T510,270 L510,360 L0,360 Z" fill="#e7dcbd" opacity="0.6"/>
+    <!-- star -->
+    <path class="accent-mustard" d="M430,44 l4,11 l11,1 l-8,8 l3,11 l-10,-6 l-10,6 l3,-11 l-8,-8 l11,-1 z"/>
+    <!-- figure: small rabbit silhouette on hill -->
+    <g transform="translate(210,236)">
+      <ellipse class="figFill" cx="0" cy="30" rx="10" ry="16"/>
+      <line class="fig" x1="-6" y1="8" x2="-10" y2="-16"/>
+      <line class="fig" x1="4" y1="6" x2="9" y2="-20"/>
+      <circle class="accent-red" cx="0" cy="18" r="1.6"/>
+    </g>
+    <!-- gaze line to star -->
+    <path class="gaze" d="M222,224 C300,150 380,90 428,58"/>
+    <!-- caption zone -->
+    <text class="cap" x="255" y="338" text-anchor="middle">A star was watching, too.</text>
+
+    <!-- annotations -->
+    <text class="labelSm" x="8" y="18">余白（空）— 画面上部の大半</text>
+    <text class="labelSm" x="238" y="292">地平線：下から1/4〜1/3</text>
+    <g transform="translate(232,232)">
+      <path class="brace" d="M0,0 q-14,10 0,64"/>
+      <text class="labelSm" x="10" y="36">被写体高さ20〜35%</text>
+    </g>
+  </g>
+
+  <!-- ===================== Panel B: 扉／窓越し ===================== -->
+  <g transform="translate(630,130)">
+    <text class="panelTitle" x="0" y="-14">B. 扉／窓越し 型</text>
+    <rect class="frame paper" x="0" y="0" width="510" height="360"/>
+    <!-- large void / night zone -->
+    <rect class="zoneAlt" x="0" y="0" width="510" height="360"/>
+    <!-- door frame, small, off center -->
+    <g transform="translate(330,90)">
+      <rect x="0" y="0" width="90" height="150" fill="#f6e7b8" stroke="#3a332a" stroke-width="1.6"/>
+      <rect x="0" y="0" width="90" height="150" fill="#c9992c" opacity="0.18"/>
+      <!-- crescent moon outside -->
+    </g>
+    <path class="accent-indigo" d="M110,60 a26,26 0 1 0 18,44 a20,20 0 1 1 -18,-44 z"/>
+    <!-- figure at the door, small -->
+    <g transform="translate(300,196)">
+      <ellipse class="figFill" cx="0" cy="26" rx="9" ry="14"/>
+      <line class="fig" x1="-5" y1="6" x2="-9" y2="-14"/>
+      <line class="fig" x1="4" y1="5" x2="8" y2="-18"/>
+    </g>
+    <path class="gaze" d="M310,190 C330,170 345,150 355,130"/>
+    <text class="cap" x="255" y="338" text-anchor="middle">The letter remained unopened.</text>
+
+    <text class="labelSm" x="8" y="18">余白（夜・何もない部屋）— 画面の大半</text>
+    <text class="labelSm" x="332" y="80">扉の中だけ朝の光</text>
+  </g>
+
+  <!-- ===================== Panel C: 机上の静物 ===================== -->
+  <g transform="translate(60,540)">
+    <text class="panelTitle" x="0" y="-14">C. 机上の静物 型</text>
+    <rect class="frame paper" x="0" y="0" width="510" height="360"/>
+    <rect class="zone" x="0" y="0" width="510" height="360"/>
+    <!-- small table, corner -->
+    <g transform="translate(70,250)">
+      <rect x="0" y="0" width="120" height="10" fill="#3a332a" opacity="0.85"/>
+      <line x1="10" y1="10" x2="10" y2="60" stroke="#3a332a" stroke-width="4"/>
+      <line x1="110" y1="10" x2="110" y2="60" stroke="#3a332a" stroke-width="4"/>
+      <!-- one object: envelope -->
+      <g transform="translate(38,-26)">
+        <rect x="0" y="0" width="44" height="28" fill="#f6e7b8" stroke="#3a332a" stroke-width="1.4"/>
+        <path d="M0,0 L22,16 L44,0" fill="none" stroke="#3a332a" stroke-width="1.2"/>
+        <rect x="18" y="10" width="8" height="6" class="accent-red"/>
+      </g>
+    </g>
+    <text class="cap" x="255" y="338" text-anchor="middle">One object. Everything else, silence.</text>
+
+    <text class="labelSm" x="8" y="18">余白 — 画面のほぼ全て</text>
+    <text class="labelSm" x="200" y="196">小道具は一つだけ</text>
+  </g>
+
+  <!-- ===================== Panel D: 曲がる道 ===================== -->
+  <g transform="translate(630,540)">
+    <text class="panelTitle" x="0" y="-14">D. 曲がる道 型</text>
+    <rect class="frame paper" x="0" y="0" width="510" height="360"/>
+    <rect class="zone" x="0" y="0" width="510" height="360"/>
+    <!-- checkered diagonal path -->
+    <g transform="translate(0,0)">
+      <path id="pathline" d="M0,320 C150,300 200,200 340,180 C420,168 470,120 510,70" fill="none" stroke="none"/>
+      <g stroke="#3a332a" stroke-width="1" opacity="0.7">
+        <rect x="10" y="298" width="16" height="16" fill="#3a332a"/>
+        <rect x="40" y="286" width="16" height="16" fill="#f3ecda"/>
+        <rect x="72" y="266" width="16" height="16" fill="#3a332a"/>
+        <rect x="106" y="240" width="16" height="16" fill="#f3ecda"/>
+        <rect x="150" y="216" width="16" height="16" fill="#3a332a"/>
+        <rect x="196" y="200" width="16" height="16" fill="#f3ecda"/>
+        <rect x="248" y="186" width="16" height="16" fill="#3a332a"/>
+        <rect x="300" y="170" width="16" height="16" fill="#f3ecda"/>
+        <rect x="352" y="148" width="16" height="16" fill="#3a332a"/>
+        <rect x="400" y="118" width="16" height="16" fill="#f3ecda"/>
+        <rect x="446" y="92" width="16" height="16" fill="#3a332a"/>
+        <rect x="486" y="66" width="16" height="16" fill="#f3ecda"/>
+      </g>
+    </g>
+    <!-- figure on path -->
+    <g transform="translate(230,196)">
+      <ellipse class="figFill" cx="0" cy="16" rx="8" ry="12"/>
+      <line class="fig" x1="-4" y1="0" x2="-8" y2="-14"/>
+      <line class="fig" x1="3" y1="-1" x2="7" y2="-16"/>
+    </g>
+    <text class="cap" x="255" y="338" text-anchor="middle">Every turn left something behind.</text>
+
+    <text class="labelSm" x="8" y="18">余白 — 道の前後は無地に溶ける</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(60,930)">
+    <rect x="0" y="-14" width="16" height="12" class="zone"/>
+    <text class="labelSm" x="24" y="-4">余白ゾーン（空・虚空）</text>
+    <rect x="220" y="-14" width="16" height="12" class="zoneAlt"/>
+    <text class="labelSm" x="244" y="-4">余白ゾーン（夜・空白の部屋）</text>
+    <line x1="470" y1="-8" x2="500" y2="-8" class="gaze"/>
+    <text class="labelSm" x="508" y="-4">視線の抜け</text>
+    <path class="brace" d="M760,-14 q-8,6 0,12" transform="translate(0,0)"/>
+    <text class="labelSm" x="772" y="-4">被写体の高さ比率ガイド</text>
+  </g>
+</svg>
