@@ -1,0 +1,139 @@
+# 烏龍式・SNS発信研究室
+
+X・noteの投稿データを蓄積し、仮説と検証を繰り返すための分析システム。
+単なるインプレッション管理ではなく、「どの発信パターンが認知拡大・ファン獲得・収益化につながるか」を実測データから探るための道具。
+
+## 位置づけ
+
+- データの保存先は**既存の「【課題】リサーチシート（賢いうさぎ）」**（BOSSが日常的に使っているスプレッドシート）。
+  新規スプレッドシートは作らず、既存タブ（Xアカウント100本ノック／烏龍X記事分析 等）はそのまま、末尾に新タブを4つ追加しただけ。
+  - `X投稿ログ`：Xの投稿ごとの記録（24h・72hメトリクス込み）
+  - `note記事ログ`：note記事ごとの記録
+  - `仮説ログ`：仮説・検証結果・次回の改善案
+  - `分類マスタ`：分類項目の選択肢一覧（プルダウンの参照元）
+- URL: https://docs.google.com/spreadsheets/d/1VbVRAA1gj_uf9vNsA0tLkZIbkTFGfxrikqPi1geg4TY/edit
+- Google認証は`任務盤`の既存サービスアカウント（`03_貿易省/産業庁/任務盤/secrets/google-sheets-service-account.json`）をそのまま再利用している。このフォルダは任務盤のコードを一切変更していない。
+
+## 日々の使い方
+
+### 基本はGoogleスプレッドシートに直接入力してよい
+
+`X投稿ログ`・`note記事ログ`のヘッダーはすでに用意してあるので、Sheets上で直接行を追記してもよい。
+`投稿形式`・`フックの種類`・`投稿の目的`・note`ジャンル`・`無料有料区分`はプルダウン（データ検証）が設定済み。
+`発信ジャンル`・`損失の種類`・`複眼設計の種類`は複数選択可能な項目なので、`分類マスタ`タブの選択肢を**全角セミコロン「；」区切り**で1セルに入力する（例：`行動；お金`）。
+
+### コマンドで記録する場合
+
+初回だけ：
+
+```bash
+npm run snslab:setup
+```
+
+（スプレッドシートID・タブ・ヘッダー・プルダウンを整える。既存データには触れない。再実行しても安全）
+
+X投稿を1件記録：
+
+```bash
+node 03_貿易省/文化庁/SNS発信研究室/add-x.cjs \
+  --url "https://x.com/.../status/123" --date 2026-11-19 --time 09:00 \
+  --hook "冒頭3行のフック" --text "投稿全文" \
+  --genre "行動；お金" --theme "テーマ" --loss "時間的損失" \
+  --format 箇条書き --hook-type 具体的な数字 --lens "心理学；実体験" \
+  --experience ○ --image ○ --link × --purpose 送客
+```
+
+投稿後24時間・72時間でメトリクスを記録（どちらも後から実行してよい）：
+
+```bash
+node 03_貿易省/文化庁/SNS発信研究室/update-x.cjs --url "..." --window 24h \
+  --impressions 1200 --likes 80 --reposts 10 --replies 5 --bookmarks 20 \
+  --detail-clicks 30 --profile-access 15 --follows 3 --link-clicks 4
+```
+
+note記事を記録：
+
+```bash
+node 03_貿易省/文化庁/SNS発信研究室/add-note.cjs \
+  --title "記事タイトル" --url "https://note.com/.../n/..." \
+  --published 2026-11-19 --genre 信頼 --access 有料 --price 500 \
+  --impressions 1000 --pv 300 --likes 20 --comments 1 \
+  --referrer X --sales 3 --revenue 1500 --funnel "Xの固定ポストから"
+```
+
+仮説・検証結果を記録：
+
+```bash
+node 03_貿易省/文化庁/SNS発信研究室/add-hypothesis.cjs \
+  --date 2026-11-19 --target "X投稿URL／note URL／全般" \
+  --hypothesis "..." --method "..." --result "..." --next "..."
+```
+
+### ダッシュボードを見る
+
+```bash
+npm run snslab:dashboard
+```
+
+`03_貿易省/文化庁/SNS発信研究室/dashboard/index.html` が生成される（ブラウザで開くだけ。オフラインで見られる）。
+平均・中央値、共感率／保存率／拡散率／プロフィールアクセス率／フォロー獲得率／送客率、ジャンル別・フック別・投稿形式別・文字数別・曜日別・複眼設計別の比較、週間・月間推移、note売上推移、上位5件・下位5件の投稿を表示する。
+
+**件数が5件未満（`config.json`の`minSampleSize`で変更可）の集計には「参考(n<5)」と注記**し、少数データから安易に因果関係を断定しないようにしている。データが空のときは「データなし」と表示し、架空の数値は出さない。
+
+### CSV入出力
+
+```bash
+npm run snslab:export    # 3タブをCSVへ書き出し（data/export/、Git管理外）
+node 03_貿易省/文化庁/SNS発信研究室/import-csv.cjs --type x --csv data/export/x投稿ログ.csv [--dry-run]
+node 03_貿易省/文化庁/SNS発信研究室/import-csv.cjs --type note --csv data/export/note記事ログ.csv [--dry-run]
+```
+
+インポートは投稿URL／記事URLを一意キーとして、既存行があれば更新、なければ追記する（重複は作らない）。
+
+## データ構造
+
+### X投稿ログ（35列）
+
+投稿日・曜日（自動算出）・投稿時刻・投稿URL・冒頭3行のフック・投稿全文・文字数（自動算出）・発信ジャンル（複数可）・投稿テーマ・損失の種類（複数可）・投稿形式・フックの種類・複眼設計の種類（複数可）・実体験の有無・画像の有無・外部リンクの有無・投稿の目的、に続けて
+インプレッション／いいね／リポスト／リプライ／ブックマーク／詳細クリック／プロフィールアクセス／フォロー獲得数／リンククリックを **24h・72hそれぞれ**記録する（取得できない値は空欄＝欠損値）。
+
+### note記事ログ（15列）
+
+記事タイトル・記事URL・公開日・更新日・ジャンル・無料有料区分・販売価格・インプレッション・PV・スキ・コメント・流入元・販売数・売上・購入導線。
+
+### 仮説ログ（6列）
+
+日付・対象・仮説・検証方法・結果・次回の改善案。
+
+分類項目の選択肢は `config.json` の `classifications` で管理しており、後から追加・変更できる（変更したら `npm run snslab:setup` を再実行するとプルダウンにも反映される）。
+
+## 技術構成
+
+```text
+SNS発信研究室/
+  config.json          分類項目・スプレッドシートID・集計設定
+  lib/core.cjs          正規化・集計ロジック（純粋関数、Sheets/CSVに非依存）
+  lib/sheets.cjs         Google Sheets読み書き（任務盤のgsheets.cjsを再利用）
+  lib/csv.cjs            CSV相互変換
+  setup-sheet.cjs        初回セットアップ（タブ・ヘッダー・プルダウン）
+  add-x.cjs / update-x.cjs    X投稿の記録・メトリクス更新
+  add-note.cjs                note記事の記録
+  add-hypothesis.cjs          仮説ログの追記
+  dashboard.cjs                ダッシュボード(静的HTML)生成
+  export-csv.cjs / import-csv.cjs  CSV入出力
+  test/                  ユニットテスト
+  data/                  ローカル書き出し先（Git管理外）
+  dashboard/              生成されたHTML（Git管理外）
+```
+
+テスト実行：
+
+```bash
+npm run test:snslab
+```
+
+## 今後の拡張（今回は着手しない）
+
+- note・Xの一部指標をAPI／スクレイピングで自動取得（現状は手入力。`note伸び記事レーダー`の取得手法が参考になる）
+- AIによる投稿文・フックの自動分類
+- 分類マスタのUI化（現状はスプレッドシート直接編集）

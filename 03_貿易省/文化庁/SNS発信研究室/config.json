@@ -1,0 +1,26 @@
+{
+  "spreadsheetId": "1VbVRAA1gj_uf9vNsA0tLkZIbkTFGfxrikqPi1geg4TY",
+  "sheets": {
+    "x": "X投稿ログ",
+    "note": "note記事ログ",
+    "hypothesis": "仮説ログ"
+  },
+  "monthlyRevenueTarget": 500000,
+  "minSampleSize": 5,
+  "textLengthBuckets": [
+    { "label": "短文(0-70)", "max": 70 },
+    { "label": "中文(71-140)", "max": 140 },
+    { "label": "長文(141-280)", "max": 280 },
+    { "label": "超長文(281+)", "max": null }
+  ],
+  "classifications": {
+    "genre": ["行動", "お金", "時間", "信頼", "健康", "キャリア"],
+    "lossType": ["時間的損失", "金銭的損失", "心理的損失", "社会的損失", "機会損失"],
+    "multiLens": ["哲学", "歴史", "心理学", "脳科学", "経済学", "経営学", "実体験"],
+    "format": ["箇条書き", "共感", "ストーリー", "ランキング", "X記事", "note紹介"],
+    "hookType": ["常識の逆転", "名言", "共感", "問題提起", "具体的な数字", "人物の特徴"],
+    "purpose": ["認知", "共感", "教育", "信頼形成", "送客", "販売"],
+    "noteGenre": ["行動", "お金", "時間", "信頼", "健康", "キャリア"],
+    "noteAccessType": ["無料", "有料"]
+  }
+}

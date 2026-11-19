@@ -4,6 +4,8 @@ node_modules/
 **/.env
 03_貿易省/産業庁/スクリプト/output/
 03_貿易省/産業庁/商品開発/note伸び記事レーダー/data/
+03_貿易省/文化庁/SNS発信研究室/data/
+03_貿易省/文化庁/SNS発信研究室/dashboard/index.html
 03_貿易省/文化庁/note運営OS/00_リサーチ/latest.json
 03_貿易省/文化庁/note運営OS/90_実行ログ/
 03_貿易省/産業庁/任務盤/.env.local
