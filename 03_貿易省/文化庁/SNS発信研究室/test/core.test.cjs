@@ -13,6 +13,18 @@ test("曜日は投稿日から自動算出される", () => {
   assert.equal(core.deriveWeekday("2026-11-19"), "木");
 });
 
+test("X公式エクスポートの日付形式をYYYY-MM-DDへ変換できる", () => {
+  assert.equal(core.parseXExportDate("Thu, Nov 19, 2026"), "2026-11-19");
+  assert.equal(core.parseXExportDate("Mon, Jan 1, 2026"), "2026-01-01");
+  assert.equal(core.parseXExportDate(""), "");
+  assert.equal(core.parseXExportDate("不正な値"), "");
+});
+
+test("冒頭フックは複数行なら先頭3行、単一行なら先頭80文字を取る", () => {
+  assert.equal(core.deriveHook("1行目\n2行目\n3行目\n4行目"), "1行目\n2行目\n3行目");
+  assert.equal(core.deriveHook("あ".repeat(100)), "あ".repeat(80));
+});
+
 test("Xレコードは行列とオブジェクトを往復できる", () => {
   const record = {
     "投稿日": "2026-11-19", "投稿時刻": "09:00", "投稿URL": "https://x.com/u/status/1",

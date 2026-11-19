@@ -71,6 +71,24 @@ function deriveCharCount(text) {
   return String(text || "").length;
 }
 
+const EN_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function parseXExportDate(value) {
+  // X公式エクスポートの日付形式 "Thu, Nov 19, 2026" -> "2026-11-19"
+  const m = String(value || "").match(/([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})/);
+  if (!m) return "";
+  const monthIndex = EN_MONTHS.indexOf(m[1]);
+  if (monthIndex === -1) return "";
+  return `${m[3]}-${String(monthIndex + 1).padStart(2, "0")}-${String(Number(m[2])).padStart(2, "0")}`;
+}
+
+function deriveHook(text, maxLines = 3, maxChars = 80) {
+  const s = String(text || "");
+  const lines = s.split(/\n+/).filter(Boolean);
+  if (lines.length > 1) return lines.slice(0, maxLines).join("\n");
+  return s.slice(0, maxChars);
+}
+
 function normalizeXRecord(input) {
   const record = { ...input };
   record["文字数"] = toAmount(record["文字数"]) ?? deriveCharCount(record["投稿全文"]);
@@ -245,6 +263,8 @@ module.exports = {
   toAmount,
   deriveWeekday,
   deriveCharCount,
+  parseXExportDate,
+  deriveHook,
   normalizeXRecord,
   xRowFromRecord,
   xRecordFromRow,

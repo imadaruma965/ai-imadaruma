@@ -89,6 +89,24 @@ async function updateRow(spreadsheetId, sheetTitle, rowNumber, row) {
   });
 }
 
+async function appendRows(spreadsheetId, sheetTitle, rows) {
+  if (!rows.length) return { updatedRows: 0 };
+  return gsheets.appendValues(spreadsheetId, `'${sheetTitle}'!A:A`, rows);
+}
+
+async function batchUpdateRows(spreadsheetId, sheetTitle, updates) {
+  if (!updates.length) return;
+  const sheets = await gsheets.sheetsClient();
+  const data = updates.map(({ rowNumber, row }) => ({
+    range: `'${sheetTitle}'!A${rowNumber}:${columnLetter(row.length - 1)}${rowNumber}`,
+    values: [row],
+  }));
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: { valueInputOption: "USER_ENTERED", data },
+  });
+}
+
 async function setSingleSelectValidation(spreadsheetId, sheetTitle, columnIndex, values) {
   const sheets = await gsheets.sheetsClient();
   const info = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties" });
@@ -122,6 +140,8 @@ module.exports = {
   appendRow,
   findRowNumberByKey,
   updateRow,
+  appendRows,
+  batchUpdateRows,
   setSingleSelectValidation,
   columnLetter,
 };

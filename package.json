@@ -15,7 +15,8 @@
     "snslab:update-x": "node 03_貿易省/文化庁/SNS発信研究室/update-x.cjs",
     "snslab:add-note": "node 03_貿易省/文化庁/SNS発信研究室/add-note.cjs",
     "snslab:add-hypothesis": "node 03_貿易省/文化庁/SNS発信研究室/add-hypothesis.cjs",
-    "test:snslab": "node --test 03_貿易省/文化庁/SNS発信研究室/test/core.test.cjs 03_貿易省/文化庁/SNS発信研究室/test/dashboard.test.cjs",
+    "snslab:import-x-native": "node 03_貿易省/文化庁/SNS発信研究室/import-x-native.cjs",
+    "test:snslab": "node --test 03_貿易省/文化庁/SNS発信研究室/test/core.test.cjs 03_貿易省/文化庁/SNS発信研究室/test/dashboard.test.cjs 03_貿易省/文化庁/SNS発信研究室/test/sheets.test.cjs 03_貿易省/文化庁/SNS発信研究室/test/import-x-native.test.cjs",
     "taskboard": "node 03_貿易省/産業庁/任務盤/server.cjs",
     "test:taskboard": "node --test 03_貿易省/産業庁/任務盤/server.test.cjs 03_貿易省/産業庁/任務盤/governance.test.cjs 03_貿易省/産業庁/任務盤/notification-service.test.cjs 03_貿易省/産業庁/任務盤/voice-service.test.cjs 03_貿易省/産業庁/任務盤/governance-monitor.test.cjs 03_貿易省/産業庁/任務盤/sales-pipeline.test.cjs 03_貿易省/産業庁/任務盤/finance-board.test.cjs 03_貿易省/産業庁/任務盤/smart-rabbit.test.cjs 03_貿易省/産業庁/任務盤/lib/knowledge-search.test.cjs 03_貿易省/産業庁/任務盤/lib/smart-rabbit-context.test.cjs 03_貿易省/産業庁/任務盤/lib/load-local-env.test.cjs 03_貿易省/産業庁/任務盤/lib/smart-rabbit-speech.test.cjs 03_貿易省/産業庁/任務盤/lib/account-research-sheet.test.cjs 03_貿易省/産業庁/任務盤/google-oauth.test.cjs"
   },
